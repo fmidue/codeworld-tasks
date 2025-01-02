@@ -4,11 +4,11 @@ cabal-version: 2.2
 --
 -- see: https://github.com/sol/hpack
 
-name:           observable-sharing
+name:           codeworld-tasks
 version:        0.1.0.0
-description:    Please see the README on GitHub at <https://github.com/patritzenfeld/observable-sharing#readme>
-homepage:       https://github.com/patritzenfeld/observable-sharing#readme
-bug-reports:    https://github.com/patritzenfeld/observable-sharing/issues
+description:    Please see the README on GitHub at <https://github.com/fmidue/codeworld-tasks#readme>
+homepage:       https://github.com/fmidue/codeworld-tasks#readme
+bug-reports:    https://github.com/fmidue/codeworld-tasks/issues
 author:         Patrick Ritzenfeld
 maintainer:     patrick.ritzenfeld@uni-due.de
 copyright:      2024 Patrick Ritzenfeld
@@ -19,7 +19,7 @@ extra-source-files:
 
 source-repository head
   type: git
-  location: https://github.com/patritzenfeld/observable-sharing
+  location: https://github.com/fmidue/codeworld-tasks
 
 library
   exposed-modules:
@@ -31,9 +31,9 @@ library
       Trie
       Types
   other-modules:
-      Paths_observable_sharing
+      Paths_codeworld_tasks
   autogen-modules:
-      Paths_observable_sharing
+      Paths_codeworld_tasks
   hs-source-dirs:
       src
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
@@ -48,13 +48,13 @@ library
     , text
   default-language: Haskell2010
 
-test-suite observable-sharing-test
+test-suite codeworld-tasks-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
-      Paths_observable_sharing
+      Paths_codeworld_tasks
   autogen-modules:
-      Paths_observable_sharing
+      Paths_codeworld_tasks
   hs-source-dirs:
       test
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
@@ -62,10 +62,10 @@ test-suite observable-sharing-test
       base >=4.11 && <5
     , bytestring
     , bytestring-trie
+    , codeworld-tasks
     , containers
     , data-reify
     , extra
     , mtl
-    , observable-sharing
     , text
   default-language: Haskell2010

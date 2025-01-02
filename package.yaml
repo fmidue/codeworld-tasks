@@ -1,7 +1,7 @@
 ---
-name: observable-sharing
+name: codeworld-tasks
 version: 0.1.0.0
-github: "patritzenfeld/observable-sharing"
+github: "fmidue/codeworld-tasks"
 license: BSD-3-Clause
 author: "Patrick Ritzenfeld"
 maintainer: "patrick.ritzenfeld@uni-due.de"
@@ -10,7 +10,7 @@ copyright: "2024 Patrick Ritzenfeld"
 extra-source-files:
   - README.md
 
-description: Please see the README on GitHub at <https://github.com/patritzenfeld/observable-sharing#readme>
+description: Please see the README on GitHub at <https://github.com/fmidue/codeworld-tasks#readme>
 
 dependencies:
   - base >= 4.11 && < 5
@@ -37,7 +37,7 @@ library:
   source-dirs: src
 
 tests:
-  observable-sharing-test:
+  codeworld-tasks-test:
     main: Spec.hs
     source-dirs: test
     ghc-options:
@@ -45,4 +45,4 @@ tests:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
-      - observable-sharing
+      - codeworld-tasks
