@@ -21,6 +21,11 @@ class Drawable a where
   closedCurve :: [Point] -> a
   thickClosedCurve :: Double -> [Point] -> a
   solidClosedCurve :: [Point] -> a
+  polyline :: [Point] -> a
+  thickPolyline :: Double -> [Point] -> a
+  polygon :: [Point] -> a
+  solidPolygon :: [Point] -> a
+  thickPolygon :: Double -> [Point] -> a
   lettering :: Text -> a
   styledLettering :: TextStyle -> Font -> Text -> a
   thickCircle :: Double -> Double -> a

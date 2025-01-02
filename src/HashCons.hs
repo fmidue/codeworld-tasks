@@ -22,12 +22,12 @@ data Node
   | SolidCircleNode Double
   | PolygonNode [Point]
   | SolidPolygonNode [Point]
-  | ThickPolygonNode [Point] Double
+  | ThickPolygonNode Double [Point]
   | ClosedCurveNode [Point]
   | SolidClosedCurveNode [Point]
   | ThickClosedCurveNode Double [Point]
   | PolylineNode [Point]
-  | ThickPolylineNode [Point] Double
+  | ThickPolylineNode Double [Point]
   | CurveNode [Point]
   | ThickCurveNode Double [Point]
   | SectorNode Double Double Double
@@ -71,6 +71,11 @@ instance Drawable Runner where
   closedCurve          = toRunnerSimple . ClosedCurveNode
   thickClosedCurve t   = toRunnerSimple . ThickClosedCurveNode t
   solidClosedCurve     = toRunnerSimple . SolidClosedCurveNode
+  polyline             = toRunnerSimple . PolylineNode
+  thickPolyline t      = toRunnerSimple . ThickPolylineNode t
+  polygon              = toRunnerSimple . PolygonNode
+  solidPolygon         = toRunnerSimple . SolidPolygonNode
+  thickPolygon t       = toRunnerSimple . ThickPolygonNode t
   lettering            = toRunnerSimple . LetteringNode
   styledLettering ts f = toRunnerSimple . StyledLetteringNode ts f
 

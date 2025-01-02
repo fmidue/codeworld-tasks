@@ -24,9 +24,9 @@ data ReifyPicture a
   | SolidCircle Double
   | Polygon [Point]
   | SolidPolygon [Point]
-  | ThickPolygon [Point] Double
+  | ThickPolygon Double [Point]
   | Polyline [Point]
-  | ThickPolyline [Point] Double
+  | ThickPolyline Double [Point]
   | Sector Double Double Double
   | Arc Double Double Double
   | ThickArc Double Double Double Double
@@ -69,6 +69,11 @@ instance Drawable (PRec a) where
   closedCurve          = PRec . ClosedCurve
   thickClosedCurve t   = PRec . ThickClosedCurve t
   solidClosedCurve     = PRec . SolidClosedCurve
+  polyline             = PRec . Polyline
+  thickPolyline t      = PRec . ThickPolyline t
+  polygon              = PRec . Polygon
+  thickPolygon t       = PRec . ThickPolygon t
+  solidPolygon         = PRec . SolidPolygon
   lettering            = PRec . Lettering
   styledLettering ts f = PRec . StyledLettering ts f
   colored c            = PRec . Color c

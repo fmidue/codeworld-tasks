@@ -58,6 +58,11 @@ instance Drawable Graph where
   solidClosedCurve     = processSimple. SolidClosedCurveNode
   lettering            = processSimple . LetteringNode
   styledLettering fs t = processSimple . StyledLetteringNode fs t
+  polyline             = processSimple . PolylineNode
+  thickPolyline t      = processSimple . ThickPolylineNode t
+  polygon              = processSimple . PolygonNode
+  solidPolygon         = processSimple . SolidPolygonNode
+  thickPolygon t       = processSimple . ThickPolygonNode t
 
   translated x y = processOneGraph $ TranslateNode x y
   colored c      = processOneGraph $ ColorNode c

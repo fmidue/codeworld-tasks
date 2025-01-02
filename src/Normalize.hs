@@ -167,7 +167,7 @@ data NormalizedPicture
   | Blank
   | Polygon !ShapeKind [AbsPoint]
   | ClosedCurve !ShapeKind [AbsPoint]
-  | Polyline [AbsPoint] !Thickness
+  | Polyline !Thickness [AbsPoint]
   | Curve !ShapeKind [AbsPoint]
   | Arc !ShapeKind !Angle !Angle !Size
   | Reflect !Angle !NormalizedPicture
@@ -245,14 +245,20 @@ instance Drawable NormalizedPicture where
     | otherwise = Arc (Hollow $ thickness t) (toAngle a1) (toAngle a2) (toSize r)
 
   curve = handlePointList $ Curve $ Hollow Normal
-
   thickCurve t = handlePointList $ Curve $ Hollow $ thickness t
 
   closedCurve = handlePointList $ ClosedCurve $ Hollow Normal
-
   solidClosedCurve = handlePointList $ ClosedCurve Solid
-
   thickClosedCurve t = handlePointList $ ClosedCurve $ Hollow $ thickness t
+
+  -- Further rules needed starts here
+  polyline = handlePointList $ Polyline Normal
+  thickPolyline t = handlePointList $ Polyline $ thickness t
+
+  polygon = handlePointList $ Polygon $ Hollow Normal
+  solidPolygon = handlePointList $ Polygon Solid
+  thickPolygon t = handlePointList $ Polygon $ Hollow $ thickness t
+  -- Further rules needed ends here
 
   lettering "" = blank
   lettering t  = Lettering t

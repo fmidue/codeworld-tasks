@@ -84,12 +84,12 @@ toReify = map $ second toReifyPic
       SolidCircleNode r -> SolidCircle r
       PolygonNode ps -> Polygon ps
       SolidPolygonNode ps -> SolidPolygon ps
-      ThickPolygonNode ps t -> ThickPolygon ps t
+      ThickPolygonNode t ps -> ThickPolygon t ps
       ClosedCurveNode ps -> ClosedCurve ps
       SolidClosedCurveNode ps -> SolidClosedCurve ps
       ThickClosedCurveNode t ps -> ThickClosedCurve t ps
       PolylineNode ps -> Polyline ps
-      ThickPolylineNode ps t -> ThickPolyline ps t
+      ThickPolylineNode t ps -> ThickPolyline t ps
       CurveNode ps -> Curve ps
       ThickCurveNode t ps -> ThickCurve t ps
       SectorNode a1 a2 r -> Sector a1 a2 r
