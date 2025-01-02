@@ -47,6 +47,7 @@ data ReifyPicture a
   | Pictures [a]
   | And a a
   | CoordinatePlane
+  | Logo
   | Blank
   deriving (Show, Foldable, Eq, Ord)
 
@@ -81,9 +82,12 @@ instance Drawable (PRec a) where
   scaled x y           = PRec . Scale x y
   dilated a            = PRec . Dilate a
   rotated a            = PRec . Rotate a
+  reflected a          = PRec . Reflect a
+  clipped x y          = PRec . Clip x y
   pictures             = PRec . Pictures
   a & b                = PRec $ And a b
   coordinatePlane      = PRec CoordinatePlane
+  codeWorldLogo        = PRec Logo
   blank                = PRec Blank
 
 
@@ -126,6 +130,7 @@ changeBaseType p = case p of
   Arc a1 a2 r           -> Arc a1 a2 r
   ThickArc t a1 a2 r    -> ThickArc t a1 a2 r
   CoordinatePlane       -> CoordinatePlane
+  Logo                  -> Logo
   Blank                 -> Blank
   _                     -> error "This is a recursive Constructor. You're missing a pattern match!"
 

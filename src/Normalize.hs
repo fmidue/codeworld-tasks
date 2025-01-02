@@ -164,6 +164,7 @@ data NormalizedPicture
   | Rotate !Angle !NormalizedPicture
   | Pictures [NormalizedPicture]
   | CoordinatePlane
+  | Logo
   | Blank
   | Polygon !ShapeKind [AbsPoint]
   | ClosedCurve !ShapeKind [AbsPoint]
@@ -201,6 +202,7 @@ instance Drawable NormalizedPicture where
   blank = Blank
 
   coordinatePlane = CoordinatePlane
+  codeWorldLogo = Logo
 
   circle 0 = blank
   circle r = Circle (Hollow Normal) $ toSize r
@@ -306,7 +308,9 @@ instance Drawable NormalizedPicture where
     Pictures ps     -> Pictures $ map (rotated a) ps
     q               -> Rotate (toAngle a) q
 
-
+  -- Rules needed here aswell
+  reflected a = Reflect $ toAngle a
+  clipped x y = Clip (toSize x) (toSize y)
 
 
 handlePointList :: Drawable a => ([AbsPoint] -> a) -> [Point] -> a

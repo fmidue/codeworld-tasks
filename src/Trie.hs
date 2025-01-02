@@ -42,6 +42,7 @@ instance Drawable Graph where
 
   blank                = processSimple BlankNode
   coordinatePlane      = processSimple CoordinatePlaneNode
+  codeWorldLogo        = processSimple LogoNode
   rectangle x          = processSimple . RectangleNode x
   solidRectangle x     = processSimple . SolidRectangleNode x
   thickRectangle t x   = processSimple . ThickRectangleNode t x
@@ -69,6 +70,8 @@ instance Drawable Graph where
   dilated d      = processOneGraph $ DilateNode d
   scaled x y     = processOneGraph $ ScaleNode x y
   rotated a      = processOneGraph $ RotateNode a
+  reflected a    = processOneGraph $ ReflectNode a
+  clipped x y    = processOneGraph $ ClipNode x y
 
   pictures ps = Graph sT sAST
     where
@@ -136,16 +139,33 @@ buildStringAST node args = opString <> argsString
       CircleNode r -> "circle " <> toBS r
       ThickCircleNode t r -> "thickCircle " <> toBS t <> " " <> toBS r
       SolidCircleNode r -> "solidCircle " <> toBS r
+      CurveNode ps -> "curve " <> toBS ps
+      ThickCurveNode t ps -> "thickCurve " <> toBS t <> " " <> toBS ps
+      ClosedCurveNode ps -> "closedCurve " <> toBS ps
+      ThickClosedCurveNode t ps -> "thickClosedCurve " <> toBS t <> " " <> toBS ps
+      SolidClosedCurveNode ps -> "solidClosedCurve " <> toBS ps
+      ArcNode a1 a2 r -> "arc " <> toBS a1 <> " " <> toBS a2 <> " " <> toBS r
+      ThickArcNode t a1 a2 r -> "thickArc " <> toBS t <> " " <> toBS a1 <> " " <> toBS a2 <> " " <> toBS r
+      SectorNode a1 a2 r -> "sector " <> toBS a1 <> " " <> toBS a2 <> " " <> toBS r
+      PolylineNode ps -> "polyline " <> toBS ps
+      ThickPolylineNode t ps -> "thickPolyline " <> toBS t <> " " <> toBS ps
+      PolygonNode ps -> "polygon " <> toBS ps
+      ThickPolygonNode t ps -> "polygon " <> toBS t <> " " <> toBS ps
+      SolidPolygonNode ps -> "solidPolygon " <> toBS ps
       LetteringNode t -> "lettering " <> encodeUtf8 t
+      StyledLetteringNode ts f t -> "styledLettering " <> toBS ts <> " " <> toBS f <> " " <> encodeUtf8 t
       ColorNode c _ -> "color " <> toBS c
       TranslateNode x y _ -> "translated " <> toBS x <> " " <> toBS y
       ScaleNode x y _ -> "scaled " <> toBS x <> " " <> toBS y
       DilateNode d _ -> "dilated " <> toBS d
       RotateNode a _ -> "rotated " <> toBS a
+      ReflectNode a _ -> "reflected " <> toBS a
+      ClipNode x y _ -> "clipped " <> toBS x <> " " <> toBS y
       PicturesNode _ -> "pictures"
       AndNode _ _ -> "(&)"
       CoordinatePlaneNode -> "coordinatePlane"
-      _ -> "blank"
+      LogoNode -> "codeWorldLogo"
+      BlankNode -> "blank"
     argsString = case args of
       [] -> ""
       _  -> " (" <> BS.concat (intersperse ") (" args) <> ")"

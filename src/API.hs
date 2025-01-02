@@ -36,7 +36,10 @@ class Drawable a where
   dilated :: Double -> a -> a
   scaled :: Double -> Double -> a -> a
   rotated :: Double -> a -> a
+  reflected :: Double -> a -> a
+  clipped :: Double -> Double -> a -> a
   pictures :: [a] -> a
   (&) :: a -> a -> a
   coordinatePlane :: a
+  codeWorldLogo :: a
   blank :: a

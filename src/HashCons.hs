@@ -45,6 +45,7 @@ data Node
   | PicturesNode [NodeId]
   | AndNode NodeId NodeId
   | CoordinatePlaneNode
+  | LogoNode
   | BlankNode
   deriving (Eq,Ord,Show)
 
@@ -56,6 +57,7 @@ type BiMap a = [(NodeId,a)]
 
 instance Drawable Runner where
   coordinatePlane      = toRunnerSimple CoordinatePlaneNode
+  codeWorldLogo        = toRunnerSimple LogoNode
   blank                = toRunnerSimple BlankNode
   rectangle x          = toRunnerSimple . RectangleNode x
   thickRectangle t x   = toRunnerSimple . ThickRectangleNode t x
@@ -84,6 +86,8 @@ instance Drawable Runner where
   scaled x y     = toRunnerSingle $ ScaleNode x y
   dilated d      = toRunnerSingle $ DilateNode d
   rotated a      = toRunnerSingle $ RotateNode a
+  reflected a    = toRunnerSingle $ ReflectNode a
+  clipped x y    = toRunnerSingle $ ClipNode x y
 
   pictures ps = Runner $ do
     hs <- mapM unRunner ps

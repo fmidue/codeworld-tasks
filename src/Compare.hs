@@ -60,6 +60,7 @@ printOriginal term subTerms = sub term
 hasArguments :: ReifyPicture a -> Bool
 hasArguments Blank           = False
 hasArguments CoordinatePlane = False
+hasArguments Logo            = False
 hasArguments _               = True
 
 
@@ -107,4 +108,5 @@ toReify = map $ second toReifyPic
       PicturesNode ps -> Pictures ps
       AndNode p1 p2 -> And p1 p2
       CoordinatePlaneNode -> CoordinatePlane
+      LogoNode -> Logo
       BlankNode -> Blank
