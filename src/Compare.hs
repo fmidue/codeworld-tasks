@@ -17,10 +17,10 @@ import Reify                            (ReifyPicture(..), share)
 
 runShare :: (forall a . Drawable a => a) -> IO ([(IM.Key, ReifyPicture Int)], [(IM.Key, ReifyPicture Int)])
 runShare a = do
-  (reify,reifyTerm) <- share a
-  let (hCons,_) = hashconsShare a
+  (reify,reifyTerms) <- share a
+  let (hCons,consTerms) = hashconsShare a
   let (explicitShares,allShares) = relabel (IM.toList reify) hCons
-  let allTerms = IM.toList reifyTerm
+  let allTerms = toReify consTerms ++ IM.toList reifyTerms
   if explicitShares == allShares
     then
       putStrLn "You shared everything, good job!"
