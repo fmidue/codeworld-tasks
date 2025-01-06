@@ -10,7 +10,7 @@ import Data.Text                        (Text)
 
 type NodeId = Int
 type Point = (Double,Double)
-
+type Vector = (Double,Double)
 
 data TextStyle
   = Plain

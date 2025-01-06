@@ -7,11 +7,12 @@ module Normalize (
 
 
 import Data.Containers.ListUtils        (nubOrd)
-import Data.List                        (sort)
+import Data.List.Extra                  (sort, takeEnd)
+import Data.Maybe                       (fromMaybe)
 import Data.Text                        (Text)
 
 import API                              (Drawable(..))
-import Types                            (Color(..), Point)
+import Types                            (Color(..), Point, Vector)
 
 
 newtype Size = Size Double deriving (Ord)
@@ -244,20 +245,31 @@ instance Drawable NormalizedPicture where
     | abs (a1 - a2) >= 2*pi = thickCircle t r
     | otherwise = Arc (Hollow $ thickness t) (toAngle a1) (toAngle a2) (toSize r)
 
-  curve = handlePointList False $ Curve $ Hollow Normal
-  thickCurve t = handlePointList False $ Curve $ Hollow $ thickness t
+  curve            = handlePointList $ Curve $ Hollow Normal
+  thickCurve t     = handlePointList $ Curve $ Hollow $ thickness t
+  solidClosedCurve = handlePointList (Curve Solid) . toOpenShape
 
-  closedCurve = handlePointList True $ Curve $ Hollow Normal
-  solidClosedCurve = handlePointList True $ Curve Solid
-  thickClosedCurve t = handlePointList True $ Curve $ Hollow $ thickness t
+  closedCurve        = curve . toOpenShape
+  thickClosedCurve t = thickCurve t . toOpenShape
 
   -- Further rules needed starts here
-  polyline = handlePointList False $ Polyline $ Hollow Normal
-  thickPolyline t = handlePointList False $ Polyline $ Hollow $ thickness t
+  polyline ps = let shape = Hollow Normal in
+    case pointsToRectangle shape ps of
+      Nothing -> handlePointList (Polyline shape) ps
+      Just r  -> r
 
-  polygon = handlePointList True $ Polyline $ Hollow Normal
-  solidPolygon = handlePointList True $ Polyline Solid
-  thickPolygon t = handlePointList True $ Polyline $ Hollow $ thickness t
+  thickPolyline t ps = let shape = Hollow $ thickness t in
+    case pointsToRectangle shape ps of
+      Nothing -> handlePointList (Polyline shape) ps
+      Just r  -> r
+
+  solidPolygon ps =
+    case pointsToRectangle Solid ps of
+      Nothing -> handlePointList (Polyline Solid) (toOpenShape ps)
+      Just r  -> r
+
+  polygon        = polyline . toOpenShape
+  thickPolygon t = thickPolyline t . toOpenShape
   -- Further rules needed ends here
 
   lettering "" = blank
@@ -311,12 +323,16 @@ instance Drawable NormalizedPicture where
   clipped x y = Clip (toSize x) (toSize y)
 
 
-handlePointList :: Drawable a => Bool -> ([AbsPoint] -> a) -> [Point] -> a
-handlePointList isClosed f ps
-    | length (removeDupes ps) < 2 = blank
-    | otherwise = f $ map toAbstractPoint $ removeDupes $ ps ++ endPoint
+handlePointList :: Drawable a => ([AbsPoint] -> a) -> [Point] -> a
+handlePointList f ps
+    | length noRepeats < 2 = blank
+    | otherwise = f $ map toAbstractPoint noRepeats
   where
-    endPoint = if isClosed then take 1 ps else []
+    noRepeats = removeDupes ps
+
+
+toOpenShape :: [Point] -> [Point]
+toOpenShape ps = ps ++ take 1 ps
 
 
 removeDupes :: Eq a => [a] -> [a]
@@ -383,6 +399,104 @@ internallyEqual (Pos a) (Pos b) = a==b
 internallyEqual (Neg a) (Neg b) = a==b
 internallyEqual Zero Zero = True
 internallyEqual _ _ = False
+
+
+isRectangle :: [Point] -> Bool
+isRectangle ps
+    | hasFour && endIsStart = allOrthogonal unique
+    | otherwise = False
+  where
+    unique = nubOrd ps
+    hasFour = length unique == 4
+    endIsStart = take 1 ps == takeEnd 1 ps
+
+
+getVector :: Point -> Point -> Vector
+getVector (x1,y1) (x2,y2) = (x2-x1,y2-y1)
+
+
+isOrthogonal :: Vector -> Vector -> Bool
+isOrthogonal p = (==0) . dotProduct p
+
+
+dotProduct :: Vector -> Vector -> Double
+dotProduct (x1,y1) (x2,y2) = x1*x2 + y1*y2
+
+allOrthogonal :: [Point] -> Bool
+allOrthogonal (p1:p2:p3:xs) = isOrthogonal (getVector p1 p2) (getVector p2 p3) && allOrthogonal (p2:p3:xs)
+allOrthogonal _ = True
+
+
+sideLengths :: [Point] -> (Double,Double)
+sideLengths (p1:p2:p3:_) = (vectorLen (getVector p1 p2), vectorLen(getVector p2 p3))
+sideLengths _ = (0,0)
+
+
+vectorLen :: Vector -> Double
+vectorLen (x,y) = sqrt $ x*x + y*y
+
+
+rotatePoint :: Double -> Point -> Point
+rotatePoint angle (x, y) = (x * cos angle - y * sin angle, x * sin angle + y * cos angle)
+
+
+wasRotatedBy :: [Point] -> Maybe Double
+wasRotatedBy (p1:p2:_) = angleToAxes (getVector p1 p2)
+wasRotatedBy _ = Nothing
+
+
+angleToAxes :: Vector -> Maybe Double
+angleToAxes v
+  | dotProd == 0 = Nothing
+  | angle == pi = Nothing
+  | otherwise = Just angle
+  where
+    dotProd = dotProduct v (0,1)
+    angle = acos $ dotProd / vectorLen v
+
+
+rotationAngle :: [Point] -> Double
+rotationAngle ps = fromMaybe 0 $ wasRotatedBy ps
+
+
+pointsToRectangle :: ShapeKind -> [Point] -> Maybe NormalizedPicture
+pointsToRectangle shapeKind ps
+  | isRectangle ps = Just $ translated x y $ rotated angle $ shapeToUse xLen yLen
+  | otherwise = Nothing
+  where
+    (xLen,yLen) = sideLengths ps
+    angle = rotationAngle atOriginPs
+    (atOriginPs,(x,y)) = toOrigin ps
+    shapeToUse = case shapeKind of
+      Hollow Normal -> rectangle
+      Hollow Thick  -> thickRectangle 1
+      Solid         -> solidRectangle
+
+
+toOrigin :: [Point] -> ([Point],Point)
+toOrigin [] = ([],(0,0))
+toOrigin ps = (map (`subPoints` middlePoint) ps, middlePoint)
+  where
+    middlePoint = mean ps
+
+
+mean :: [Point] -> Point
+mean [] = (0,0)
+mean ps = scalePoint (1/fromIntegral (length ps)) pointSum
+  where
+    pointSum = foldr addPoints (0,0) ps
+
+
+scalePoint :: Double -> Point -> Point
+scalePoint fac (x,y) = (x*fac,y*fac)
+
+
+subPoints :: Point -> Point -> Point
+subPoints (x1,y1) (x2,y2) = (x1-x2,y1-y2)
+
+
+addPoints :: Point -> Point -> Point
+addPoints (x1,y1) (x2,y2) = (x1+x2,y1+y2)
 
 
 southOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
