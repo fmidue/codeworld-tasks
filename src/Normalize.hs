@@ -166,9 +166,7 @@ data NormalizedPicture
   | CoordinatePlane
   | Logo
   | Blank
-  | Polygon !ShapeKind [AbsPoint]
-  | ClosedCurve !ShapeKind [AbsPoint]
-  | Polyline !Thickness [AbsPoint]
+  | Polyline !ShapeKind [AbsPoint]
   | Curve !ShapeKind [AbsPoint]
   | Arc !ShapeKind !Angle !Angle !Size
   | Reflect !Angle !NormalizedPicture
@@ -246,20 +244,20 @@ instance Drawable NormalizedPicture where
     | abs (a1 - a2) >= 2*pi = thickCircle t r
     | otherwise = Arc (Hollow $ thickness t) (toAngle a1) (toAngle a2) (toSize r)
 
-  curve = handlePointList $ Curve $ Hollow Normal
-  thickCurve t = handlePointList $ Curve $ Hollow $ thickness t
+  curve = handlePointList False $ Curve $ Hollow Normal
+  thickCurve t = handlePointList False $ Curve $ Hollow $ thickness t
 
-  closedCurve = handlePointList $ ClosedCurve $ Hollow Normal
-  solidClosedCurve = handlePointList $ ClosedCurve Solid
-  thickClosedCurve t = handlePointList $ ClosedCurve $ Hollow $ thickness t
+  closedCurve = handlePointList True $ Curve $ Hollow Normal
+  solidClosedCurve = handlePointList True $ Curve Solid
+  thickClosedCurve t = handlePointList True $ Curve $ Hollow $ thickness t
 
   -- Further rules needed starts here
-  polyline = handlePointList $ Polyline Normal
-  thickPolyline t = handlePointList $ Polyline $ thickness t
+  polyline = handlePointList False $ Polyline $ Hollow Normal
+  thickPolyline t = handlePointList False $ Polyline $ Hollow $ thickness t
 
-  polygon = handlePointList $ Polygon $ Hollow Normal
-  solidPolygon = handlePointList $ Polygon Solid
-  thickPolygon t = handlePointList $ Polygon $ Hollow $ thickness t
+  polygon = handlePointList True $ Polyline $ Hollow Normal
+  solidPolygon = handlePointList True $ Polyline Solid
+  thickPolygon t = handlePointList True $ Polyline $ Hollow $ thickness t
   -- Further rules needed ends here
 
   lettering "" = blank
@@ -313,12 +311,20 @@ instance Drawable NormalizedPicture where
   clipped x y = Clip (toSize x) (toSize y)
 
 
-handlePointList :: Drawable a => ([AbsPoint] -> a) -> [Point] -> a
-handlePointList f ps
-    | length reduced < 2 = blank
-    | otherwise = f $ map toAbstractPoint reduced
+handlePointList :: Drawable a => Bool -> ([AbsPoint] -> a) -> [Point] -> a
+handlePointList isClosed f ps
+    | length (removeDupes ps) < 2 = blank
+    | otherwise = f $ map toAbstractPoint $ removeDupes $ ps ++ endPoint
   where
-    reduced = sort $ nubOrd ps
+    endPoint = if isClosed then take 1 ps else []
+
+
+removeDupes :: Eq a => [a] -> [a]
+removeDupes (x:y:xs)
+  | x == y    =      rec
+  | otherwise =  x : rec
+  where rec = removeDupes (y:xs)
+removeDupes xs = xs
 
 
 modTwoPi :: Double -> Double
