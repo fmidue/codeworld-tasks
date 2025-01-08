@@ -21,13 +21,18 @@ module Normalize (
   ) where
 
 
-import Data.Containers.ListUtils        (nubOrd)
-import Data.List.Extra                  (sort, takeEnd)
-import Data.Maybe                       (fromMaybe)
+import Data.List.Extra                  (sort)
 import Data.Text                        (Text)
 
 import API                              (Drawable(..))
-import Types                            (Color(..), Point, Vector)
+import Types                            (Color(..), Point)
+import VectorSpace (
+  atOriginWithOffset,
+  isRectangle,
+  sideLengths,
+  rotationAngle,
+  )
+
 
 
 newtype Size = Size Double deriving (Ord)
@@ -386,98 +391,18 @@ toAbstractPoint :: Point -> AbsPoint
 toAbstractPoint (x,y) = (toPosition x, toPosition y)
 
 
-isRectangle :: [Point] -> Bool
-isRectangle ps
-    | hasFour && endIsStart = allOrthogonal unique
-    | otherwise = False
-  where
-    unique = nubOrd ps
-    hasFour = length unique == 4
-    endIsStart = take 1 ps == takeEnd 1 ps
-
-
-getVector :: Point -> Point -> Vector
-getVector (x1,y1) (x2,y2) = (x2-x1,y2-y1)
-
-
-isOrthogonal :: Vector -> Vector -> Bool
-isOrthogonal p = (==0) . dotProduct p
-
-
-dotProduct :: Vector -> Vector -> Double
-dotProduct (x1,y1) (x2,y2) = x1*x2 + y1*y2
-
-allOrthogonal :: [Point] -> Bool
-allOrthogonal (p1:p2:p3:xs) = isOrthogonal (getVector p1 p2) (getVector p2 p3) && allOrthogonal (p2:p3:xs)
-allOrthogonal _ = True
-
-
-sideLengths :: [Point] -> (Double,Double)
-sideLengths (p1:p2:p3:_) = (vectorLen (getVector p1 p2), vectorLen(getVector p2 p3))
-sideLengths _ = (0,0)
-
-
-vectorLen :: Vector -> Double
-vectorLen (x,y) = sqrt $ x*x + y*y
-
-
-wasRotatedBy :: [Point] -> Maybe Double
-wasRotatedBy (p1:p2:_) = angleToAxes (getVector p1 p2)
-wasRotatedBy _ = Nothing
-
-
-angleToAxes :: Vector -> Maybe Double
-angleToAxes v
-  | dotProd == 0 = Nothing
-  | angle == pi = Nothing
-  | otherwise = Just angle
-  where
-    dotProd = dotProduct v (0,1)
-    angle = acos $ dotProd / vectorLen v
-
-
-rotationAngle :: [Point] -> Double
-rotationAngle ps = fromMaybe 0 $ wasRotatedBy ps
-
-
 pointsToRectangle :: ShapeKind -> [Point] -> Maybe NormalizedPicture
 pointsToRectangle shapeKind ps
   | isRectangle ps = Just $ translated x y $ rotated angle $ shapeToUse xLen yLen
   | otherwise = Nothing
   where
     (xLen,yLen) = sideLengths ps
-    angle = rotationAngle atOriginPs
-    (atOriginPs,(x,y)) = toOrigin ps
+    angle = rotationAngle originPs
+    (originPs,(x,y)) = atOriginWithOffset ps
     shapeToUse = case shapeKind of
       Hollow Normal -> rectangle
       Hollow Thick  -> thickRectangle 1
       Solid         -> solidRectangle
-
-
-toOrigin :: [Point] -> ([Point],Point)
-toOrigin [] = ([],(0,0))
-toOrigin ps = (map (`subPoints` middlePoint) ps, middlePoint)
-  where
-    middlePoint = mean ps
-
-
-mean :: [Point] -> Point
-mean [] = (0,0)
-mean ps = scalePoint (1/fromIntegral (length ps)) pointSum
-  where
-    pointSum = foldr addPoints (0,0) ps
-
-
-scalePoint :: Double -> Point -> Point
-scalePoint fac (x,y) = (x*fac,y*fac)
-
-
-subPoints :: Point -> Point -> Point
-subPoints (x1,y1) (x2,y2) = (x1-x2,y1-y2)
-
-
-addPoints :: Point -> Point -> Point
-addPoints (x1,y1) (x2,y2) = (x1+x2,y1+y2)
 
 
 southOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
