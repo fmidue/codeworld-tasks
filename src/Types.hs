@@ -34,3 +34,9 @@ data Color
   | Green
   | Red
   deriving (Eq,Ord,Show)
+
+
+green, red, yellow :: Color
+yellow = Yellow
+green  = Green
+red    = Red
