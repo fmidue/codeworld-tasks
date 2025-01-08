@@ -8,8 +8,9 @@ module Normalize (
   ) where
 
 
-import Data.List.Extra                  (sort)
+import Data.List.Extra                  (sort, takeEnd)
 import Data.Text                        (Text)
+import Data.Tuple.Extra                 (both)
 
 import API                              (Drawable(..))
 import Types                            (Color, Point)
@@ -190,6 +191,15 @@ instance Drawable NormalizedPicture where
 
   Blank & p = p
   p & Blank = p
+  Polyline (Hollow Normal) ps1 & Polyline (Hollow Thick) ps2 = Polyline (Hollow Thick) ps2 & Polyline (Hollow Normal) ps1
+  Polyline (Hollow t) ps1 & Polyline Solid ps2 = Polyline Solid ps2 & Polyline (Hollow t) ps1
+  Curve (Hollow Normal) ps1 & Curve (Hollow Thick) ps2 = Curve (Hollow Thick) ps2 & Curve (Hollow Normal) ps1
+  Curve (Hollow t) ps1 & Curve Solid ps2 = Curve Solid ps2 & Curve (Hollow t) ps1
+  Polyline sp psp & Curve sc psc = Curve sc psc & Polyline sp psp
+  Polyline s1 ps1 & Polyline s2 ps2 = handleFreeShape Polyline s1 s2 ps1 ps2
+  Curve    s1 ps1 & Curve    s2 ps2 = handleFreeShape Curve    s1 s2 ps1 ps2
+  p & Polyline s ps = Polyline s ps & p
+  p & Curve s ps = Curve s ps & p
   p1 & p2 = Pictures $ ps1 ++ ps2
     where
       ps1 = case p1 of
@@ -392,6 +402,19 @@ pointsToRectangle shapeKind ps
       Solid         -> solidRectangle
 
 
+handleFreeShape
+  :: (ShapeKind -> [AbsPoint] -> NormalizedPicture)
+  -> ShapeKind
+  -> ShapeKind
+  -> [AbsPoint]
+  -> [AbsPoint]
+  -> NormalizedPicture
+handleFreeShape f s1 s2 ps1 ps2
+  | toPoint (takeEnd 1 ps1) == toPoint (take 1 ps2) && s1 == s2 = f s1 $ ps1 ++ drop 1 ps2
+  | otherwise = Pictures [f s1 ps1, f s2 ps2]
+  where toPoint = map concretePoint
+
+
 southOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
 southOf p1 = Is p1 (Direction (Just South) Nothing)
 
@@ -431,6 +454,9 @@ northeastOf = flip southwestOf
 toSize :: Double -> Size
 toSize = Size
 
+
+concretePoint :: AbsPoint -> Point
+concretePoint = both getExactPos
 
 toRelative :: NormalizedPicture -> [RelativePicSpec]
 toRelative p = case p of
