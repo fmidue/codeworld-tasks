@@ -2,7 +2,22 @@
 {-# language OverloadedStrings #-}
 
 module Normalize (
-  module Normalize
+  NormalizedPicture(..),
+
+  (===),
+  toRelative,
+
+  red,
+  yellow,
+  green,
+
+  sampleSolution,
+  example1,
+  example2,
+  example3,
+  example4,
+  example5,
+  threeCircles,
   ) where
 
 
@@ -132,12 +147,6 @@ instance Num Moved where
     | i == 0 = Zero
     | i < 0 = Neg $ fromIntegral i
     | otherwise = Pos $ fromIntegral i
-
-
-halve :: Moved -> Moved
-halve Zero = Zero
-halve (Pos a) = Pos $ a/2
-halve (Neg a) = Neg $ a/2
 
 
 instance Eq Angle where
@@ -343,13 +352,6 @@ removeDupes (x:y:xs)
 removeDupes xs = xs
 
 
-modTwoPi :: Double -> Double
-modTwoPi d
-  | d == 0 || d == 2*pi = 0
-  | d < 2*pi = d
-  | otherwise = modTwoPi (d-2*pi)
-
-
 toAngle :: Double -> Angle
 toAngle a
   | a < 0 = toAngle (a+2*pi)
@@ -358,10 +360,6 @@ toAngle a
   | a <= 3*pi/2 = ToThreeQuarter a
   | a < 2*pi = ToFull a
   | otherwise = toAngle (a-2*pi)
-
-
-addToAngle :: Double -> Angle -> Angle
-addToAngle d a = toAngle $ d + getExactAngle a
 
 
 getExactAngle :: Angle -> Double
@@ -386,19 +384,6 @@ toPosition d
 
 toAbstractPoint :: Point -> AbsPoint
 toAbstractPoint (x,y) = (toPosition x, toPosition y)
-
-middle :: Moved -> Moved -> Moved
-middle Zero a = halve a
-middle a Zero = halve a
-middle a b = let dist = abs $ a-b
-  in a - (signum a *halve dist)
-
-
-internallyEqual :: Moved -> Moved -> Bool
-internallyEqual (Pos a) (Pos b) = a==b
-internallyEqual (Neg a) (Neg b) = a==b
-internallyEqual Zero Zero = True
-internallyEqual _ _ = False
 
 
 isRectangle :: [Point] -> Bool
@@ -434,10 +419,6 @@ sideLengths _ = (0,0)
 
 vectorLen :: Vector -> Double
 vectorLen (x,y) = sqrt $ x*x + y*y
-
-
-rotatePoint :: Double -> Point -> Point
-rotatePoint angle (x, y) = (x * cos angle - y * sin angle, x * sin angle + y * cos angle)
 
 
 wasRotatedBy :: [Point] -> Maybe Double
