@@ -195,7 +195,7 @@ instance Drawable NormalizedPicture where
   Polyline (Hollow t) ps1 & Polyline Solid ps2 = Polyline Solid ps2 & Polyline (Hollow t) ps1
   Curve (Hollow Normal) ps1 & Curve (Hollow Thick) ps2 = Curve (Hollow Thick) ps2 & Curve (Hollow Normal) ps1
   Curve (Hollow t) ps1 & Curve Solid ps2 = Curve Solid ps2 & Curve (Hollow t) ps1
-  Polyline sp psp & Curve sc psc = Curve sc psc & Polyline sp psp
+  Polyline sp ps1 & Curve sc ps2 = Curve sc ps2 & Polyline sp ps1
   Polyline s1 ps1 & Polyline s2 ps2 = handleFreeShape Polyline s1 s2 ps1 ps2
   Curve    s1 ps1 & Curve    s2 ps2 = handleFreeShape Curve    s1 s2 ps1 ps2
   p & Polyline s ps = Polyline s ps & p
