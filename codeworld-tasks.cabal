@@ -30,6 +30,7 @@ library
       Reify
       Trie
       Types
+      VectorSpace
   other-modules:
       Paths_codeworld_tasks
   autogen-modules:
