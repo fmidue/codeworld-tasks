@@ -1,7 +1,10 @@
 {-# language DeriveTraversable #-}
 {-# language TypeFamilies #-}
 
-module Reify (module Reify) where
+module Reify (
+  ReifyPicture(..),
+  share,
+  ) where
 
 
 import Data.Foldable                    (toList)
@@ -147,7 +150,3 @@ share d = do
 
 mapInsertWith :: [Key] -> IntMap Int -> IntMap Int
 mapInsertWith b m = Prelude.foldr (\x acc-> IM.insertWith (+) x (1 :: Int) acc) m b
-
-
-test :: Drawable a => a
-test = let r = rectangle 2 3 in r & r

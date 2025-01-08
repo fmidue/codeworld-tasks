@@ -7,6 +7,10 @@ module Examples (
   example4,
   example5,
   threeCircles,
+
+  shareTest1,
+  shareTest2,
+  shareTest3,
 ) where
 
 
@@ -53,3 +57,15 @@ threeCircles :: Drawable a => a
 threeCircles = colored red (solidCircle 1)
              & translated 2 4 (colored green $ solidCircle 1)
              & translated 0 3 (colored yellow $ solidCircle 1)
+
+
+shareTest1 :: Drawable a => a
+shareTest1 = circle 1 & translated 1 2 (circle 1)
+
+
+shareTest2 :: Drawable a => a
+shareTest2 = let c = circle 1 in c & translated 1 2 c
+
+
+shareTest3 :: Drawable a => a
+shareTest3 = let r = rectangle 2 3 in r & r

@@ -12,7 +12,7 @@ import Data.List.Extra                  (sort)
 import Data.Text                        (Text)
 
 import API                              (Drawable(..))
-import Types                            (Color(..), Point)
+import Types                            (Color, Point)
 import VectorSpace (
   atOriginWithOffset,
   isRectangle,

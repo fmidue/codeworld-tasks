@@ -1,7 +1,13 @@
 {-# language MultiParamTypeClasses#-}
 {-# language FlexibleContexts #-}
 
-module HashCons (module HashCons) where
+module HashCons (
+  Node(..),
+  NodeId,
+  BiMap,
+  getNodes,
+  hashconsShare,
+) where
 
 
 import Control.Monad.State              (State, get, put, runState)
@@ -9,9 +15,11 @@ import Data.List                        (elemIndex)
 import Data.Text                        (Text)
 
 import API                              (Drawable(..))
-import Types                            (Color, Font, NodeId, Point, TextStyle)
+import Types                            (Color, Font, Point, TextStyle)
 
 
+
+type NodeId = Int
 
 data Node
   = RectangleNode Double Double
@@ -161,11 +169,3 @@ getNodes n = case n of
   PicturesNode is     -> is
   AndNode i1 i2       -> [i1,i2]
   _                   -> []
-
-
-test1 :: Drawable a => a
-test1 = circle 1 & translated 1 2 (circle 1)
-
-
-test2 :: Drawable a => a
-test2 = let c = circle 1 in c & translated 1 2 c

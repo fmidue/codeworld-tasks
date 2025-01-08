@@ -1,6 +1,8 @@
 {-# language RankNTypes #-}
 
-module Compare (module Compare) where
+module Compare (
+  runShare,
+) where
 
 
 import Data.Char                        (toLower)

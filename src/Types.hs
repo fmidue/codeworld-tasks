@@ -1,6 +1,15 @@
 
 module Types (
-  module Types
+  Point,
+  Vector,
+
+  Color,
+  TextStyle,
+  Font,
+
+  red,
+  green,
+  yellow,
   ) where
 
 
@@ -8,7 +17,7 @@ import Data.Text                        (Text)
 
 
 
-type NodeId = Int
+--type NodeId = Int
 type Point = (Double,Double)
 type Vector = (Double,Double)
 
