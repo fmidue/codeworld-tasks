@@ -1,4 +1,8 @@
 module VectorSpace (
+  addVectors,
+  scaleVector,
+  scaleVector2,
+  rotateVector,
   sideLengths,
   rotationAngle,
   isRectangle,
@@ -32,6 +36,14 @@ vectorLen (x,y) = sqrt $ x*x + y*y
 
 scaleVector :: Double -> Vector -> Vector
 scaleVector fac (x,y) = (x*fac,y*fac)
+
+
+scaleVector2 :: Double -> Double -> Vector -> Vector
+scaleVector2 xFac yFac (x,y) = (x*xFac,y*yFac)
+
+
+rotateVector :: Double -> Vector -> Vector
+rotateVector angle (x,y) = (x * cos angle - y * sin angle, x * sin angle + y * cos angle)
 
 
 subVectors :: Vector -> Vector -> Vector

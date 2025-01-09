@@ -15,10 +15,13 @@ import Data.Tuple.Extra                 (both)
 import API                              (Drawable(..))
 import Types                            (Color, Point)
 import VectorSpace (
+  addVectors,
   atOriginWithOffset,
   isRectangle,
-  sideLengths,
+  rotateVector,
   rotationAngle,
+  scaleVector2,
+  sideLengths, rotateVector,
   )
 
 
@@ -263,12 +266,14 @@ instance Drawable NormalizedPicture where
   styledLettering _ _ "" = blank
   styledLettering _ _ t = Lettering t
 
-  -- TODO: translate/scale/rotate free shapes
+  -- TODO: reflect (and clip?) free shapes
   translated 0 0 p = p
   translated x y p = case p of
     Translate a b q -> translated (x + getExactPos a) (y + getExactPos b) q
     Pictures ps     -> Pictures $ map (translated x y) ps
     Blank           -> Blank
+    Polyline s ps   -> Polyline s $ map (applyToAbsPoint (addVectors (x,y))) ps
+    Curve s ps      -> Curve    s $ map (applyToAbsPoint (addVectors (x,y))) ps
     a               -> Translate (toPosition x) (toPosition y) a
 
   colored c p = case p of
@@ -292,6 +297,8 @@ instance Drawable NormalizedPicture where
                          $ scaled fac1 fac2 q
     Blank            -> Blank
     Pictures ps      -> Pictures $ map (scaled fac1 fac2) ps
+    Polyline s ps    -> Polyline s $ map (applyToAbsPoint (scaleVector2 fac1 fac2)) ps
+    Curve s ps       -> Curve    s $ map (applyToAbsPoint (scaleVector2 fac1 fac2)) ps
     a                -> Scale (abs fac1) (abs fac2) a
 
   rotated 0 p = p
@@ -302,6 +309,8 @@ instance Drawable NormalizedPicture where
                         (toPosition $ getExactPos x*sin a + getExactPos y*cos a)
                         $ rotated a q
     Pictures ps     -> Pictures $ map (rotated a) ps
+    Polyline s ps   -> Polyline s $ map (applyToAbsPoint (rotateVector a)) ps
+    Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotateVector a)) ps
     q               -> Rotate (toAngle a) q
 
   -- TODO: Rules needed here
@@ -381,6 +390,11 @@ toPosition d
 
 toAbstractPoint :: Point -> AbsPoint
 toAbstractPoint (x,y) = (toPosition x, toPosition y)
+
+
+
+applyToAbsPoint :: (Point -> Point) -> AbsPoint -> AbsPoint
+applyToAbsPoint f ap = toAbstractPoint $ f (concretePoint ap)
 
 
 pointsToRectangle :: ShapeKind -> [Point] -> Maybe NormalizedPicture
