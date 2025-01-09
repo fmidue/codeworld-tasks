@@ -196,8 +196,8 @@ instance Drawable NormalizedPicture where
   Curve (Hollow Normal) ps1 & Curve (Hollow Thick) ps2 = Curve (Hollow Thick) ps2 & Curve (Hollow Normal) ps1
   Curve (Hollow t) ps1 & Curve Solid ps2 = Curve Solid ps2 & Curve (Hollow t) ps1
   Polyline sp ps1 & Curve sc ps2 = Curve sc ps2 & Polyline sp ps1
-  Polyline s1 ps1 & Polyline s2 ps2 = handleFreeShape Polyline s1 s2 ps1 ps2
-  Curve    s1 ps1 & Curve    s2 ps2 = handleFreeShape Curve    s1 s2 ps1 ps2
+  Polyline s1 ps1 & Polyline s2 ps2 = handleFreeShape True  s1 s2 ps1 ps2
+  Curve    s1 ps1 & Curve    s2 ps2 = handleFreeShape False s1 s2 ps1 ps2
   p & Polyline s ps = Polyline s ps & p
   p & Curve s ps = Curve s ps & p
   p1 & p2 = Pictures $ ps1 ++ ps2
@@ -264,20 +264,9 @@ instance Drawable NormalizedPicture where
   thickClosedCurve t = thickCurve t . toOpenShape
 
   -- Further rules needed starts here
-  polyline ps = let shape = Hollow Normal in
-    case pointsToRectangle shape ps of
-      Nothing -> handlePointList (Polyline shape) ps
-      Just r  -> r
-
-  thickPolyline t ps = let shape = Hollow $ thickness t in
-    case pointsToRectangle shape ps of
-      Nothing -> handlePointList (Polyline shape) ps
-      Just r  -> r
-
-  solidPolygon ps =
-    case pointsToRectangle Solid ps of
-      Nothing -> handlePointList (Polyline Solid) (toOpenShape ps)
-      Just r  -> r
+  polyline        = checkForRectangle $ Hollow Normal
+  thickPolyline t = checkForRectangle $ Hollow $ thickness t
+  solidPolygon    = checkForRectangle Solid . toOpenShape
 
   polygon        = polyline . toOpenShape
   thickPolygon t = thickPolyline t . toOpenShape
@@ -332,6 +321,12 @@ instance Drawable NormalizedPicture where
   -- Rules needed here aswell
   reflected a = Reflect $ toAngle a
   clipped x y = Clip (toSize x) (toSize y)
+
+
+checkForRectangle :: ShapeKind -> [Point] -> NormalizedPicture
+checkForRectangle shape ps = case pointsToRectangle shape ps of
+  Nothing -> handlePointList (Polyline shape) ps
+  Just r  -> r
 
 
 handlePointList :: Drawable a => ([AbsPoint] -> a) -> [Point] -> a
@@ -403,16 +398,32 @@ pointsToRectangle shapeKind ps
 
 
 handleFreeShape
-  :: (ShapeKind -> [AbsPoint] -> NormalizedPicture)
+  :: Bool
   -> ShapeKind
   -> ShapeKind
   -> [AbsPoint]
   -> [AbsPoint]
   -> NormalizedPicture
-handleFreeShape f s1 s2 ps1 ps2
-  | toPoint (takeEnd 1 ps1) == toPoint (take 1 ps2) && s1 == s2 = f s1 $ ps1 ++ drop 1 ps2
-  | otherwise = Pictures [f s1 ps1, f s2 ps2]
-  where toPoint = map concretePoint
+handleFreeShape isPolyline s1 s2 ps1 ps2
+  | toPoint (takeEnd 1 ps1) == toPoint (take 1 ps2)
+    && s1 == s2
+  = func s1 (toPoint $ ps1 ++ drop 1 ps2)
+  | otherwise = pictures [func s1 (toPoint ps1), func s2 (toPoint ps2)]
+    where
+      toPoint = map concretePoint
+      solidCurveHelper = handlePointList $ Curve Solid
+      solidPolylineHelper = checkForRectangle Solid
+
+      func s = case s of
+        (Hollow Normal)
+          | isPolyline -> polyline
+          | otherwise  -> curve
+        (Hollow Thick)
+          | isPolyline -> thickPolyline 1
+          | otherwise  -> thickCurve 1
+        Solid
+          | isPolyline -> solidPolylineHelper
+          | otherwise  -> solidCurveHelper
 
 
 southOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
