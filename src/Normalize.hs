@@ -191,10 +191,14 @@ instance Drawable NormalizedPicture where
 
   Blank & p = p
   p & Blank = p
-  Polyline (Hollow Normal) ps1 & Polyline (Hollow Thick) ps2 = Polyline (Hollow Thick) ps2 & Polyline (Hollow Normal) ps1
-  Polyline (Hollow t) ps1 & Polyline Solid ps2 = Polyline Solid ps2 & Polyline (Hollow t) ps1
-  Curve (Hollow Normal) ps1 & Curve (Hollow Thick) ps2 = Curve (Hollow Thick) ps2 & Curve (Hollow Normal) ps1
-  Curve (Hollow t) ps1 & Curve Solid ps2 = Curve Solid ps2 & Curve (Hollow t) ps1
+  Polyline (Hollow Normal) ps1 & Polyline (Hollow Thick) ps2 =
+    Polyline (Hollow Thick) ps2 & Polyline (Hollow Normal) ps1
+  Polyline (Hollow t) ps1 & Polyline Solid ps2 =
+    Polyline Solid ps2 & Polyline (Hollow t) ps1
+  Curve (Hollow Normal) ps1 & Curve (Hollow Thick) ps2 =
+    Curve (Hollow Thick) ps2 & Curve (Hollow Normal) ps1
+  Curve (Hollow t) ps1 & Curve Solid ps2 =
+    Curve Solid ps2 & Curve (Hollow t) ps1
   Polyline sp ps1 & Curve sc ps2 = Curve sc ps2 & Polyline sp ps1
   Polyline s1 ps1 & Polyline s2 ps2 = handleFreeShape True  s1 s2 ps1 ps2
   Curve    s1 ps1 & Curve    s2 ps2 = handleFreeShape False s1 s2 ps1 ps2
@@ -246,14 +250,12 @@ instance Drawable NormalizedPicture where
   closedCurve        = curve . toOpenShape
   thickClosedCurve t = thickCurve t . toOpenShape
 
-  -- Further rules needed starts here
   polyline        = checkForRectangle $ Hollow Normal
   thickPolyline t = checkForRectangle $ Hollow $ thickness t
   solidPolygon    = checkForRectangle Solid . toOpenShape
 
   polygon        = polyline . toOpenShape
   thickPolygon t = thickPolyline t . toOpenShape
-  -- Further rules needed ends here
 
   lettering "" = blank
   lettering t  = Lettering t
@@ -261,6 +263,7 @@ instance Drawable NormalizedPicture where
   styledLettering _ _ "" = blank
   styledLettering _ _ t = Lettering t
 
+  -- TODO: translate/scale/rotate free shapes
   translated 0 0 p = p
   translated x y p = case p of
     Translate a b q -> translated (x + getExactPos a) (y + getExactPos b) q
@@ -301,7 +304,7 @@ instance Drawable NormalizedPicture where
     Pictures ps     -> Pictures $ map (rotated a) ps
     q               -> Rotate (toAngle a) q
 
-  -- Rules needed here aswell
+  -- TODO: Rules needed here
   reflected a = Reflect $ toAngle a
   clipped x y = Clip (toSize x) (toSize y)
 
@@ -477,6 +480,7 @@ stripTranslation (Translate _ _ p) = p
 stripTranslation p                 = p
 
 
+-- TODO: also handle point list based shapes
 relativePosition :: [NormalizedPicture] -> [RelativePicSpec]
 relativePosition [] = []
 relativePosition (Translate x y p:ps) = othersTrans ++ relativePosition ps
