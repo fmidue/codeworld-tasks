@@ -319,7 +319,7 @@ instance Drawable NormalizedPicture where
   reflected a (Curve s ps) = Curve s $ map (applyToAbsPoint (reflectPoint a)) ps
   reflected a (Pictures ps) = Pictures $ map (reflected a) ps
   reflected a p@(Translate _ y _) = let d = a*2 in
-    translated (2*getExactPos y*sin d) (-2*getExactPos y*cos d) $ rotated d p
+    translated (2*getExactPos y*sin d) (-(2*getExactPos y*cos d)) $ rotated d p
   reflected a p = Reflect (toAngle a) p
 
    -- TODO: clip free shapes?
