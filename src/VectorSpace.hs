@@ -3,6 +3,7 @@ module VectorSpace (
   scaleVector,
   scaleVector2,
   rotateVector,
+  reflectPoint,
   sideLengths,
   rotationAngle,
   isRectangle,
@@ -52,6 +53,11 @@ subVectors (x1,y1) (x2,y2) = (x1-x2,y1-y2)
 
 addVectors :: Vector -> Vector -> Vector
 addVectors (x1,y1) (x2,y2) = (x1+x2,y1+y2)
+
+
+reflectPoint :: Double -> Point -> Point
+reflectPoint th (x, y) = (x * cos a + y * sin a, x * sin a - y * cos a)
+  where a = 2 * th
 
 
 allOrthogonal :: [Point] -> Bool

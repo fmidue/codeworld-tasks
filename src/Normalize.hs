@@ -18,6 +18,7 @@ import VectorSpace (
   addVectors,
   atOriginWithOffset,
   isRectangle,
+  reflectPoint,
   rotateVector,
   rotationAngle,
   scaleVector2,
@@ -266,7 +267,6 @@ instance Drawable NormalizedPicture where
   styledLettering _ _ "" = blank
   styledLettering _ _ t = Lettering t
 
-  -- TODO: reflect (and clip?) free shapes
   translated 0 0 p = p
   translated x y p = case p of
     Translate a b q -> translated (x + getExactPos a) (y + getExactPos b) q
@@ -313,8 +313,16 @@ instance Drawable NormalizedPicture where
     Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotateVector a)) ps
     q               -> Rotate (toAngle a) q
 
-  -- TODO: Rules needed here
-  reflected a = Reflect $ toAngle a
+  reflected a (Rectangle s x y) = rotated (a*2) $ Rectangle s x y
+  reflected _ (Circle s r) = Circle s r
+  reflected a (Polyline s ps) = Polyline s $ map (applyToAbsPoint (reflectPoint a)) ps
+  reflected a (Curve s ps) = Curve s $ map (applyToAbsPoint (reflectPoint a)) ps
+  reflected a (Pictures ps) = Pictures $ map (reflected a) ps
+  reflected a p@(Translate _ y _) = let d = a*2 in
+    translated (2*getExactPos y*sin d) (-2*getExactPos y*cos d) $ rotated d p
+  reflected a p = Reflect (toAngle a) p
+
+   -- TODO: clip free shapes?
   clipped x y = Clip (toSize x) (toSize y)
 
 
