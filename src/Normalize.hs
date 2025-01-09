@@ -235,26 +235,9 @@ instance Drawable NormalizedPicture where
   thickRectangle _ _ 0 = blank
   thickRectangle t l w = Rectangle (Hollow $ thickness t) (toSize l) $ toSize w
 
-  arc _ _ 0 = blank
-  arc a1 a2 r
-    | a1 == a2  = blank
-    | a1 > a2 = arc a2 a1 r
-    | abs (a1 - a2) >= 2*pi = circle r
-    | otherwise = Arc (Hollow Normal) (toAngle a1) (toAngle a2) (toSize r)
-
-  sector _ _ 0 = blank
-  sector a1 a2 r
-    | a1 == a2  = blank
-    | a1 > a2 = sector a2 a1 r
-    | abs (a1 - a2) >= 2*pi = solidCircle r
-    | otherwise = Arc Solid (toAngle a1) (toAngle a2) (toSize r)
-
-  thickArc _ _ _ 0 = blank
-  thickArc t a1 a2 r
-    | a1 == a2  = blank
-    | a1 > a2 = thickArc t a2 a1 r
-    | abs (a1 - a2) >= 2*pi = thickCircle t r
-    | otherwise = Arc (Hollow $ thickness t) (toAngle a1) (toAngle a2) (toSize r)
+  arc      = checkForCircle $ Hollow Normal
+  sector   = checkForCircle Solid
+  thickArc = checkForCircle . Hollow . thickness
 
   curve            = handlePointList $ Curve $ Hollow Normal
   thickCurve t     = handlePointList $ Curve $ Hollow $ thickness t
@@ -321,6 +304,20 @@ instance Drawable NormalizedPicture where
   -- Rules needed here aswell
   reflected a = Reflect $ toAngle a
   clipped x y = Clip (toSize x) (toSize y)
+
+
+checkForCircle :: ShapeKind -> Double -> Double -> Double -> NormalizedPicture
+checkForCircle _ _ _ 0 = blank
+checkForCircle shape a1 a2 r
+  | a1 == a2  = blank
+  | a1 > a2 = arc a2 a1 r
+  | abs (a1 - a2) >= 2*pi = circleKind r
+  | otherwise = Arc shape (toAngle a1) (toAngle a2) (toSize r)
+  where
+    circleKind = case shape of
+      Hollow Normal -> circle
+      Hollow Thick  -> thickCircle 1
+      Solid         -> solidCircle
 
 
 checkForRectangle :: ShapeKind -> [Point] -> NormalizedPicture
