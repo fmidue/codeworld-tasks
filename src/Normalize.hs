@@ -448,6 +448,19 @@ handleFreeShape isPolyline s1 s2 ps1 ps2
           | otherwise  -> solidCurveHelper
 
 
+{-
+overapproximated (heavily) for Polylines
+same for Curves, but arc edges may also extend outside the rectangle slightly
+=> both may need more accuracy to detect overlap better (or this rough estimate is enough for most pictures)
+-}
+boundingRect :: Drawable a => [AbsPoint] -> a
+boundingRect ps = polygon [(xMax,yMax), (xMin,yMax), (xMin,yMin), (xMax,yMin)]
+  where
+    coordList = both (map getExactPos) $ unzip ps
+    (xMax,yMax) = both maximum coordList
+    (xMin,yMin) = both minimum coordList
+
+
 southOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
 southOf p1 = Is p1 (Direction (Just South) Nothing)
 
@@ -502,21 +515,38 @@ stripTranslation (Translate _ _ p) = p
 stripTranslation p                 = p
 
 
+getTranslation :: NormalizedPicture -> (Moved, Moved)
+getTranslation (Translate x y _)   = (x,y)
+getTranslation (Polyline _ points) = getTranslation (boundingRect points)
+getTranslation (Curve _ points)    = getTranslation (boundingRect points)
+getTranslation _                   = (0,0)
+
+
+couldHaveTranslation :: NormalizedPicture -> Bool
+couldHaveTranslation Translate {} = True
+couldHaveTranslation Polyline {}  = True
+couldHaveTranslation Curve {}     = True
+couldHaveTranslation _            = False
+
+
 -- TODO: also handle point list based shapes
 relativePosition :: [NormalizedPicture] -> [RelativePicSpec]
 relativePosition [] = []
-relativePosition (Translate x y p:ps) = othersTrans ++ relativePosition ps
+relativePosition (p:ps)
+  | couldHaveTranslation p = othersTrans ++ relativePosition ps
+  | otherwise = others ++ relativePosition ps
   where
-    asCenter (Translate a b pic) =
-      translated (getExactPos $ a-x) (getExactPos $ b-y) pic
-    asCenter pic = translated (getExactPos $ -x) (getExactPos $ -y) pic
+    (pX,pY) = getTranslation p
+
+    asCenter pic = let (bX,bY) = getTranslation pic in
+      translated (getExactPos $ bX-pX) (getExactPos $ bY-pY) $ stripTranslation pic
+
     othersTrans = map (\pic ->
         orientation (asCenter pic) (PicSpec p) $ PicSpec $ stripTranslation pic
         )
       ps
-relativePosition (p:ps) = others ++ relativePosition ps
-  where
-    others = map (\x -> orientation x (PicSpec p) $ PicSpec $ stripTranslation x) ps
+
+    others = map (\pic -> orientation pic (PicSpec p) $ PicSpec $ stripTranslation pic) ps
 
 
 orientation
