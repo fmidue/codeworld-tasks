@@ -3,7 +3,12 @@
 
 module Normalize (
   NormalizedPicture(..),
+  Components(..),
+  RelativePicSpec(..),
   (===),
+  northOf,
+  stripToShape,
+  stripToColor,
   toRelative,
   ) where
 
@@ -67,9 +72,12 @@ data Direction = Direction {
 
 
 data RelativePicSpec
-  = Is RelativePicSpec Direction RelativePicSpec
-  | PicSpec NormalizedPicture
+  = Is NormalizedPicture Direction NormalizedPicture
   deriving(Eq,Ord)
+
+
+newtype Components = Components ([NormalizedPicture],[RelativePicSpec]) deriving (Eq)
+
 
 type AbsPoint = (Moved,Moved)
 
@@ -83,7 +91,6 @@ instance Show Direction where
 
 
 instance Show RelativePicSpec where
-  show (PicSpec p) = show p
   show (Is p1 dir p2) = show p1 ++ " is " ++ show dir ++ " of " ++ show p2
 
 
@@ -461,39 +468,55 @@ boundingRect ps = polygon [(xMax,yMax), (xMin,yMax), (xMin,yMin), (xMax,yMin)]
     (xMin,yMin) = both minimum coordList
 
 
-southOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
+
+stripToColor :: NormalizedPicture -> NormalizedPicture
+stripToColor (Translate _ _ p) = p
+stripToColor (Rotate _ p)  = p
+stripToColor (Reflect _ p) = p
+stripToColor (Scale _ _ p) = p
+stripToColor p = p
+
+stripToShape :: NormalizedPicture -> NormalizedPicture
+stripToShape (Color _ p) = p
+stripToShape p = case stripToColor p of
+  Color _ q -> q
+  q -> q
+
+
+
+southOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
 southOf p1 = Is p1 (Direction (Just South) Nothing)
 
 
-northOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
+northOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
 northOf = flip southOf
 
 
-westOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
+westOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
 westOf p1 = Is p1 (Direction  Nothing (Just West))
 
 
-eastOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
+eastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
 eastOf = flip westOf
 
 
-onTopOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
+onTopOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
 onTopOf p1 = Is p1 (Direction Nothing Nothing)
 
 
-southwestOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
+southwestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
 southwestOf p1 = Is p1 (Direction (Just South) (Just West))
 
 
-southeastOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
+southeastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
 southeastOf p1 = Is p1 (Direction (Just South) (Just East))
 
 
-northwestOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
+northwestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
 northwestOf = flip southeastOf
 
 
-northeastOf :: RelativePicSpec -> RelativePicSpec -> RelativePicSpec
+northeastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
 northeastOf = flip southwestOf
 
 
@@ -504,10 +527,10 @@ toSize = Size
 concretePoint :: AbsPoint -> Point
 concretePoint = both getExactPos
 
-toRelative :: NormalizedPicture -> [RelativePicSpec]
+toRelative :: NormalizedPicture -> Components
 toRelative p = case p of
-  Pictures ps -> sort $ relativePosition ps
-  a           -> [PicSpec a]
+  Pictures ps -> Components (map stripTranslation ps, sort $ relativePosition ps)
+  a           -> Components ([stripTranslation a],[])
 
 
 stripTranslation :: NormalizedPicture -> NormalizedPicture
@@ -542,17 +565,17 @@ relativePosition (p:ps)
       translated (getExactPos $ bX-pX) (getExactPos $ bY-pY) $ stripTranslation pic
 
     othersTrans = map (\pic ->
-        orientation (asCenter pic) (PicSpec p) $ PicSpec $ stripTranslation pic
+        orientation (asCenter pic) (stripTranslation p) $ stripTranslation pic
         )
       ps
 
-    others = map (\pic -> orientation pic (PicSpec p) $ PicSpec $ stripTranslation pic) ps
+    others = map (\pic -> orientation pic p $ stripTranslation pic) ps
 
 
 orientation
   :: NormalizedPicture
-  -> ( RelativePicSpec
-    -> RelativePicSpec
+  -> ( NormalizedPicture
+    -> NormalizedPicture
     -> RelativePicSpec
      )
 orientation (Translate a b _) = case (a,b) of
