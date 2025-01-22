@@ -29,6 +29,7 @@ library
       HashCons
       Normalize
       Reify
+      Solution
       Trie
       Types
       VectorSpace
