@@ -449,7 +449,7 @@ handleFreeShape isPolyline s1 s2 ps1 ps2
 
 
 {-
-overapproximated (heavily) for Polylines
+over-approximated (heavily) for PolyLines
 same for Curves, but arc edges may also extend outside the rectangle slightly
 => both may need more accuracy to detect overlap better (or this rough estimate is enough for most pictures)
 -}
