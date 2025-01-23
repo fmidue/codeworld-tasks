@@ -1,13 +1,17 @@
 
 module Solution (module Solution) where
 
-import Normalize
-import API
-import Types
+
+import Normalize                        (NormalizedPicture)
+import Relative (
+  Components(..),
+  RelativePicSpec,
+  toRelative,
+  )
+
 
 
 data Spec = Only Components | ReqAndOpt (Components,Components)
-
 
 newtype PredSpec = PredSpec [Components -> Bool]
 
@@ -38,10 +42,3 @@ isExactly a = specPosition (==[a])
 
 has :: RelativePicSpec -> Components -> Bool
 has a = specPosition (a `elem`)
-
-
-
-
-
-sampleSol :: RelativePicSpec
-sampleSol = colored yellow (solidCircle 1) `northOf` colored green (solidRectangle 8 10)

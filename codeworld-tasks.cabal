@@ -29,6 +29,7 @@ library
       HashCons
       Normalize
       Reify
+      Relative
       Solution
       Trie
       Types
