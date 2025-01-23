@@ -1,6 +1,7 @@
 
 module Examples (
   sampleSolution,
+  relativeSampleSolution,
   example1,
   example2,
   example3,
@@ -15,12 +16,19 @@ module Examples (
 
 
 import API                              (Drawable(..))
+import Relative                         (RelativePicSpec, northOf)
 import Types                            (red, green, yellow)
 
 
 sampleSolution :: Drawable a => a
 sampleSolution = translated 0 6 (colored yellow (solidCircle 1))
                & colored green (solidRectangle 20 2)
+
+
+relativeSampleSolution :: RelativePicSpec
+relativeSampleSolution =
+  colored yellow (solidCircle 1) `northOf`
+  colored green (solidRectangle 8 10)
 
 
 example1 :: Drawable a => a
