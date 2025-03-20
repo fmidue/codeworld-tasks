@@ -1,6 +1,6 @@
 {-# language OverloadedStrings #-}
 
-module Normalize (
+module CodeWorld.Tasks.Normalize (
   Moved(..),
   NormalizedPicture(..),
   couldHaveTranslation,
@@ -16,9 +16,9 @@ import Data.List.Extra                  (takeEnd)
 import Data.Text                        (Text)
 import Data.Tuple.Extra                 (both)
 
-import API                              (Drawable(..))
-import Types                            (Color, Point)
-import VectorSpace (
+import CodeWorld.Tasks.API              (Drawable(..))
+import CodeWorld.Tasks.Types            (Color, Point)
+import CodeWorld.Tasks.VectorSpace (
   addVectors,
   atOriginWithOffset,
   isRectangle,

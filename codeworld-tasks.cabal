@@ -23,17 +23,17 @@ source-repository head
 
 library
   exposed-modules:
-      API
-      Compare
-      Examples
-      HashCons
-      Normalize
-      Reify
-      Relative
-      Solution
-      Trie
-      Types
-      VectorSpace
+      CodeWorld.Tasks.Types
+      CodeWorld.Tasks.API
+      CodeWorld.Tasks.Normalize
+      CodeWorld.Tasks.VectorSpace
+      CodeWorld.Tasks.Compare
+      CodeWorld.Tasks.HashCons
+      CodeWorld.Tasks.Reify
+      CodeWorld.Tasks.Trie
+      CodeWorld.Tasks.Solution
+      CodeWorld.Tasks.Relative
+      CodeWorld.Tasks.Examples
   other-modules:
       Paths_codeworld_tasks
   autogen-modules:

@@ -1,4 +1,4 @@
-module VectorSpace (
+module CodeWorld.Tasks.VectorSpace (
   addVectors,
   scaleVector,
   scaleVector2,
@@ -15,7 +15,7 @@ where
 import Data.Containers.ListUtils        (nubOrd)
 import Data.List.Extra                  (takeEnd)
 import Data.Maybe                       (fromMaybe)
-import Types                            (Point, Vector)
+import CodeWorld.Tasks.Types            (Point, Vector)
 
 
 

@@ -1,7 +1,7 @@
 {-# language MultiParamTypeClasses#-}
 {-# language FlexibleContexts #-}
 
-module HashCons (
+module CodeWorld.Tasks.HashCons (
   Node(..),
   NodeId,
   BiMap,
@@ -14,8 +14,8 @@ import Control.Monad.State              (State, get, put, runState)
 import Data.List                        (elemIndex)
 import Data.Text                        (Text)
 
-import API                              (Drawable(..))
-import Types                            (Color, Font, Point, TextStyle)
+import CodeWorld.Tasks.API              (Drawable(..))
+import CodeWorld.Tasks.Types            (Color, Font, Point, TextStyle)
 
 
 

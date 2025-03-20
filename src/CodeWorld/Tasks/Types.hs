@@ -1,5 +1,5 @@
 
-module Types (
+module CodeWorld.Tasks.Types (
   Point,
   Vector,
 
