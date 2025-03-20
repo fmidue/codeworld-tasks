@@ -1,9 +1,18 @@
 
-module Solution (module Solution) where
+module CodeWorld.Tasks.Solution (
+  Spec(..),
+  spec,
+  specElems,
+  containsExactElems,
+  specPosition,
+  evaluate,
+  isExactly,
+  has,
+  ) where
 
 
-import Normalize                        (NormalizedPicture)
-import Relative (
+import CodeWorld.Tasks.Normalize (NormalizedPicture)
+import CodeWorld.Tasks.Relative (
   Components(..),
   RelativePicSpec,
   toRelative,

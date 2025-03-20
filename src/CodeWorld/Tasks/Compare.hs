@@ -1,6 +1,6 @@
 {-# language RankNTypes #-}
 
-module Compare (
+module CodeWorld.Tasks.Compare (
   runShare,
 ) where
 
@@ -11,9 +11,9 @@ import Data.Maybe                       (fromJust)
 import Data.Tuple.Extra                 ((&&&), second)
 import qualified Data.IntMap            as IM
 
-import API                              (Drawable)
-import HashCons                         (BiMap, Node(..), hashconsShare)
-import Reify                            (ReifyPicture(..), share)
+import CodeWorld.Tasks.API              (Drawable)
+import CodeWorld.Tasks.HashCons         (BiMap, Node(..), hashconsShare)
+import CodeWorld.Tasks.Reify            (ReifyPicture(..), share)
 
 
 

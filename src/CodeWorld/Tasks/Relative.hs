@@ -1,6 +1,6 @@
 {-# language RecordWildCards #-}
 
-module Relative (
+module CodeWorld.Tasks.Relative (
   Components(..),
   RelativePicSpec(..),
   (===),
@@ -11,8 +11,8 @@ module Relative (
 
 import Data.List                        (sort)
 
-import API                              (Drawable(..))
-import Normalize (
+import CodeWorld.Tasks.API              (Drawable(..))
+import CodeWorld.Tasks.Normalize (
   NormalizedPicture(..),
   Moved(..),
   getExactPos,

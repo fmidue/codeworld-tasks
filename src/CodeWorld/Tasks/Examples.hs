@@ -1,5 +1,5 @@
 
-module Examples (
+module CodeWorld.Tasks.Examples (
   sampleSolution,
   relativeSampleSolution,
   example1,
@@ -15,9 +15,9 @@ module Examples (
 ) where
 
 
-import API                              (Drawable(..))
-import Relative                         (RelativePicSpec, northOf)
-import Types                            (red, green, yellow)
+import CodeWorld.Tasks.API              (Drawable(..))
+import CodeWorld.Tasks.Relative         (RelativePicSpec, northOf)
+import CodeWorld.Tasks.Types            (red, green, yellow)
 
 
 sampleSolution :: Drawable a => a

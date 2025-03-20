@@ -1,9 +1,9 @@
 
-module API (Drawable(..)) where
+module CodeWorld.Tasks.API (Drawable(..)) where
 
 
 import Data.Text (Text)
-import Types (Color, Font, Point, TextStyle)
+import CodeWorld.Tasks.Types (Color, Font, Point, TextStyle)
 
 
 

@@ -1,7 +1,7 @@
 {-# language DeriveTraversable #-}
 {-# language TypeFamilies #-}
 
-module Reify (
+module CodeWorld.Tasks.Reify (
   ReifyPicture(..),
   share,
   ) where
@@ -13,8 +13,8 @@ import Data.Reify                       (Graph(..), MuRef(..), reifyGraph)
 import Data.Text                        (Text)
 import qualified Data.IntMap            as IM
 
-import API                              (Drawable(..))
-import Types                            (Font, TextStyle, Point, Color)
+import CodeWorld.Tasks.API              (Drawable(..))
+import CodeWorld.Tasks.Types            (Font, TextStyle, Point, Color)
 
 
 

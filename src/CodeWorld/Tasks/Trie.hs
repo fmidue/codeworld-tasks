@@ -1,7 +1,7 @@
 {-# language OverloadedStrings #-}
 {-# options_ghc -Wno-orphans #-}
 
-module Trie (
+module CodeWorld.Tasks.Trie (
   shareGraph,
   ) where
 
@@ -15,8 +15,8 @@ import Data.Trie                        (Trie)
 import qualified Data.ByteString.Char8  as BS
 import qualified Data.Trie              as T
 
-import API                              (Drawable(..))
-import HashCons                         (Node(..), NodeId, getNodes)
+import CodeWorld.Tasks.API              (Drawable(..))
+import CodeWorld.Tasks.HashCons         (Node(..), NodeId, getNodes)
 
 
 
