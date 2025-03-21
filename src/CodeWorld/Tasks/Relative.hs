@@ -5,6 +5,15 @@ module CodeWorld.Tasks.Relative (
   RelativePicSpec(..),
   (===),
   northOf,
+  southOf,
+  eastOf,
+  westOf,
+  southeastOf,
+  southwestOf,
+  northeastOf,
+  northwestOf,
+  onTopOf,
+  alone,
   toRelative,
   )where
 
@@ -34,6 +43,7 @@ data Direction = Direction {
 
 data RelativePicSpec
   = Is NormalizedPicture Direction NormalizedPicture
+  | Alone NormalizedPicture
   deriving(Eq,Ord)
 
 
@@ -50,6 +60,7 @@ instance Show Direction where
 
 instance Show RelativePicSpec where
   show (Is p1 dir p2) = show p1 ++ " is " ++ show dir ++ " of " ++ show p2
+  show (Alone p) = show p
 
 
 (===) :: NormalizedPicture -> NormalizedPicture -> Bool
@@ -92,10 +103,14 @@ northeastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
 northeastOf = flip southwestOf
 
 
+alone :: NormalizedPicture -> RelativePicSpec
+alone = Alone
+
+
 toRelative :: NormalizedPicture -> Components
 toRelative p = case p of
   Pictures ps -> Components (map stripTranslation ps, sort $ relativePosition ps)
-  a           -> Components ([stripTranslation a],[])
+  a           -> Components ([stripTranslation a],[Alone a])
 
 
 relativePosition :: [NormalizedPicture] -> [RelativePicSpec]
