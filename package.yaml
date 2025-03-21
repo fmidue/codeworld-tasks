@@ -18,6 +18,7 @@ dependencies:
   - bytestring-trie
   - containers
   - data-reify
+  - deepseq
   - extra
   - mtl
   - text

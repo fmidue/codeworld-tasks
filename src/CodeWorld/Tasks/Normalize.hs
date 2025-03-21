@@ -1,3 +1,5 @@
+{-# language DeriveAnyClass #-}
+{-# language DeriveGeneric #-}
 {-# language OverloadedStrings #-}
 
 module CodeWorld.Tasks.Normalize (
@@ -12,9 +14,11 @@ module CodeWorld.Tasks.Normalize (
   ) where
 
 
+import Control.DeepSeq                  (NFData)
 import Data.List.Extra                  (takeEnd)
 import Data.Text                        (Text)
 import Data.Tuple.Extra                 (both)
+import GHC.Generics                     (Generic)
 
 import CodeWorld.Tasks.API              (Drawable(..))
 import CodeWorld.Tasks.Types            (Color, Point)
@@ -31,19 +35,19 @@ import CodeWorld.Tasks.VectorSpace (
 
 
 
-newtype Size = Size Double deriving (Ord)
+newtype Size = Size Double deriving (Ord,Generic,NFData)
 
 
 data Thickness
   = Normal
   | Thick
-  deriving (Show,Eq,Ord)
+  deriving (Show,Eq,Ord,Generic,NFData)
 
 
 data ShapeKind
   = Hollow Thickness
   | Solid
-  deriving (Eq,Ord,Show)
+  deriving (Eq,Ord,Show,Generic,NFData)
 
 
 data Angle
@@ -51,14 +55,14 @@ data Angle
   | ToHalf Double
   | ToThreeQuarter Double
   | ToFull Double
-  deriving (Ord)
+  deriving (Ord,Generic,NFData)
 
 
 data Moved
   = Neg Double
   | Pos Double
   | Zero
-  deriving (Ord)
+  deriving (Ord,Generic,NFData)
 
 
 type AbsPoint = (Moved,Moved)
@@ -151,7 +155,7 @@ data NormalizedPicture
   | Arc !ShapeKind !Angle !Angle !Size
   | Reflect !Angle !NormalizedPicture
   | Clip !Size !Size !NormalizedPicture
-  deriving (Show,Eq,Ord)
+  deriving (Show,Eq,Ord,Generic,NFData)
 
 
 thickness :: (Eq a, Fractional a) => a -> Thickness

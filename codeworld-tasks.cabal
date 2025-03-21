@@ -47,6 +47,7 @@ library
     , bytestring-trie
     , containers
     , data-reify
+    , deepseq
     , extra
     , mtl
     , text
@@ -69,6 +70,7 @@ test-suite codeworld-tasks-test
     , codeworld-tasks
     , containers
     , data-reify
+    , deepseq
     , extra
     , mtl
     , text

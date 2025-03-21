@@ -1,3 +1,5 @@
+{-# language DeriveAnyClass #-}
+{-# language DeriveGeneric #-}
 
 module CodeWorld.Tasks.Types (
   Point,
@@ -13,7 +15,9 @@ module CodeWorld.Tasks.Types (
   ) where
 
 
+import Control.DeepSeq                  (NFData)
 import Data.Text                        (Text)
+import GHC.Generics                     (Generic)
 
 
 
@@ -42,7 +46,7 @@ data Color
   = Yellow
   | Green
   | Red
-  deriving (Eq,Ord,Show)
+  deriving (Eq,Ord,Show,Generic,NFData)
 
 
 green, red, yellow :: Color
