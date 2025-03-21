@@ -35,6 +35,7 @@ ghc-options:
 library:
   source-dirs: src
   exposed-modules:
+    - CodeWorld.Tasks
     - CodeWorld.Tasks.Types
     - CodeWorld.Tasks.API
     - CodeWorld.Tasks.Normalize
