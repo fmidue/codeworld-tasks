@@ -20,14 +20,14 @@ import Data.Tuple.Extra                 (both)
 import CodeWorld.Tasks.API              (Drawable(..))
 import CodeWorld.Tasks.Types            (Color, Point)
 import CodeWorld.Tasks.VectorSpace (
-  addVectors,
+  vectorSum,
   atOriginWithOffset,
   isRectangle,
-  reflectPoint,
-  rotateVector,
+  reflectedPoint,
   rotationAngle,
-  scaleVector2,
-  sideLengths, rotateVector,
+  scaledVector,
+  sideLengths,
+  rotatedVector,
   )
 
 
@@ -260,8 +260,8 @@ instance Drawable NormalizedPicture where
     Translate a b q -> translated (x + getExactPos a) (y + getExactPos b) q
     Pictures ps     -> Pictures $ map (translated x y) ps
     Blank           -> Blank
-    Polyline s ps   -> Polyline s $ map (applyToAbsPoint (addVectors (x,y))) ps
-    Curve s ps      -> Curve    s $ map (applyToAbsPoint (addVectors (x,y))) ps
+    Polyline s ps   -> Polyline s $ map (applyToAbsPoint (vectorSum (x,y))) ps
+    Curve s ps      -> Curve    s $ map (applyToAbsPoint (vectorSum (x,y))) ps
     a               -> Translate (toPosition x) (toPosition y) a
 
   colored c p = case p of
@@ -285,8 +285,8 @@ instance Drawable NormalizedPicture where
                          $ scaled fac1 fac2 q
     Blank            -> Blank
     Pictures ps      -> Pictures $ map (scaled fac1 fac2) ps
-    Polyline s ps    -> Polyline s $ map (applyToAbsPoint (scaleVector2 fac1 fac2)) ps
-    Curve s ps       -> Curve    s $ map (applyToAbsPoint (scaleVector2 fac1 fac2)) ps
+    Polyline s ps    -> Polyline s $ map (applyToAbsPoint (scaledVector fac1 fac2)) ps
+    Curve s ps       -> Curve    s $ map (applyToAbsPoint (scaledVector fac1 fac2)) ps
     a                -> Scale (abs fac1) (abs fac2) a
 
   rotated 0 p = p
@@ -297,15 +297,15 @@ instance Drawable NormalizedPicture where
                         (toPosition $ getExactPos x*sin a + getExactPos y*cos a)
                         $ rotated a q
     Pictures ps     -> Pictures $ map (rotated a) ps
-    Polyline s ps   -> Polyline s $ map (applyToAbsPoint (rotateVector a)) ps
-    Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotateVector a)) ps
+    Polyline s ps   -> Polyline s $ map (applyToAbsPoint (rotatedVector a)) ps
+    Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotatedVector a)) ps
     Circle s r      -> Circle s r
     q               -> Rotate (toAngle a) q
 
   reflected a (Rectangle s x y) = rotated (a*2) $ Rectangle s x y
   reflected _ (Circle s r) = Circle s r
-  reflected a (Polyline s ps) = Polyline s $ map (applyToAbsPoint (reflectPoint a)) ps
-  reflected a (Curve s ps) = Curve s $ map (applyToAbsPoint (reflectPoint a)) ps
+  reflected a (Polyline s ps) = Polyline s $ map (applyToAbsPoint (reflectedPoint a)) ps
+  reflected a (Curve s ps) = Curve s $ map (applyToAbsPoint (reflectedPoint a)) ps
   reflected a (Pictures ps) = Pictures $ map (reflected a) ps
   reflected a p@(Translate _ y _) = let d = a*2 in
     translated (2*getExactPos y*sin d) (-(2*getExactPos y*cos d)) $ rotated d p

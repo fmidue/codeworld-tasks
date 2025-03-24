@@ -1,15 +1,23 @@
 module CodeWorld.Tasks.VectorSpace (
-  addVectors,
-  scaleVector,
-  scaleVector2,
-  rotateVector,
-  reflectPoint,
+  -- CodeWorld interface
+  translatedPoint,
+  rotatedPoint,
+  reflectedPoint,
+  scaledPoint,
+  dilatedPoint,
+  vectorLength,
+  vectorDirection,
+  vectorSum,
+  vectorDifference,
+  scaledVector,
+  rotatedVector,
+  dotProduct,
+  -- other stuff
   sideLengths,
   rotationAngle,
   isRectangle,
   atOriginWithOffset,
-)
-where
+  ) where
 
 
 import Data.Containers.ListUtils        (nubOrd)
@@ -17,6 +25,22 @@ import Data.List.Extra                  (takeEnd)
 import Data.Maybe                       (fromMaybe)
 import CodeWorld.Tasks.Types            (Point, Vector)
 
+
+
+translatedPoint :: Double -> Double -> Point -> Point
+translatedPoint x y (xp,yp) = (x+xp,y+yp)
+
+
+scaledPoint :: Double -> Double -> Point -> Point
+scaledPoint = scaledVector
+
+
+dilatedPoint :: Double -> Point -> Point
+dilatedPoint f = scaledPoint f f
+
+
+rotatedPoint :: Double -> Point -> Point
+rotatedPoint = rotatedVector
 
 
 getVector :: Point -> Point -> Vector
@@ -31,32 +55,32 @@ dotProduct :: Vector -> Vector -> Double
 dotProduct (x1,y1) (x2,y2) = x1*x2 + y1*y2
 
 
-vectorLen :: Vector -> Double
-vectorLen (x,y) = sqrt $ x*x + y*y
+vectorLength :: Vector -> Double
+vectorLength (x,y) = sqrt $ x*x + y*y
 
 
-scaleVector :: Double -> Vector -> Vector
-scaleVector fac (x,y) = (x*fac,y*fac)
+scaledVector :: Double -> Double -> Vector -> Vector
+scaledVector xFac yFac (x,y) = (x*xFac,y*yFac)
 
 
-scaleVector2 :: Double -> Double -> Vector -> Vector
-scaleVector2 xFac yFac (x,y) = (x*xFac,y*yFac)
+rotatedVector :: Double -> Vector -> Vector
+rotatedVector angle (x,y) = (x * cos angle - y * sin angle, x * sin angle + y * cos angle)
 
 
-rotateVector :: Double -> Vector -> Vector
-rotateVector angle (x,y) = (x * cos angle - y * sin angle, x * sin angle + y * cos angle)
+vectorDifference :: Vector -> Vector -> Vector
+vectorDifference (x1,y1) (x2,y2) = (x1-x2,y1-y2)
 
 
-subVectors :: Vector -> Vector -> Vector
-subVectors (x1,y1) (x2,y2) = (x1-x2,y1-y2)
+vectorSum :: Vector -> Vector -> Vector
+vectorSum (x1,y1) (x2,y2) = (x1+x2,y1+y2)
 
 
-addVectors :: Vector -> Vector -> Vector
-addVectors (x1,y1) (x2,y2) = (x1+x2,y1+y2)
+vectorDirection :: Vector -> Double
+vectorDirection (x,y) = atan2 y x
 
 
-reflectPoint :: Double -> Point -> Point
-reflectPoint th (x, y) = (x * cos a + y * sin a, x * sin a - y * cos a)
+reflectedPoint :: Double -> Point -> Point
+reflectedPoint th (x, y) = (x * cos a + y * sin a, x * sin a - y * cos a)
   where a = 2 * th
 
 
@@ -66,7 +90,7 @@ allOrthogonal _ = True
 
 
 sideLengths :: [Point] -> (Double,Double)
-sideLengths (p1:p2:p3:_) = (vectorLen (getVector p1 p2), vectorLen(getVector p2 p3))
+sideLengths (p1:p2:p3:_) = (vectorLength (getVector p1 p2), vectorLength (getVector p2 p3))
 sideLengths _ = (0,0)
 
 
@@ -82,7 +106,7 @@ angleToAxes v
   | otherwise = Just angle
   where
     dotProd = dotProduct v (0,1)
-    angle = acos $ dotProd / vectorLen v
+    angle = acos $ dotProd / vectorLength v
 
 
 rotationAngle :: [Point] -> Double
@@ -91,10 +115,11 @@ rotationAngle ps = fromMaybe 0 $ wasRotatedBy ps
 
 mean :: [Point] -> Point
 mean [] = (0,0)
-mean ps = scaleVector (1/fromIntegral (length unique)) vSum
+mean ps = scaledVector f f vSum
   where
     unique = nubOrd ps
-    vSum = foldr addVectors (0,0) unique
+    vSum = foldr vectorSum (0,0) unique
+    f = 1/fromIntegral (length unique)
 
 
 isRectangle :: [Point] -> Bool
@@ -109,6 +134,6 @@ isRectangle ps
 
 atOriginWithOffset :: [Point] -> ([Point],Point)
 atOriginWithOffset [] = ([],(0,0))
-atOriginWithOffset ps = (map (`subVectors` middlePoint) ps, middlePoint)
+atOriginWithOffset ps = (map (`vectorDifference` middlePoint) ps, middlePoint)
   where
     middlePoint = mean ps
