@@ -299,6 +299,7 @@ instance Drawable NormalizedPicture where
     Pictures ps     -> Pictures $ map (rotated a) ps
     Polyline s ps   -> Polyline s $ map (applyToAbsPoint (rotateVector a)) ps
     Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotateVector a)) ps
+    Circle s r      -> Circle s r
     q               -> Rotate (toAngle a) q
 
   reflected a (Rectangle s x y) = rotated (a*2) $ Rectangle s x y
