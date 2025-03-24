@@ -26,6 +26,7 @@ library
       CodeWorld.Tasks
       CodeWorld.Tasks.Types
       CodeWorld.Tasks.API
+      CodeWorld.Tasks.Picture
       CodeWorld.Tasks.Normalize
       CodeWorld.Tasks.VectorSpace
       CodeWorld.Tasks.Compare

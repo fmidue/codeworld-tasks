@@ -1,5 +1,3 @@
-{-# language DeriveAnyClass #-}
-{-# language DeriveGeneric #-}
 {-# language OverloadedStrings #-}
 
 module CodeWorld.Tasks.Normalize (
@@ -14,11 +12,10 @@ module CodeWorld.Tasks.Normalize (
   ) where
 
 
-import Control.DeepSeq                  (NFData)
+
 import Data.List.Extra                  (takeEnd)
 import Data.Text                        (Text)
 import Data.Tuple.Extra                 (both)
-import GHC.Generics                     (Generic)
 
 import CodeWorld.Tasks.API              (Drawable(..))
 import CodeWorld.Tasks.Types            (Color, Point)
@@ -35,19 +32,19 @@ import CodeWorld.Tasks.VectorSpace (
 
 
 
-newtype Size = Size Double deriving (Ord,Generic,NFData)
+newtype Size = Size Double deriving (Ord)
 
 
 data Thickness
   = Normal
   | Thick
-  deriving (Show,Eq,Ord,Generic,NFData)
+  deriving (Show,Eq,Ord)
 
 
 data ShapeKind
   = Hollow Thickness
   | Solid
-  deriving (Ord,Show,Generic,NFData)
+  deriving (Ord,Show)
 
 
 data Angle
@@ -55,14 +52,14 @@ data Angle
   | ToHalf Double
   | ToThreeQuarter Double
   | ToFull Double
-  deriving (Ord,Generic,NFData)
+  deriving (Ord)
 
 
 data Moved
   = Neg Double
   | Pos Double
   | Zero
-  deriving (Ord,Generic,NFData)
+  deriving (Ord)
 
 
 type AbsPoint = (Moved,Moved)
@@ -161,7 +158,7 @@ data NormalizedPicture
   | Arc !ShapeKind !Angle !Angle !Size
   | Reflect !Angle !NormalizedPicture
   | Clip !Size !Size !NormalizedPicture
-  deriving (Show,Eq,Ord,Generic,NFData)
+  deriving (Show,Eq,Ord)
 
 
 thickness :: (Eq a, Fractional a) => a -> Thickness
@@ -302,6 +299,7 @@ instance Drawable NormalizedPicture where
     Pictures ps     -> Pictures $ map (rotated a) ps
     Polyline s ps   -> Polyline s $ map (applyToAbsPoint (rotateVector a)) ps
     Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotateVector a)) ps
+    Circle s r      -> Circle s r
     q               -> Rotate (toAngle a) q
 
   reflected a (Rectangle s x y) = rotated (a*2) $ Rectangle s x y
