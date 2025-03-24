@@ -1,13 +1,11 @@
 
 module CodeWorld.Tasks (
-  module CodeWorld.Tasks.API,
-  Picture,
+  module CodeWorld.Tasks.Picture,
   drawingOf,
   ) where
 
 
-import CodeWorld.Tasks.API
-import CodeWorld.Tasks.Picture
+import CodeWorld.Tasks.Picture hiding (toInterface)
 
 
 drawingOf :: Picture -> IO ()
