@@ -21,7 +21,6 @@ import GHC.Generics                     (Generic)
 
 
 
---type NodeId = Int
 type Point = (Double,Double)
 type Vector = (Double,Double)
 
