@@ -115,11 +115,11 @@ rotationAngle ps = fromMaybe 0 $ wasRotatedBy ps
 
 mean :: [Point] -> Point
 mean [] = (0,0)
-mean ps = scaledVector fac fac vSum
+mean ps = scaledVector f f vSum
   where
     unique = nubOrd ps
     vSum = foldr vectorSum (0,0) unique
-    fac = 1/fromIntegral (length unique)
+    f = 1/fromIntegral (length unique)
 
 
 isRectangle :: [Point] -> Bool
