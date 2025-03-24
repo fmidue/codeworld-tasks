@@ -39,15 +39,16 @@ library:
     - CodeWorld.Tasks.Types
     - CodeWorld.Tasks.API
     - CodeWorld.Tasks.Picture
-    - CodeWorld.Tasks.Normalize
     - CodeWorld.Tasks.VectorSpace
     - CodeWorld.Tasks.Compare
     - CodeWorld.Tasks.HashCons
     - CodeWorld.Tasks.Reify
     - CodeWorld.Tasks.Trie
-    - CodeWorld.Tasks.Solution
-    - CodeWorld.Tasks.Relative
-    - CodeWorld.Tasks.Examples
+    - CodeWorld.Test.Normalize
+    - CodeWorld.Test.Abstract
+    - CodeWorld.Test.Solution
+    - CodeWorld.Test.Relative
+    - CodeWorld.Test.Examples
 
 tests:
   codeworld-tasks-test:
