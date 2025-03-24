@@ -43,7 +43,7 @@ containsExactElems ps = specElems (all (`elem` ps))
 containsElems :: [NormalizedPicture] -> Components -> Bool
 containsElems ps = specElems (\c -> all (`elem` c) ps)
 
--- Use a predicate on the list of relative positionings
+-- Use a predicate on the list of relative positions
 specPosition :: ([RelativePicSpec] -> Bool) -> Components -> Bool
 specPosition f (Components (_,rP)) = f rP
 
