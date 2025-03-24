@@ -4,10 +4,13 @@ module CodeWorld.Tasks (
   module CodeWorld.Tasks.Types,
   module CodeWorld.Tasks.VectorSpace,
   drawingOf,
+  trace,
   ) where
 
 
-import CodeWorld.Tasks.Picture hiding (toInterface)
+import Data.Text                        (Text)
+
+import CodeWorld.Tasks.Picture          hiding (toInterface)
 import CodeWorld.Tasks.Types
 import CodeWorld.Tasks.VectorSpace hiding (
   sideLengths,
@@ -19,3 +22,7 @@ import CodeWorld.Tasks.VectorSpace hiding (
 
 drawingOf :: Picture -> IO ()
 drawingOf = const $ pure ()
+
+
+trace :: Text -> a -> a
+trace = const id
