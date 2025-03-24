@@ -26,6 +26,7 @@ library
       CodeWorld.Tasks
       CodeWorld.Tasks.Types
       CodeWorld.Tasks.API
+      CodeWorld.Tasks.Picture
       CodeWorld.Tasks.Normalize
       CodeWorld.Tasks.VectorSpace
       CodeWorld.Tasks.Compare
@@ -36,7 +37,6 @@ library
       CodeWorld.Tasks.Relative
       CodeWorld.Tasks.Examples
   other-modules:
-      CodeWorld.Tasks.Picture
       Paths_codeworld_tasks
   autogen-modules:
       Paths_codeworld_tasks
