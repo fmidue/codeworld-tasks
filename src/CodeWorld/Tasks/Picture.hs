@@ -1,11 +1,15 @@
+{-# language DeriveAnyClass #-}
+{-# language DeriveGeneric #-}
 
 module CodeWorld.Tasks.Picture where
 
 
 import CodeWorld.Tasks.API              (Drawable(..))
 import CodeWorld.Tasks.Types            (Color, Font, TextStyle, Point)
-import Data.Text                        (Text)
 
+import Control.DeepSeq                  (NFData)
+import Data.Text                        (Text)
+import GHC.Generics                     (Generic)
 
 
 data Picture
@@ -42,7 +46,7 @@ data Picture
   | CoordinatePlane
   | Logo
   | Blank
-  deriving (Show, Eq, Ord)
+  deriving (Show, Eq, Ord, Generic, NFData)
 
 
 instance Drawable Picture where
