@@ -110,7 +110,8 @@ alone = Alone
 toRelative :: NormalizedPicture -> Components
 toRelative p = case p of
   Pictures ps -> Components (map stripTranslation ps, sort $ relativePosition ps)
-  a           -> Components ([stripTranslation a],[Alone a])
+  a           -> let noTranslation = stripTranslation a in
+    Components ([noTranslation],[alone noTranslation])
 
 
 relativePosition :: [NormalizedPicture] -> [RelativePicSpec]

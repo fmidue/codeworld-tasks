@@ -13,6 +13,7 @@ module CodeWorld.Tasks.Solution (
 
 
 import CodeWorld.Tasks.Normalize (NormalizedPicture)
+import CodeWorld.Tasks.Picture (Picture, toInterface)
 import CodeWorld.Tasks.Relative (
   Components(..),
   RelativePicSpec,
@@ -48,9 +49,9 @@ specPosition :: ([RelativePicSpec] -> Bool) -> Components -> Bool
 specPosition f (Components (_,rP)) = f rP
 
 
--- Evaluate all of the given predicates
-evaluate :: PredSpec -> NormalizedPicture -> Bool
-evaluate (PredSpec fs) pic = all (\f -> f $ toRelative pic) fs
+-- Evaluate all of the given predicates on the student submission
+evaluate :: PredSpec -> Picture -> Bool
+evaluate (PredSpec fs) pic = all (\f -> f $ toRelative $ toInterface pic) fs
 
 
 -- Input is exactly this relative picture
