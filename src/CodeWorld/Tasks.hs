@@ -4,6 +4,7 @@ module CodeWorld.Tasks (
   module CodeWorld.Tasks.Types,
   module CodeWorld.Tasks.VectorSpace,
   drawingOf,
+  animationOf,
   trace,
   ) where
 
@@ -22,6 +23,10 @@ import CodeWorld.Tasks.VectorSpace hiding (
 
 drawingOf :: Picture -> IO ()
 drawingOf = const $ pure ()
+
+
+animationOf :: (Double -> Picture) -> IO ()
+animationOf = const $ pure ()
 
 
 trace :: Text -> a -> a
