@@ -1,5 +1,5 @@
 
-module CodeWorld.Tasks.Solution (
+module CodeWorld.Test.Solution (
   Spec(..),
   spec,
   specElems,
@@ -12,9 +12,9 @@ module CodeWorld.Tasks.Solution (
   ) where
 
 
-import CodeWorld.Tasks.Normalize (NormalizedPicture)
 import CodeWorld.Tasks.Picture (Picture, toInterface)
-import CodeWorld.Tasks.Relative (
+import CodeWorld.Test.Normalize (NormalizedPicture)
+import CodeWorld.Test.Relative (
   Components(..),
   RelativePicSpec,
   toRelative,

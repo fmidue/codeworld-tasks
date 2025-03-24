@@ -1,6 +1,6 @@
 {-# language OverloadedStrings #-}
 
-module CodeWorld.Tasks.Normalize (
+module CodeWorld.Test.Normalize (
   Moved(..),
   NormalizedPicture(..),
   couldHaveTranslation,
