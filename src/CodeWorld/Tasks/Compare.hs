@@ -6,7 +6,7 @@ module CodeWorld.Tasks.Compare (
 
 
 import Data.Char                        (toLower)
-import Data.List.Extra                  ((\\), nubOrd)
+import Data.List.Extra                  ((\\), maximumOn, nubOrd, replace)
 import Data.Maybe                       (fromJust)
 import Data.Tuple.Extra                 ((&&&), second)
 import qualified Data.IntMap            as IM
@@ -22,15 +22,24 @@ runShare a = do
   (reify,reifyTerms) <- share a
   let (hCons,consTerms) = hashconsShare a
   let (explicitShares,allShares) = relabel (IM.toList reify) hCons
-  let allTerms = toReify consTerms ++ IM.toList reifyTerms
+  let termIndex = toReify consTerms
+  let allTerms = termIndex ++ IM.toList reifyTerms
   if explicitShares == allShares
     then
       putStrLn "You shared everything, good job!"
     else do
-      putStrLn "You did not share these subexpressions: "
-      let notShared = allShares \\ explicitShares
-      putStrLn $ unlines $ map (flip printOriginal allTerms . snd) notShared
+      putStrLn "There are opportunities for further sharing!"
+      putStrLn "Consider this term:"
+      let completeTerm = maximumOn length $ map (flip printOriginal allTerms . snd) termIndex
+      putStrLn completeTerm
+      let notShared = map (flip printOriginal allTerms . snd) $ allShares \\ explicitShares
+      mapM_ (printShares completeTerm) notShared
   pure (explicitShares,allShares)
+  where
+    printShares longest term = do
+      putStrLn "Why not:"
+      putStrLn $ "let share = " ++ term ++ " in"
+      putStrLn $ replace term "share" longest
 
 
 
@@ -43,6 +52,8 @@ printOriginal term subTerms = sub term
       | otherwise = printOriginal expr subTerms
       where
         expr = getExpr n
+    recursivelyAnd n = printOriginal (getExpr n) subTerms
+
 
     sub p = unwords $ case term of
       Color c i       -> ["colored", show c, recursively i]
@@ -53,7 +64,7 @@ printOriginal term subTerms = sub term
       Reflect a i     -> ["reflected", show a, recursively i]
       Clip x y i      -> ["clipped", show x, show y, recursively i]
       Pictures is     -> ["pictures", concatMap recursively is]
-      And i1 i2       -> [recursively i1, "&", recursively i2]
+      And i1 i2       -> [recursivelyAnd i1, "&", recursivelyAnd i2]
       _               -> case show p of
         (x:xs) -> [toLower x:xs]
         _      -> error "not possible"
