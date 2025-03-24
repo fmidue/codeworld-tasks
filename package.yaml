@@ -36,19 +36,7 @@ library:
   source-dirs: src
   exposed-modules:
     - CodeWorld.Tasks
-    - CodeWorld.Tasks.Types
-    - CodeWorld.Tasks.API
-    - CodeWorld.Tasks.Picture
-    - CodeWorld.Tasks.VectorSpace
-    - CodeWorld.Tasks.Compare
-    - CodeWorld.Tasks.HashCons
-    - CodeWorld.Tasks.Reify
-    - CodeWorld.Tasks.Trie
-    - CodeWorld.Test.Normalize
-    - CodeWorld.Test.Abstract
-    - CodeWorld.Test.Solution
-    - CodeWorld.Test.Relative
-    - CodeWorld.Test.Examples
+    - CodeWorld.Test
 
 tests:
   codeworld-tasks-test:

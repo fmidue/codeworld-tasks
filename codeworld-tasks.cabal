@@ -24,20 +24,21 @@ source-repository head
 library
   exposed-modules:
       CodeWorld.Tasks
-      CodeWorld.Tasks.Types
+      CodeWorld.Test
+  other-modules:
       CodeWorld.Tasks.API
-      CodeWorld.Tasks.Picture
-      CodeWorld.Tasks.VectorSpace
       CodeWorld.Tasks.Compare
       CodeWorld.Tasks.HashCons
+      CodeWorld.Tasks.Picture
       CodeWorld.Tasks.Reify
       CodeWorld.Tasks.Trie
-      CodeWorld.Test.Normalize
+      CodeWorld.Tasks.Types
+      CodeWorld.Tasks.VectorSpace
       CodeWorld.Test.Abstract
-      CodeWorld.Test.Solution
-      CodeWorld.Test.Relative
       CodeWorld.Test.Examples
-  other-modules:
+      CodeWorld.Test.Normalize
+      CodeWorld.Test.Relative
+      CodeWorld.Test.Solution
       Paths_codeworld_tasks
   autogen-modules:
       Paths_codeworld_tasks
