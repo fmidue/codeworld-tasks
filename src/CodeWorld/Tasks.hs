@@ -1,18 +1,13 @@
 
 module CodeWorld.Tasks (
   module CodeWorld.Tasks.API,
-  module CodeWorld.Tasks.Normalize,
   Picture,
   drawingOf,
   ) where
 
 
 import CodeWorld.Tasks.API
-import CodeWorld.Tasks.Normalize
-
-
-
-type Picture = NormalizedPicture
+import CodeWorld.Tasks.Picture
 
 
 drawingOf :: Picture -> IO ()
