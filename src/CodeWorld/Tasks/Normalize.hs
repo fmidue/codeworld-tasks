@@ -47,7 +47,7 @@ data Thickness
 data ShapeKind
   = Hollow Thickness
   | Solid
-  deriving (Eq,Ord,Show,Generic,NFData)
+  deriving (Ord,Show,Generic,NFData)
 
 
 data Angle
@@ -74,6 +74,12 @@ instance Show Size where
 
 instance Eq Size where
   _ == _ = True
+
+
+instance Eq ShapeKind where
+  Hollow _ == Hollow _ = True
+  Solid    == Solid    = True
+  _        == _        = False
 
 
 instance Show Moved where
@@ -206,7 +212,11 @@ instance Drawable NormalizedPicture where
   solidCircle r = Circle Solid $ toSize r
 
   thickCircle 0 _ = blank
-  thickCircle t r = Circle (Hollow $ thickness t) $ toSize r
+  thickCircle t r = Circle shape $ toSize (r + t/2)
+    where
+      shape
+        | t == 2*r = Solid
+        | otherwise = Hollow $ thickness t
 
   rectangle 0 _ = blank
   rectangle _ 0 = blank
@@ -218,7 +228,11 @@ instance Drawable NormalizedPicture where
 
   thickRectangle _ 0 _ = blank
   thickRectangle _ _ 0 = blank
-  thickRectangle t l w = Rectangle (Hollow $ thickness t) (toSize l) $ toSize w
+  thickRectangle t l w = Rectangle shape (toSize $ l + t/2) $ toSize $ w + t/2
+    where
+      shape
+        | t >= 2*l || t >= 2*w = Solid
+        | otherwise = Hollow $ thickness t
 
   arc      = checkForCircle $ Hollow Normal
   sector   = checkForCircle Solid
