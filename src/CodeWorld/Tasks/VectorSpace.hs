@@ -36,7 +36,7 @@ scaledPoint = scaledVector
 
 
 dilatedPoint :: Double -> Point -> Point
-dilatedPoint fac = scaledPoint fac fac
+dilatedPoint f = scaledPoint f f
 
 
 rotatedPoint :: Double -> Point -> Point
