@@ -9,7 +9,7 @@ import Data.Char                        (toLower)
 import Data.Foldable                    (toList)
 import Data.List.Extra                  ((\\), maximumOn, nubOrd, replace)
 import Data.Maybe                       (fromJust, fromMaybe)
-import Data.Tuple.Extra                 (second)
+import Data.Tuple.Extra                 (second, both)
 import qualified Data.IntMap            as IM
 
 import CodeWorld.Tasks.API              (Drawable)
@@ -109,16 +109,22 @@ hasArguments Logo            = False
 hasArguments _               = True
 
 
-relabelWith :: [(Int,ReifyPicture Int)] -> (BiMap Node,BiMap Node) -> ([(Int,ReifyPicture Int)],[(Int,ReifyPicture Int)])
-relabelWith reifyPic (shares,allNodes) = (map step (toReify shares),map step nodesAsReify)
+relabelWith
+  :: [(Int,ReifyPicture Int)]
+  -> (BiMap Node,BiMap Node)
+  -> ([(Int,ReifyPicture Int)],[(Int,ReifyPicture Int)])
+relabelWith reifyTerm (consShares,consTerm) =
+    both (map updateNode) (toReify consShares,nodesAsReify)
   where
-    rootNode = fst $ maximumOn fst allNodes
-    renamingOrderReify = 1 : nubOrd (concatMap (toList . snd) reifyPic)
-    nodesAsReify = toReify allNodes
-    renamingOrderNodes = rootNode : reverse (nubOrd (concatMap (toList . snd) nodesAsReify))
+    consRoot = maximum $ map fst consTerm
+    reifyRoot = minimum $ map fst reifyTerm
+    nodesAsReify = toReify consTerm
+    renamingOrderReify = reifyRoot : graphNodes reifyTerm
+    renamingOrderNodes = consRoot : reverse (graphNodes nodesAsReify)
     mapping = zip renamingOrderNodes renamingOrderReify
-    step (i,struct) = (updateIndex i,fmap updateIndex struct)
+    updateNode (i,graph) = (updateIndex i,fmap updateIndex graph)
     updateIndex i = fromMaybe i (lookup i mapping)
+    graphNodes = nubOrd . concatMap (toList . snd)
 
 
 toReify :: BiMap Node -> [(IM.Key, ReifyPicture Int)]
