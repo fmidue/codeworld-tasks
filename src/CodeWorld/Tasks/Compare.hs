@@ -6,9 +6,10 @@ module CodeWorld.Tasks.Compare (
 
 
 import Data.Char                        (toLower)
+import Data.Foldable                    (toList)
 import Data.List.Extra                  ((\\), maximumOn, nubOrd, replace)
-import Data.Maybe                       (fromJust)
-import Data.Tuple.Extra                 ((&&&), second)
+import Data.Maybe                       (fromJust, fromMaybe)
+import Data.Tuple.Extra                 (second)
 import qualified Data.IntMap            as IM
 
 import CodeWorld.Tasks.API              (Drawable)
@@ -20,27 +21,58 @@ import CodeWorld.Tasks.Reify            (ReifyPicture(..), share)
 runShare :: (forall a . Drawable a => a) -> IO ([(IM.Key, ReifyPicture Int)], [(IM.Key, ReifyPicture Int)])
 runShare a = do
   (reify,reifyTerms) <- share a
-  let (hCons,consTerms) = hashconsShare a
-  let (explicitShares,allShares) = relabel (IM.toList reify) hCons
-  let termIndex = toReify consTerms
-  let allTerms = termIndex ++ IM.toList reifyTerms
+  let explicitShares = IM.toList reify
+  let (allShares,termIndex) = relabelWith (IM.toList reifyTerms) (hashconsShare a)
   if explicitShares == allShares
     then
       putStrLn "You shared everything, good job!"
     else do
       putStrLn "There are opportunities for further sharing!"
-      putStrLn "Consider this term:"
-      let completeTerm = maximumOn length $ map (flip printOriginal allTerms . snd) termIndex
-      putStrLn completeTerm
-      let notShared = map (flip printOriginal allTerms . snd) $ allShares \\ explicitShares
-      mapM_ (printShares completeTerm) notShared
+      putStrLn "Consider your original term (with possibly renamed bindings):"
+      let completeTerm = maximumOn length $ map (flip printOriginal termIndex . snd) termIndex
+      let explicit = map (flip printOriginal termIndex . snd) explicitShares
+      printSharedTerm completeTerm explicit
+      putStrLn ""
+      putStrLn "It could be rewritten in the following way:"
+      let notShared = map (flip printOriginal termIndex . snd) $ allShares \\ explicitShares
+
+      mapM_ (printSuggestions completeTerm explicit) notShared
   pure (explicitShares,allShares)
   where
-    printShares longest term = do
-      putStrLn "Why not:"
-      putStrLn $ "let share = " ++ term ++ " in"
-      putStrLn $ replace term "share" longest
+    rep = foldr (\(n,v) str -> substitute v n str)
 
+    printSharedTerm term shared = do
+      putStrLn ""
+      putStrLn "let"
+      mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) sharingNames
+      putStrLn "in"
+
+      putStrLn $ "  " ++ rep term sharingNames
+      where
+        sharingNames = consistentName 0 shared
+
+    printSuggestions term alreadyShared subterm = do
+      putStrLn ""
+      putStrLn "let"
+      mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) sharingNames
+      putStrLn "in"
+      putStrLn $ "  " ++ maintermWithSub
+      where
+        alreadyNamed = consistentName 0 alreadyShared
+        sharingNames = alreadyNamed ++ consistentName (length alreadyNamed) [subtermWithSub]
+        subtermWithSub = rep subterm alreadyNamed
+        maintermWithSub = rep term $ reverse sharingNames
+
+
+consistentName :: Int -> [String] -> [(String, String)]
+consistentName start = zip (drop start bindingSupply)
+  where bindingSupply = map (("name" ++) . show) [1 :: Int ..]
+
+
+substitute :: String -> String -> String -> String
+substitute subterm name term = replace subterm name $ replace withBrackets name term
+  where
+    withBrackets = '(' : subterm ++ ")"
 
 
 printOriginal :: (Show a, Eq a) => ReifyPicture a -> [(a, ReifyPicture a)] -> String
@@ -56,7 +88,7 @@ printOriginal term subTerms = sub term
 
 
     sub p = unwords $ case term of
-      Color c i       -> ["colored", show c, recursively i]
+      Color c i       -> ["colored", map toLower (show c), recursively i]
       Translate x y i -> ["translated", show x, show y, recursively i]
       Scale x y i     -> ["scaled", show x, show y, recursively i]
       Dilate fac i    -> ["dilated", show fac, recursively i]
@@ -77,13 +109,16 @@ hasArguments Logo            = False
 hasArguments _               = True
 
 
-relabel :: [(Int,ReifyPicture Int)] -> BiMap Node -> ([(Int,ReifyPicture Int)],[(Int,ReifyPicture Int)])
-relabel reifyPic nodes = (reNumber reifiedPic, reNumber reifiedNodes)
+relabelWith :: [(Int,ReifyPicture Int)] -> (BiMap Node,BiMap Node) -> ([(Int,ReifyPicture Int)],[(Int,ReifyPicture Int)])
+relabelWith reifyPic (shares,allNodes) = (map step (toReify shares),map step nodesAsReify)
   where
-    reifiedNodes = map snd $ toReify nodes
-    reifiedPic = map snd reifyPic
-    mapping = zip (nubOrd $ reifiedPic ++ reifiedNodes) [1..]
-    reNumber = map $ (fromJust . flip lookup mapping) &&& id
+    rootNode = fst $ maximumOn fst allNodes
+    renamingOrderReify = 1 : nubOrd (concatMap (toList . snd) reifyPic)
+    nodesAsReify = toReify allNodes
+    renamingOrderNodes = rootNode : reverse (nubOrd (concatMap (toList . snd) nodesAsReify))
+    mapping = zip renamingOrderNodes renamingOrderReify
+    step (i,struct) = (updateIndex i,fmap updateIndex struct)
+    updateIndex i = fromMaybe i (lookup i mapping)
 
 
 toReify :: BiMap Node -> [(IM.Key, ReifyPicture Int)]
