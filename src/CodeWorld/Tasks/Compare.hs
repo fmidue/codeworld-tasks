@@ -20,25 +20,27 @@ import CodeWorld.Tasks.Reify            (ReifyPicture(..), share)
 
 runShare :: (forall a . Drawable a => a) -> IO ([(IM.Key, ReifyPicture Int)], [(IM.Key, ReifyPicture Int)])
 runShare a = do
-  (reify,reifyTerms) <- share a
-  let explicitShares = IM.toList reify
-  let (allShares,termIndex) = relabelWith (IM.toList reifyTerms) (hashconsShare a)
+  reifyResult <- share a
+  let (explicitShares,termIndex) = both IM.toList reifyResult
+  let allShares = relabelWith termIndex (hashconsShare a)
   if explicitShares == allShares
     then
       putStrLn "You shared everything, good job!"
     else do
       putStrLn "There are opportunities for further sharing!"
       putStrLn "Consider your original term (with possibly renamed bindings):"
-      let completeTerm = maximumOn length $ map (flip printOriginal termIndex . snd) termIndex
-      let explicit = map (flip printOriginal termIndex . snd) explicitShares
+      let completeTerm = maximumOn length $ restoreTerms termIndex termIndex
+      let explicit = restoreTerms termIndex explicitShares
       printSharedTerm completeTerm explicit
       putStrLn ""
       putStrLn "It could be rewritten in the following way:"
-      let notShared = map (flip printOriginal termIndex . snd) $ allShares \\ explicitShares
+      let notShared = restoreTerms termIndex $ allShares \\ explicitShares
 
       mapM_ (printSuggestions completeTerm explicit) notShared
   pure (explicitShares,allShares)
   where
+    restoreTerms source = map (flip printOriginal source . snd)
+
     rep = foldr (\(n,v) str -> substitute v n str)
 
     printSharedTerm term shared = do
@@ -112,9 +114,8 @@ hasArguments _               = True
 relabelWith
   :: [(Int,ReifyPicture Int)]
   -> (BiMap Node,BiMap Node)
-  -> ([(Int,ReifyPicture Int)],[(Int,ReifyPicture Int)])
-relabelWith reifyTerm (consShares,consTerm) =
-    both (map updateNode) (toReify consShares,nodesAsReify)
+  -> [(Int,ReifyPicture Int)]
+relabelWith reifyTerm (consShares,consTerm) = map updateNode $ toReify consShares
   where
     consRoot = maximum $ map fst consTerm
     reifyRoot = minimum $ map fst reifyTerm
