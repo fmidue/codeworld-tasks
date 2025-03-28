@@ -52,7 +52,7 @@ data ReifyPicture a
   | CoordinatePlane
   | Logo
   | Blank
-  deriving (Show, Foldable, Functor, Eq, Ord)
+  deriving (Show, Foldable, Eq, Ord)
 
 
 newtype PRec a = PRec (ReifyPicture (PRec a))
