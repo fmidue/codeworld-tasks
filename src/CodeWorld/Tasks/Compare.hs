@@ -7,7 +7,7 @@ module CodeWorld.Tasks.Compare (
 
 import Data.Char                        (toLower)
 import Data.Foldable                    (toList)
-import Data.List.Extra                  ((\\), maximumOn, nubOrd, replace)
+import Data.List.Extra                  ((\\), nubOrd)
 import Data.Maybe                       (fromJust, fromMaybe)
 import Data.Tuple.Extra                 (second, both)
 import qualified Data.IntMap            as IM
@@ -23,33 +23,34 @@ runShare a = do
   reifyResult <- share a
   let (explicitShares,termIndex) = both IM.toList reifyResult
   let allShares = relabelWith termIndex (hashconsShare a)
+  let varM = varMapping explicitShares termIndex
+  print varM
   if explicitShares == allShares
     then
       putStrLn "You shared everything, good job!"
     else do
       putStrLn "There are opportunities for further sharing!"
       putStrLn "Consider your original term (with possibly renamed bindings):"
-      let completeTerm = maximumOn length $ restoreTerms termIndex termIndex
-      let explicit = restoreTerms termIndex explicitShares
+      let completeTerm = case restoreTerms varM termIndex (filter (\x -> fst x == 1) termIndex) of
+            []    -> error "this graph has no root"
+            (x:_) -> x
+      let explicit = restoreTerms varM termIndex explicitShares
       printSharedTerm completeTerm explicit
       putStrLn ""
       putStrLn "It could be rewritten in the following way:"
-      let notShared = restoreTerms termIndex $ allShares \\ explicitShares
+      let notShared = restoreTerms varM termIndex $ allShares \\ explicitShares
 
       mapM_ (printSuggestions completeTerm explicit) notShared
   pure (explicitShares,allShares)
   where
-    restoreTerms source = map (flip printOriginal source . snd)
-
-    rep = foldr (\(n,v) str -> substitute v n str)
+    restoreTerms bindings source = map (\x -> printOriginal bindings (snd x) source)
 
     printSharedTerm term shared = do
       putStrLn ""
       putStrLn "let"
       mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) sharingNames
       putStrLn "in"
-
-      putStrLn $ "  " ++ rep term sharingNames
+      putStrLn $ "  " ++ term
       where
         sharingNames = consistentName 0 shared
 
@@ -58,12 +59,19 @@ runShare a = do
       putStrLn "let"
       mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) sharingNames
       putStrLn "in"
-      putStrLn $ "  " ++ maintermWithSub
+      putStrLn $ "  " ++ term
       where
         alreadyNamed = consistentName 0 alreadyShared
-        sharingNames = alreadyNamed ++ consistentName (length alreadyNamed) [subtermWithSub]
-        subtermWithSub = rep subterm alreadyNamed
-        maintermWithSub = rep term $ reverse sharingNames
+        sharingNames = alreadyNamed ++ consistentName (length alreadyNamed) [subterm]
+
+
+varMapping :: [(Int,ReifyPicture Int)] -> [(Int,ReifyPicture Int)] -> [(Int,String)]
+varMapping = runMapping (1 :: Int)
+  where
+    runMapping _ _ [] = []
+    runMapping step sharedTerms (x@(num,_):allTerms)
+      | x `elem` sharedTerms = (num,"name" ++ show step) : runMapping (step+1) sharedTerms allTerms
+      | otherwise = runMapping step sharedTerms allTerms
 
 
 consistentName :: Int -> [String] -> [(String, String)]
@@ -71,34 +79,35 @@ consistentName start = zip (drop start bindingSupply)
   where bindingSupply = map (("name" ++) . show) [1 :: Int ..]
 
 
-substitute :: String -> String -> String -> String
-substitute subterm name term = replace subterm name $ replace withBrackets name term
+printOriginal :: [(Int,String)] -> ReifyPicture Int -> [(Int, ReifyPicture Int)] -> String
+printOriginal bindings term subTerms = sub term
   where
-    withBrackets = '(' : subterm ++ ")"
+    getExpr i = case lookup i bindings of
+                  Nothing   -> Left $ fromJust $ lookup i subTerms
+                  Just name -> Right name
 
+    printNext :: Int -> String
+    printNext i = case getExpr i of
+      Left reifyPic
+        | hasArguments reifyPic -> "(" ++ printOriginal bindings reifyPic subTerms ++ ")"
+        | otherwise             -> printOriginal bindings reifyPic subTerms
+      Right name -> name
 
-printOriginal :: (Show a, Eq a) => ReifyPicture a -> [(a, ReifyPicture a)] -> String
-printOriginal term subTerms = sub term
-  where
-    getExpr = fromJust . flip lookup subTerms
-    recursively n
-      | hasArguments expr = '(': printOriginal expr subTerms ++ ")"
-      | otherwise = printOriginal expr subTerms
-      where
-        expr = getExpr n
-    recursivelyAnd n = printOriginal (getExpr n) subTerms
-
+    printNextAnd :: Int -> String
+    printNextAnd i = case getExpr i of
+      Left reifyPic -> printOriginal bindings reifyPic subTerms
+      Right name    -> name
 
     sub p = unwords $ case term of
-      Color c i       -> ["colored", map toLower (show c), recursively i]
-      Translate x y i -> ["translated", show x, show y, recursively i]
-      Scale x y i     -> ["scaled", show x, show y, recursively i]
-      Dilate fac i    -> ["dilated", show fac, recursively i]
-      Rotate a i      -> ["rotated", show a, recursively i]
-      Reflect a i     -> ["reflected", show a, recursively i]
-      Clip x y i      -> ["clipped", show x, show y, recursively i]
-      Pictures is     -> ["pictures", concatMap recursively is]
-      And i1 i2       -> [recursivelyAnd i1, "&", recursivelyAnd i2]
+      Color c i       -> ["colored", map toLower (show c), printNext i]
+      Translate x y i -> ["translated", show x, show y, printNext i]
+      Scale x y i     -> ["scaled", show x, show y, printNext i]
+      Dilate fac i    -> ["dilated", show fac, printNext i]
+      Rotate a i      -> ["rotated", show a, printNext i]
+      Reflect a i     -> ["reflected", show a, printNext i]
+      Clip x y i      -> ["clipped", show x, show y, printNext i]
+      Pictures is     -> ["pictures", concatMap printNext is]
+      And i1 i2       -> [printNextAnd i1, "&", printNextAnd i2]
       _               -> case show p of
         (x:xs) -> [toLower x:xs]
         _      -> error "not possible"
