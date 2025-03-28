@@ -5,10 +5,10 @@ module CodeWorld.Tasks.Compare (
 ) where
 
 
+import Control.Monad                    (unless)
 import Data.Char                        (toLower)
-import Data.Foldable                    (toList)
-import Data.List.Extra                  ((\\), nubOrd)
-import Data.Maybe                       (fromJust, fromMaybe)
+import Data.List.Extra                  (maximumOn)
+import Data.Maybe                       (fromJust)
 import Data.Tuple.Extra                 (second, both)
 import qualified Data.IntMap            as IM
 
@@ -22,10 +22,10 @@ runShare :: (forall a . Drawable a => a) -> IO ([(IM.Key, ReifyPicture Int)], [(
 runShare a = do
   reifyResult <- share a
   let (explicitShares,termIndex) = both IM.toList reifyResult
-  let allShares = relabelWith termIndex (hashconsShare a)
+  let (allShares,consTerms) = both toReify $ hashconsShare a
   let varM = varMapping explicitShares termIndex
-  print varM
-  if explicitShares == allShares
+  let varMCons = varMapping allShares consTerms
+  if length termIndex == length consTerms
     then
       putStrLn "You shared everything, good job!"
     else do
@@ -38,29 +38,22 @@ runShare a = do
       printSharedTerm completeTerm $ zip (map (fromJust . flip lookup varM . fst) explicitShares) explicit
       putStrLn ""
       putStrLn "It could be rewritten in the following way:"
-      let notShared = restoreTerms varM termIndex $ allShares \\ explicitShares
-
-      mapM_ (printSuggestions completeTerm explicit) notShared
+      let sharable = restoreTerms varMCons consTerms allShares
+      let completeCons = case restoreTerms varMCons consTerms [maximumOn fst consTerms] of
+            []    -> error "this graph has no root"
+            (x:_) -> x
+      printSharedTerm completeCons $ zip (map (fromJust . flip lookup varMCons . fst) allShares) sharable
   pure (explicitShares,allShares)
   where
     restoreTerms bindings source = map (\x -> printOriginal bindings (snd x) source)
 
     printSharedTerm term shared = do
       putStrLn ""
-      putStrLn "let"
-      mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) shared
-      putStrLn "in"
+      unless (null shared) $ do
+        putStrLn "let"
+        mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) shared
+        putStrLn "in"
       putStrLn $ "  " ++ term
-
-    printSuggestions term alreadyShared subterm = do
-      putStrLn ""
-      putStrLn "let"
-      mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) sharingNames
-      putStrLn "in"
-      putStrLn $ "  " ++ term
-      where
-        alreadyNamed = consistentName 0 alreadyShared
-        sharingNames = alreadyNamed ++ consistentName (length alreadyNamed) [subterm]
 
 
 varMapping :: [(Int,ReifyPicture Int)] -> [(Int,ReifyPicture Int)] -> [(Int,String)]
@@ -72,13 +65,8 @@ varMapping = runMapping (1 :: Int)
       | otherwise = runMapping step sharedTerms allTerms
 
 
-consistentName :: Int -> [String] -> [(String, String)]
-consistentName start = zip (drop start bindingSupply)
-  where bindingSupply = map (("name" ++) . show) [1 :: Int ..]
-
-
 printOriginal :: [(Int,String)] -> ReifyPicture Int -> [(Int, ReifyPicture Int)] -> String
-printOriginal bindings term subTerms = sub term
+printOriginal bindings term subTerms = sub
   where
     getExpr i = case lookup i bindings of
                   Nothing   -> Left $ fromJust $ lookup i subTerms
@@ -96,7 +84,7 @@ printOriginal bindings term subTerms = sub term
       Left reifyPic -> printOriginal bindings reifyPic subTerms
       Right name    -> name
 
-    sub p = unwords $ case term of
+    sub = unwords $ case term of
       Color c i       -> ["colored", map toLower (show c), printNext i]
       Translate x y i -> ["translated", show x, show y, printNext i]
       Scale x y i     -> ["scaled", show x, show y, printNext i]
@@ -106,7 +94,7 @@ printOriginal bindings term subTerms = sub term
       Clip x y i      -> ["clipped", show x, show y, printNext i]
       Pictures is     -> ["pictures", concatMap printNext is]
       And i1 i2       -> [printNextAnd i1, "&", printNextAnd i2]
-      _               -> case show p of
+      _               -> case show term of
         (x:xs) -> [toLower x:xs]
         _      -> error "not possible"
 
@@ -116,23 +104,6 @@ hasArguments Blank           = False
 hasArguments CoordinatePlane = False
 hasArguments Logo            = False
 hasArguments _               = True
-
-
-relabelWith
-  :: [(Int,ReifyPicture Int)]
-  -> (BiMap Node,BiMap Node)
-  -> [(Int,ReifyPicture Int)]
-relabelWith reifyTerm (consShares,consTerm) = map updateNode $ toReify consShares
-  where
-    consRoot = maximum $ map fst consTerm
-    reifyRoot = minimum $ map fst reifyTerm
-    nodesAsReify = toReify consTerm
-    renamingOrderReify = reifyRoot : graphNodes reifyTerm
-    renamingOrderNodes = consRoot : reverse (graphNodes nodesAsReify)
-    mapping = zip renamingOrderNodes renamingOrderReify
-    updateNode (i,graph) = (updateIndex i,fmap updateIndex graph)
-    updateIndex i = fromMaybe i (lookup i mapping)
-    graphNodes = nubOrd . concatMap (toList . snd)
 
 
 toReify :: BiMap Node -> [(IM.Key, ReifyPicture Int)]
