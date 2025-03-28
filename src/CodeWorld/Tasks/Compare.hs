@@ -65,21 +65,18 @@ bindMapping = runMapping (1 :: Int)
 printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
 printOriginal bindings termLookup term = sub
   where
-    getExpr i = case lookup i bindings of
-                  Nothing   -> Left $ fromJust $ lookup i termLookup
-                  Just name -> Right name
-
     printNext :: Int -> String
-    printNext i = case getExpr i of
-      Left reifyPic
-        | hasArguments reifyPic -> "(" ++ printOriginal bindings termLookup reifyPic ++ ")"
-        | otherwise             -> printOriginal bindings termLookup reifyPic
-      Right name -> name
+    printNext i = case lookup i bindings of
+      Nothing
+          | hasArguments reifyPic -> "(" ++ printOriginal bindings termLookup reifyPic ++ ")"
+          | otherwise             -> printOriginal bindings termLookup reifyPic
+        where reifyPic = fromJust $ lookup i termLookup
+      Just name -> name
 
     printNextAnd :: Int -> String
-    printNextAnd i = case getExpr i of
-      Left reifyPic -> printOriginal bindings termLookup reifyPic
-      Right name    -> name
+    printNextAnd i = case lookup i bindings of
+      Nothing -> printOriginal bindings termLookup $ fromJust $ lookup i termLookup
+      Just name -> name
 
     sub = unwords $ case term of
       Color c i       -> ["colored", map toLower (show c), printNext i]
