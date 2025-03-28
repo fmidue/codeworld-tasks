@@ -23,25 +23,25 @@ runShare a = do
   reifyResult <- share a
   let (explicitShares,termIndex) = both IM.toList reifyResult
   let (allShares,consTerms) = both toReify $ hashconsShare a
-  let varM = varMapping explicitShares termIndex
-  let varMCons = varMapping allShares consTerms
+  let usedBinds = bindMapping explicitShares termIndex
+  let possibleBinds = bindMapping allShares consTerms
   if length termIndex == length consTerms
     then
       putStrLn "You shared everything, good job!"
     else do
       putStrLn "There are opportunities for further sharing!"
       putStrLn "Consider your original term (with possibly renamed bindings):"
-      let completeTerm = restoreTerm varM termIndex $ minimumOn fst termIndex
-      let explicit = map (restoreTerm varM termIndex) explicitShares
-      printSharedTerm completeTerm $ termsWithNames varM explicitShares explicit
+      let completeTerm = restoreTerm usedBinds termIndex $ minimumOn fst termIndex
+      let explicit = map (restoreTerm usedBinds termIndex) explicitShares
+      printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
       putStrLn ""
       putStrLn "It could be rewritten in the following way:"
-      let sharable = map (restoreTerm varMCons consTerms) allShares
-      let completeCons = restoreTerm varMCons consTerms $ maximumOn fst consTerms
-      printSharedTerm completeCons $ termsWithNames varMCons allShares sharable
+      let sharable = map (restoreTerm possibleBinds consTerms) allShares
+      let completeCons = restoreTerm possibleBinds consTerms $ maximumOn fst consTerms
+      printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
   pure (explicitShares,allShares)
   where
-    restoreTerm bindings source x = printOriginal bindings (snd x) source
+    restoreTerm bindings termLookup = printOriginal bindings termLookup . snd
     termsWithNames bindings shares = zip (map (fromJust . flip lookup bindings . fst) shares)
 
     printSharedTerm term shared = do
@@ -53,8 +53,8 @@ runShare a = do
       putStrLn $ "  " ++ term
 
 
-varMapping :: [(Int,ReifyPicture Int)] -> [(Int,ReifyPicture Int)] -> [(Int,String)]
-varMapping = runMapping (1 :: Int)
+bindMapping :: [(Int,ReifyPicture Int)] -> [(Int,ReifyPicture Int)] -> [(Int,String)]
+bindMapping = runMapping (1 :: Int)
   where
     runMapping _ _ [] = []
     runMapping step sharedTerms (x@(num,_):allTerms)
@@ -62,23 +62,23 @@ varMapping = runMapping (1 :: Int)
       | otherwise = runMapping step sharedTerms allTerms
 
 
-printOriginal :: [(Int,String)] -> ReifyPicture Int -> [(Int, ReifyPicture Int)] -> String
-printOriginal bindings term subTerms = sub
+printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
+printOriginal bindings termLookup term = sub
   where
     getExpr i = case lookup i bindings of
-                  Nothing   -> Left $ fromJust $ lookup i subTerms
+                  Nothing   -> Left $ fromJust $ lookup i termLookup
                   Just name -> Right name
 
     printNext :: Int -> String
     printNext i = case getExpr i of
       Left reifyPic
-        | hasArguments reifyPic -> "(" ++ printOriginal bindings reifyPic subTerms ++ ")"
-        | otherwise             -> printOriginal bindings reifyPic subTerms
+        | hasArguments reifyPic -> "(" ++ printOriginal bindings termLookup reifyPic ++ ")"
+        | otherwise             -> printOriginal bindings termLookup reifyPic
       Right name -> name
 
     printNextAnd :: Int -> String
     printNextAnd i = case getExpr i of
-      Left reifyPic -> printOriginal bindings reifyPic subTerms
+      Left reifyPic -> printOriginal bindings termLookup reifyPic
       Right name    -> name
 
     sub = unwords $ case term of
