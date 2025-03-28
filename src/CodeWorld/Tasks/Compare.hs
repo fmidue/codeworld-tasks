@@ -35,7 +35,7 @@ runShare a = do
             []    -> error "this graph has no root"
             (x:_) -> x
       let explicit = restoreTerms varM termIndex explicitShares
-      printSharedTerm completeTerm explicit
+      printSharedTerm completeTerm $ zip (map (fromJust . flip lookup varM . fst) explicitShares) explicit
       putStrLn ""
       putStrLn "It could be rewritten in the following way:"
       let notShared = restoreTerms varM termIndex $ allShares \\ explicitShares
@@ -48,11 +48,9 @@ runShare a = do
     printSharedTerm term shared = do
       putStrLn ""
       putStrLn "let"
-      mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) sharingNames
+      mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) shared
       putStrLn "in"
       putStrLn $ "  " ++ term
-      where
-        sharingNames = consistentName 0 shared
 
     printSuggestions term alreadyShared subterm = do
       putStrLn ""
