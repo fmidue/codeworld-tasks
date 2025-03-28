@@ -5,10 +5,11 @@ module CodeWorld.Tasks.Compare (
 ) where
 
 
+import Control.Monad                    (unless)
 import Data.Char                        (toLower)
-import Data.List.Extra                  ((\\), nubOrd)
+import Data.List.Extra                  (maximumOn, minimumOn)
 import Data.Maybe                       (fromJust)
-import Data.Tuple.Extra                 ((&&&), second)
+import Data.Tuple.Extra                 (second, both)
 import qualified Data.IntMap            as IM
 
 import CodeWorld.Tasks.API              (Drawable)
@@ -19,42 +20,75 @@ import CodeWorld.Tasks.Reify            (ReifyPicture(..), share)
 
 runShare :: (forall a . Drawable a => a) -> IO ([(IM.Key, ReifyPicture Int)], [(IM.Key, ReifyPicture Int)])
 runShare a = do
-  (reify,reifyTerms) <- share a
-  let (hCons,consTerms) = hashconsShare a
-  let (explicitShares,allShares) = relabel (IM.toList reify) hCons
-  let allTerms = toReify consTerms ++ IM.toList reifyTerms
-  if explicitShares == allShares
+  reifyResult <- share a
+  let (explicitShares,termIndex) = both IM.toList reifyResult
+  let (allShares,consTerms) = both toReify $ hashconsShare a
+  let usedBinds = bindMapping explicitShares termIndex
+  let possibleBinds = bindMapping allShares consTerms
+  if length termIndex == length consTerms
     then
       putStrLn "You shared everything, good job!"
     else do
-      putStrLn "You did not share these subexpressions: "
-      let notShared = allShares \\ explicitShares
-      putStrLn $ unlines $ map (flip printOriginal allTerms . snd) notShared
+      putStrLn "There are opportunities for further sharing!"
+      putStrLn "Consider your original term (with possibly renamed bindings):"
+      let completeTerm = restoreTerm usedBinds termIndex $ minimumOn fst termIndex
+      let explicit = map (restoreTerm usedBinds termIndex) explicitShares
+      printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
+      putStrLn ""
+      putStrLn "It could be rewritten in the following way:"
+      let sharable = map (restoreTerm possibleBinds consTerms) allShares
+      let completeCons = restoreTerm possibleBinds consTerms $ maximumOn fst consTerms
+      printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
   pure (explicitShares,allShares)
-
-
-
-printOriginal :: (Show a, Eq a) => ReifyPicture a -> [(a, ReifyPicture a)] -> String
-printOriginal term subTerms = sub term
   where
-    getExpr = fromJust . flip lookup subTerms
-    recursively n
-      | hasArguments expr = '(': printOriginal expr subTerms ++ ")"
-      | otherwise = printOriginal expr subTerms
-      where
-        expr = getExpr n
+    restoreTerm bindings termLookup = printOriginal bindings termLookup . snd
+    termsWithNames bindings shares = zip (map (fromJust . flip lookup bindings . fst) shares)
 
-    sub p = unwords $ case term of
-      Color c i       -> ["colored", show c, recursively i]
-      Translate x y i -> ["translated", show x, show y, recursively i]
-      Scale x y i     -> ["scaled", show x, show y, recursively i]
-      Dilate fac i    -> ["dilated", show fac, recursively i]
-      Rotate a i      -> ["rotated", show a, recursively i]
-      Reflect a i     -> ["reflected", show a, recursively i]
-      Clip x y i      -> ["clipped", show x, show y, recursively i]
-      Pictures is     -> ["pictures", concatMap recursively is]
-      And i1 i2       -> [recursively i1, "&", recursively i2]
-      _               -> case show p of
+    printSharedTerm term shared = do
+      putStrLn ""
+      unless (null shared) $ do
+        putStrLn "let"
+        mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) shared
+        putStrLn "in"
+      putStrLn $ "  " ++ term
+
+
+bindMapping :: [(Int,ReifyPicture Int)] -> [(Int,ReifyPicture Int)] -> [(Int,String)]
+bindMapping = runMapping (1 :: Int)
+  where
+    runMapping _ _ [] = []
+    runMapping step sharedTerms (x@(num,_):allTerms)
+      | x `elem` sharedTerms = (num,"name" ++ show step) : runMapping (step+1) sharedTerms allTerms
+      | otherwise = runMapping step sharedTerms allTerms
+
+
+printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
+printOriginal bindings termLookup term = sub
+  where
+    printNext :: Int -> String
+    printNext i = case lookup i bindings of
+      Nothing
+          | hasArguments reifyPic -> "(" ++ printOriginal bindings termLookup reifyPic ++ ")"
+          | otherwise             -> printOriginal bindings termLookup reifyPic
+        where reifyPic = fromJust $ lookup i termLookup
+      Just name -> name
+
+    printNextAnd :: Int -> String
+    printNextAnd i = case lookup i bindings of
+      Nothing -> printOriginal bindings termLookup $ fromJust $ lookup i termLookup
+      Just name -> name
+
+    sub = unwords $ case term of
+      Color c i       -> ["colored", map toLower (show c), printNext i]
+      Translate x y i -> ["translated", show x, show y, printNext i]
+      Scale x y i     -> ["scaled", show x, show y, printNext i]
+      Dilate fac i    -> ["dilated", show fac, printNext i]
+      Rotate a i      -> ["rotated", show a, printNext i]
+      Reflect a i     -> ["reflected", show a, printNext i]
+      Clip x y i      -> ["clipped", show x, show y, printNext i]
+      Pictures is     -> ["pictures", concatMap printNext is]
+      And i1 i2       -> [printNextAnd i1, "&", printNextAnd i2]
+      _               -> case show term of
         (x:xs) -> [toLower x:xs]
         _      -> error "not possible"
 
@@ -64,15 +98,6 @@ hasArguments Blank           = False
 hasArguments CoordinatePlane = False
 hasArguments Logo            = False
 hasArguments _               = True
-
-
-relabel :: [(Int,ReifyPicture Int)] -> BiMap Node -> ([(Int,ReifyPicture Int)],[(Int,ReifyPicture Int)])
-relabel reifyPic nodes = (reNumber reifiedPic, reNumber reifiedNodes)
-  where
-    reifiedNodes = map snd $ toReify nodes
-    reifiedPic = map snd reifyPic
-    mapping = zip (nubOrd $ reifiedPic ++ reifiedNodes) [1..]
-    reNumber = map $ (fromJust . flip lookup mapping) &&& id
 
 
 toReify :: BiMap Node -> [(IM.Key, ReifyPicture Int)]
