@@ -7,7 +7,7 @@ module CodeWorld.Tasks.Compare (
 
 import Control.Monad                    (unless)
 import Data.Char                        (toLower)
-import Data.List.Extra                  (maximumOn)
+import Data.List.Extra                  (maximumOn, minimumOn)
 import Data.Maybe                       (fromJust)
 import Data.Tuple.Extra                 (second, both)
 import qualified Data.IntMap            as IM
@@ -31,21 +31,18 @@ runShare a = do
     else do
       putStrLn "There are opportunities for further sharing!"
       putStrLn "Consider your original term (with possibly renamed bindings):"
-      let completeTerm = case restoreTerms varM termIndex (filter (\x -> fst x == 1) termIndex) of
-            []    -> error "this graph has no root"
-            (x:_) -> x
-      let explicit = restoreTerms varM termIndex explicitShares
-      printSharedTerm completeTerm $ zip (map (fromJust . flip lookup varM . fst) explicitShares) explicit
+      let completeTerm = restoreTerm varM termIndex $ minimumOn fst termIndex
+      let explicit = map (restoreTerm varM termIndex) explicitShares
+      printSharedTerm completeTerm $ termsWithNames varM explicitShares explicit
       putStrLn ""
       putStrLn "It could be rewritten in the following way:"
-      let sharable = restoreTerms varMCons consTerms allShares
-      let completeCons = case restoreTerms varMCons consTerms [maximumOn fst consTerms] of
-            []    -> error "this graph has no root"
-            (x:_) -> x
-      printSharedTerm completeCons $ zip (map (fromJust . flip lookup varMCons . fst) allShares) sharable
+      let sharable = map (restoreTerm varMCons consTerms) allShares
+      let completeCons = restoreTerm varMCons consTerms $ maximumOn fst consTerms
+      printSharedTerm completeCons $ termsWithNames varMCons allShares sharable
   pure (explicitShares,allShares)
   where
-    restoreTerms bindings source = map (\x -> printOriginal bindings (snd x) source)
+    restoreTerm bindings source x = printOriginal bindings (snd x) source
+    termsWithNames bindings shares = zip (map (fromJust . flip lookup bindings . fst) shares)
 
     printSharedTerm term shared = do
       putStrLn ""
