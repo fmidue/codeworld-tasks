@@ -3,6 +3,7 @@
 module CodeWorld.Test.Normalize (
   Moved(..),
   NormalizedPicture(..),
+  contains,
   couldHaveTranslation,
   getExactPos,
   getTranslation,
@@ -456,6 +457,7 @@ stripToColor (Translate _ _ p) = p
 stripToColor (Rotate _ p)  = p
 stripToColor (Reflect _ p) = p
 stripToColor (Scale _ _ p) = p
+stripToColor (Clip _ _ p)  = p
 stripToColor p = p
 
 stripToShape :: NormalizedPicture -> NormalizedPicture
@@ -463,6 +465,18 @@ stripToShape (Color _ p) = p
 stripToShape p = case stripToColor p of
   Color _ q -> q
   q -> q
+
+
+contains :: NormalizedPicture -> NormalizedPicture -> Bool
+(Pictures ps) `contains` p = any (`contains` p) ps
+p `contains` q = p == q || case p of
+  Translate _ _ pic -> pic `contains` q
+  Rotate _ pic ->  pic `contains` q
+  Reflect _ pic -> pic `contains` q
+  Scale _ _ pic -> pic `contains` q
+  Color _ pic -> pic `contains` q
+  _ -> False
+
 
 
 toSize :: Double -> Size

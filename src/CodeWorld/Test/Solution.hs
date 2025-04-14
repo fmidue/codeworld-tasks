@@ -15,7 +15,7 @@ module CodeWorld.Test.Solution (
 
 
 import CodeWorld.Tasks.Picture (Picture, toInterface)
-import CodeWorld.Test.Normalize (NormalizedPicture)
+import CodeWorld.Test.Normalize (NormalizedPicture, contains)
 import CodeWorld.Test.Relative (
   Components(..),
   RelativePicSpec,
@@ -55,7 +55,7 @@ containsExactElems ps = specElems (all (`elem` ps))
 
 -- Input contains at least these sub pictures
 containsElems :: [NormalizedPicture] -> Components -> Bool
-containsElems ps = specElems (\c -> all (`elem` c) ps)
+containsElems ps = specElems (any (or . (\c -> map (c `contains`) ps)))
 
 -- Use a predicate on the list of relative positions
 specPosition :: ([RelativePicSpec] -> Bool) -> Components -> Bool
