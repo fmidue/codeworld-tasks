@@ -7,7 +7,8 @@ module CodeWorld.Test.Solution (
   specPosition,
   evaluateSpec,
   isExactly,
-  has,
+  hasExact,
+  hasApprox,
   (<||>),
   option,
   options,
@@ -73,5 +74,10 @@ isExactly a = specPosition (==[a])
 
 
 -- Input contains at least this relative picture
-has :: RelativePicSpec -> Components -> Bool
-has a = specPosition (a `elem`)
+hasExact :: RelativePicSpec -> Components -> Bool
+hasExact a = specPosition (a `elem`)
+
+
+-- Input contains elements satisfying the given spatial predicate
+hasApprox :: (RelativePicSpec -> Bool) -> Components -> Bool
+hasApprox f = specPosition (any f)

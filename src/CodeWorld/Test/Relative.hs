@@ -15,6 +15,10 @@ module CodeWorld.Test.Relative (
   onTopOf,
   alone,
   toRelative,
+  isBelow,
+  isAbove,
+  isLeftOf,
+  isRightOf,
   )where
 
 
@@ -105,6 +109,28 @@ northeastOf = flip southwestOf
 
 alone :: NormalizedPicture -> RelativePicSpec
 alone = Alone
+
+
+isAbove :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isAbove p q (Is p1 (Direction (Just South) _) p2) = p1 == q && p2 == p
+isAbove _ _ _ = False
+
+
+isBelow :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isBelow p q (Is p1 (Direction (Just South) _) p2) = p1 == p && p2 == q
+isBelow _ _ _ = False
+
+
+isLeftOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isLeftOf p q (Is p1 (Direction _ (Just West)) p2) = p1 == p && p2 == q
+isLeftOf p q (Is p1 (Direction _ (Just East)) p2) = p1 == q && p2 == p
+isLeftOf _ _ _ = False
+
+
+isRightOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isRightOf p q (Is p1 (Direction _ (Just East)) p2) = p1 == p && p2 == q
+isRightOf p q (Is p1 (Direction _ (Just West)) p2) = p1 == q && p2 == p
+isRightOf _ _ _ = False
 
 
 toRelative :: NormalizedPicture -> Components
