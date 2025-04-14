@@ -41,6 +41,7 @@ module CodeWorld.Tasks.Types (
 
 
 import Control.DeepSeq                  (NFData)
+import Data.List                        (sort)
 import Data.Text                        (Text)
 import GHC.Generics                     (Generic)
 
@@ -83,9 +84,30 @@ data Color
   | RGB Double Double Double
   | HSL Double Double Double
 
-  deriving (Eq,Ord,Show,Generic,NFData)
+  deriving (Ord,Show,Generic,NFData)
 
 type Colour = Color
+
+
+instance Eq Color where
+  Yellow == Yellow = True
+  Green == Green = True
+  Red == Red = True
+  Blue == Blue = True
+  Orange == Orange = True
+  Brown == Brown = True
+  Pink == Pink = True
+  Purple == Purple = True
+  Grey == Grey = True
+  White == White = True
+  Black == Black = True
+  Modified c1 == Modified c2 = c1 == c2
+  Modified c1 == c2 = c1 == c2
+  c1 == Modified c2 = c1 == c2
+  Mixed xs == Mixed ys = sort xs == sort ys
+  RGB r1 g1 b1 == RGB r2 g2 b2 = r1 == r2 && g1 == g2 && b1 == b2
+  HSL h1 s1 l1 == HSL h2 s2 l2 = h1 == h2 && s1 == s2 && l1 == l2
+  _ == _ = False
 
 
 green, red, yellow, black, white, blue, orange, brown, pink, purple, gray, grey :: Color
