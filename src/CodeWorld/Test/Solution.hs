@@ -13,6 +13,7 @@ module CodeWorld.Test.Solution (
   (<||>),
   option,
   options,
+  ifPresentThen,
   ) where
 
 
@@ -62,6 +63,12 @@ containsElem p = specElems (any (`contains` p))
 -- Input contains at least these sub pictures
 containsElems :: [NormalizedPicture] -> Components -> Bool
 containsElems ps = specElems (any (or . (\c -> map (c `contains`) ps)))
+
+
+-- run a predicate on the input only if specific sub pictures are present
+ifPresentThen :: [NormalizedPicture] -> (Components -> Bool) -> Components -> Bool
+ifPresentThen ps f comp = not (containsElems ps comp) || f comp
+
 
 -- Use a predicate on the list of relative positions
 specPosition :: ([RelativePicSpec] -> Bool) -> Components -> Bool
