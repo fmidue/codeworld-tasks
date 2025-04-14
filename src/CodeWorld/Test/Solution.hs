@@ -2,13 +2,14 @@
 module CodeWorld.Test.Solution (
   --Spec(..),
   specElems,
+  containsElem,
   containsElems,
   containsExactElems,
   specPosition,
   evaluateSpec,
   isExactly,
-  hasExact,
-  hasApprox,
+  hasExactly,
+  hasBroadly,
   (<||>),
   option,
   options,
@@ -54,6 +55,10 @@ specElems f (Components (ps,_)) = f ps
 containsExactElems :: [NormalizedPicture] -> Components -> Bool
 containsExactElems ps = specElems (all (`elem` ps))
 
+-- Input contains at least this sub picture
+containsElem :: NormalizedPicture -> Components -> Bool
+containsElem p = specElems (any (`contains` p))
+
 -- Input contains at least these sub pictures
 containsElems :: [NormalizedPicture] -> Components -> Bool
 containsElems ps = specElems (any (or . (\c -> map (c `contains`) ps)))
@@ -74,10 +79,10 @@ isExactly a = specPosition (==[a])
 
 
 -- Input contains at least this relative picture
-hasExact :: RelativePicSpec -> Components -> Bool
-hasExact a = specPosition (a `elem`)
+hasExactly :: RelativePicSpec -> Components -> Bool
+hasExactly a = specPosition (a `elem`)
 
 
 -- Input contains elements satisfying the given spatial predicate
-hasApprox :: (RelativePicSpec -> Bool) -> Components -> Bool
-hasApprox f = specPosition (any f)
+hasBroadly :: (RelativePicSpec -> Bool) -> Components -> Bool
+hasBroadly f = specPosition (any f)
