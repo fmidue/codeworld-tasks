@@ -17,3 +17,15 @@ someCircle = circle 1
 
 someSolidCircle :: Drawable a => a
 someSolidCircle = solidCircle 1
+
+rotatedQuarter :: Drawable a => a -> a
+rotatedQuarter = rotated (pi/2)
+
+rotatedHalf :: Drawable a => a -> a
+rotatedHalf = rotated pi
+
+rotatedThreeQuarters :: Drawable a => a -> a
+rotatedThreeQuarters = rotated (3*pi/2)
+
+rotatedUpToFull :: Drawable a => a -> a
+rotatedUpToFull = rotated 5
