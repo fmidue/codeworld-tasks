@@ -1,14 +1,16 @@
 
 module CodeWorld.Test.Solution (
-  Spec(..),
-  spec,
+  --Spec(..),
   specElems,
   containsElems,
   containsExactElems,
   specPosition,
-  evaluate,
+  evaluateSpec,
   isExactly,
   has,
+  (<||>),
+  option,
+  options,
   ) where
 
 
@@ -22,13 +24,24 @@ import CodeWorld.Test.Relative (
 
 
 
-data Spec = Only Components | ReqAndOpt (Components,Components)
+--data Spec = Only Components | ReqAndOpt (Components,Components)
 
-newtype PredSpec = PredSpec [Components -> Bool]
+type PredSpec = [Components -> Bool]
 
 
-spec :: [Components -> Bool] -> PredSpec
-spec = PredSpec
+-- At least one of arbitrarily many predicates evaluates to True
+options :: [Components -> Bool] -> Components -> Bool
+options ps c = any (\p -> p c) ps
+
+
+-- At least one of two predicates evaluates to True
+(<||>) :: (Components -> Bool) -> (Components -> Bool) -> Components -> Bool
+(<||>) p q c = p c || q c
+
+
+-- Alias for (<||>)
+option :: (Components -> Bool) -> (Components -> Bool) -> Components -> Bool
+option = (<||>)
 
 
 -- Use a predicate on the list of sub images
@@ -50,8 +63,8 @@ specPosition f (Components (_,rP)) = f rP
 
 
 -- Evaluate all of the given predicates on the student submission
-evaluate :: PredSpec -> Picture -> Bool
-evaluate (PredSpec fs) pic = all (\f -> f $ toRelative $ toInterface pic) fs
+evaluateSpec :: PredSpec -> Picture -> Bool
+evaluateSpec fs pic = all (\f -> f $ toRelative $ toInterface pic) fs
 
 
 -- Input is exactly this relative picture
