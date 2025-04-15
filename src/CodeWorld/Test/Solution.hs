@@ -90,8 +90,8 @@ inRangeOf :: NormalizedPicture -> (Int,Int) -> PicPredicate
 inRangeOf p (lower,upper) = specElems (\ps -> let occurs = count p ps in occurs >= lower && occurs <= upper)
 
 
-count :: Eq a => a -> [a] -> Int
-count thing = length . filter (==thing)
+count :: NormalizedPicture -> [NormalizedPicture] -> Int
+count thing = length . filter (contains thing)
 
 
 -- run a predicate on the input only if another succeeded already
