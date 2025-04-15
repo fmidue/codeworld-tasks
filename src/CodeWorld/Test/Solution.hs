@@ -6,7 +6,8 @@ module CodeWorld.Test.Solution (
   containsElems,
   containsExactElems,
   specPosition,
-  evaluateSpec,
+  evaluatePred,
+  evaluatePreds,
   isExactly,
   hasExactly,
   hasBroadly,
@@ -104,8 +105,13 @@ specPosition f (Components (_,rP)) = f rP
 
 
 -- Evaluate all of the given predicates on the student submission
-evaluateSpec :: [PicPredicate] -> Picture -> Bool
-evaluateSpec fs pic = all (\f -> f $ toRelative $ toInterface pic) fs
+evaluatePreds :: [PicPredicate] -> Picture -> Bool
+evaluatePreds fs pic = all (`evaluatePred` pic) fs
+
+
+-- Evaluate a single predicate on the student submission
+evaluatePred :: PicPredicate -> Picture -> Bool
+evaluatePred f = f . toRelative . toInterface
 
 
 -- Input is exactly this relative picture
