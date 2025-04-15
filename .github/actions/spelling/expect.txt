@@ -1,3 +1,5 @@
 codeworld
 hashcons
+pred
+preds
 triecons
