@@ -14,6 +14,10 @@ module CodeWorld.Test.Solution (
   option,
   options,
   ifThen,
+  thisOften,
+  atLeast,
+  atMost,
+  inRangeOf,
   ) where
 
 
@@ -63,6 +67,30 @@ containsElem p = specElems (any (`contains` p))
 -- Input contains at least these sub pictures
 containsElems :: [NormalizedPicture] -> PicPredicate
 containsElems ps = specElems (any (or . (\c -> map (c `contains`) ps)))
+
+
+-- Sub picture occurs exactly this many times in submission
+thisOften :: NormalizedPicture -> Int -> PicPredicate
+thisOften p amount = specElems (\ps -> count p ps == amount)
+
+
+-- Sub picture occurs at least this many times in submission
+atLeast :: NormalizedPicture -> Int -> PicPredicate
+atLeast p amount = specElems (\ps -> count p ps >= amount)
+
+
+-- Sub picture occurs at most this many times in submission
+atMost :: NormalizedPicture -> Int -> PicPredicate
+atMost p amount = specElems (\ps -> count p ps <= amount)
+
+
+-- occurrences of the sub picture lie in specified range
+inRangeOf :: NormalizedPicture -> (Int,Int) -> PicPredicate
+inRangeOf p (lower,upper) = specElems (\ps -> let occurs = count p ps in occurs >= lower && occurs <= upper)
+
+
+count :: Eq a => a -> [a] -> Int
+count thing = length . filter (==thing)
 
 
 -- run a predicate on the input only if another succeeded already
