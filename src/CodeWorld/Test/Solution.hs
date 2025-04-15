@@ -91,7 +91,7 @@ inRangeOf p (lower,upper) = specElems (\ps -> let occurs = count p ps in occurs 
 
 
 count :: NormalizedPicture -> [NormalizedPicture] -> Int
-count thing = length . filter (contains thing)
+count thing = length . filter (`contains` thing)
 
 
 -- run a predicate on the input only if another succeeded already
