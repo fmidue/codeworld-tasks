@@ -1,4 +1,4 @@
 codeworld
 hashcons
-preds
+Preds
 triecons
