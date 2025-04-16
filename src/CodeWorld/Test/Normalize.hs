@@ -295,7 +295,7 @@ instance Drawable NormalizedPicture where
   scaled _ 0 _ = blank
   scaled 1 1 p = p
   scaled fac1 fac2 p = case p of
-    Scale f1 f2 q    -> scaled (fromFactor f1*abs fac1) (fromFactor f2* abs fac2) q
+    Scale f1 f2 q    -> scaled (fromFactor f1 * fac1) (fromFactor f2 * fac2) q
     Translate x y q  -> Translate
                          (toPosition $ getExactPos x*fac1)
                          (toPosition $ getExactPos y*fac2)
@@ -375,10 +375,6 @@ fromFactor :: Maybe Factor -> Double
 fromFactor Nothing = 1
 fromFactor (Just ( Smaller x)) = x
 fromFactor (Just (Larger x)) = x
-
-
-multFactors :: Maybe Factor -> Maybe Factor -> Maybe Factor
-multFactors f1 f2 = toFactor $ fromFactor f1 * fromFactor f2
 
 
 removeDupes :: Eq a => [a] -> [a]
