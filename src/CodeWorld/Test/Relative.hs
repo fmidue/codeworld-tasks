@@ -19,6 +19,7 @@ module CodeWorld.Test.Relative (
   isAbove,
   isLeftOf,
   isRightOf,
+  atSamePosition,
   )where
 
 
@@ -131,6 +132,11 @@ isRightOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
 isRightOf p q (Is p1 (Direction _ (Just East)) p2) = p1 == p && p2 == q
 isRightOf p q (Is p1 (Direction _ (Just West)) p2) = p1 == q && p2 == p
 isRightOf _ _ _ = False
+
+
+atSamePosition :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+atSamePosition p q (Is p1 (Direction Nothing Nothing) p2) = p1 == p && p2 == q || p1 == q && p2 == p
+atSamePosition _ _ _ = False
 
 
 toRelative :: NormalizedPicture -> Components
