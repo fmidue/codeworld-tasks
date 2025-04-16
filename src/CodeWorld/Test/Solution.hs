@@ -119,7 +119,7 @@ isExactly :: RelativePicSpec -> PicPredicate
 isExactly a = specPosition (==[a])
 
 
--- Input contains at least this relative picture
+-- Input contains elements satisfying exact spatial predicate
 hasExactly :: RelativePicSpec -> PicPredicate
 hasExactly a = specPosition (a `elem`)
 

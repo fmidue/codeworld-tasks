@@ -63,6 +63,11 @@ data Moved
   deriving (Ord)
 
 
+data Factor
+  = Smaller Double
+  | Larger Double
+  deriving (Ord)
+
 type AbsPoint = (Moved,Moved)
 
 
@@ -127,6 +132,17 @@ instance Num Moved where
     | otherwise = Pos $ fromIntegral i
 
 
+instance Eq Factor where
+  (Smaller _) == (Smaller _) = True
+  (Larger _)  == (Larger _)  = True
+  _           == _           = False
+
+
+instance Show Factor where
+  show (Smaller _) = "Smaller"
+  show (Larger _)  = "Larger"
+
+
 instance Eq Angle where
   (ToQuarter _)      == (ToQuarter _)      = True
   (ToHalf _)         == (ToHalf _)         = True
@@ -148,7 +164,7 @@ data NormalizedPicture
   | Lettering !Text
   | Color !Color !NormalizedPicture
   | Translate !Moved !Moved !NormalizedPicture
-  | Scale !Double !Double !NormalizedPicture
+  | Scale !(Maybe Factor) !(Maybe Factor) !NormalizedPicture
   | Rotate !Angle !NormalizedPicture
   | Pictures [NormalizedPicture]
   | CoordinatePlane
@@ -279,7 +295,7 @@ instance Drawable NormalizedPicture where
   scaled _ 0 _ = blank
   scaled 1 1 p = p
   scaled fac1 fac2 p = case p of
-    Scale f1 f2 q    -> scaled (f1*abs fac1) (f2* abs fac2) q
+    Scale f1 f2 q    -> scaled (fromFactor f1*abs fac1) (fromFactor f2* abs fac2) q
     Translate x y q  -> Translate
                          (toPosition $ getExactPos x*fac1)
                          (toPosition $ getExactPos y*fac2)
@@ -288,7 +304,7 @@ instance Drawable NormalizedPicture where
     Pictures ps      -> Pictures $ map (scaled fac1 fac2) ps
     Polyline s ps    -> Polyline s $ map (applyToAbsPoint (scaledVector fac1 fac2)) ps
     Curve s ps       -> Curve    s $ map (applyToAbsPoint (scaledVector fac1 fac2)) ps
-    a                -> Scale (abs fac1) (abs fac2) a
+    a                -> Scale (toFactor fac1) (toFactor fac2) a
 
   rotated 0 p = p
   rotated a p = case p of
@@ -346,6 +362,23 @@ handlePointList f ps
 
 toOpenShape :: [Point] -> [Point]
 toOpenShape ps = ps ++ take 1 ps
+
+
+toFactor :: Double -> Maybe Factor
+toFactor 1 = Nothing
+toFactor x
+  | x > 1 = Just $ Larger x
+  | otherwise = Just $ Smaller x
+
+
+fromFactor :: Maybe Factor -> Double
+fromFactor Nothing = 1
+fromFactor (Just ( Smaller x)) = x
+fromFactor (Just (Larger x)) = x
+
+
+multFactors :: Maybe Factor -> Maybe Factor -> Maybe Factor
+multFactors f1 f2 = toFactor $ fromFactor f1 * fromFactor f2
 
 
 removeDupes :: Eq a => [a] -> [a]
