@@ -284,6 +284,7 @@ instance Drawable NormalizedPicture where
   colored c p = case p of
     Translate x y q -> Translate x y $ colored c q
     Rotate a q     -> Rotate a $ colored c q
+    Scale f1 f2 q  -> Scale f1 f2 $ colored c q
     Color _ q      -> colored c q
     Pictures ps    -> Pictures $ map (colored c) ps
     Blank          -> Blank
