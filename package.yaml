@@ -35,7 +35,7 @@ ghc-options:
 library:
   source-dirs: src
   exposed-modules:
-    - CodeWorld.Tasks
+    - CodeWorld
     - CodeWorld.Test
 
 tests:

@@ -23,7 +23,7 @@ source-repository head
 
 library
   exposed-modules:
-      CodeWorld.Tasks
+      CodeWorld
       CodeWorld.Test
   other-modules:
       CodeWorld.Tasks.API

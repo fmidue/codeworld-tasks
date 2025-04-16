@@ -1,5 +1,5 @@
 
-module CodeWorld.Tasks (
+module CodeWorld (
   module CodeWorld.Tasks.Picture,
   module CodeWorld.Tasks.Types,
   module CodeWorld.Tasks.VectorSpace,
