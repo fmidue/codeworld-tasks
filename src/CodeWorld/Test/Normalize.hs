@@ -310,6 +310,7 @@ instance Drawable NormalizedPicture where
   rotated 0 p = p
   rotated a p = case p of
     Rotate a2 q     -> rotated (a + getExactAngle a2) q
+    Reflect a2 q    -> reflected (getExactAngle a2 + a/2) q
     Translate x y q -> Translate
                         (toPosition $ getExactPos x*cos a - getExactPos y*sin a)
                         (toPosition $ getExactPos x*sin a + getExactPos y*cos a)
@@ -320,6 +321,9 @@ instance Drawable NormalizedPicture where
     Circle s r      -> Circle s r
     q               -> Rotate (toAngle a) q
 
+  reflected a1 (Reflect a2 p)
+    | a1 == getExactAngle a2 = p
+    | otherwise = rotated (a1*2 - getExactAngle a2*2) p
   reflected a (Rectangle s x y) = rotated (a*2) $ Rectangle s x y
   reflected _ (Circle s r) = Circle s r
   reflected a (Polyline s ps) = Polyline s $ map (applyToAbsPoint (reflectedPoint a)) ps
@@ -327,6 +331,7 @@ instance Drawable NormalizedPicture where
   reflected a (Pictures ps) = Pictures $ map (reflected a) ps
   reflected a p@(Translate _ y _) = let d = a*2 in
     translated (2*getExactPos y*sin d) (-(2*getExactPos y*cos d)) $ rotated d p
+  reflected a (Rotate a2 p) = reflected (a - (getExactAngle a2/2)) p
   reflected a p = Reflect (toAngle a) p
 
    -- TODO: clip free shapes?
