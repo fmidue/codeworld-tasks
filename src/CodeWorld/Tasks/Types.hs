@@ -54,7 +54,7 @@ data TextStyle
   = Plain
   | Bold
   | Italic
-  deriving (Eq,Ord,Show,Generic,NFData)
+  deriving (Eq,Ord,Show)
 
 
 data Font
@@ -64,7 +64,7 @@ data Font
   | Handwriting
   | Fancy
   | NamedFont Text
-  deriving (Eq,Ord,Show,Generic,NFData)
+  deriving (Eq,Ord,Show)
 
 
 data Color
@@ -83,7 +83,6 @@ data Color
   | Mixed [Color]
   | RGB Double Double Double
   | HSL Double Double Double
-
   deriving (Ord,Show,Generic,NFData)
 
 type Colour = Color

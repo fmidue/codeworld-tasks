@@ -15,8 +15,10 @@ fst
 Github
 hspec
 https
+mconcat
 mempty
 println
+rnf
 scanl
 snd
 uncurry

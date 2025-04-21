@@ -1,5 +1,4 @@
-{-# language DeriveAnyClass #-}
-{-# language DeriveGeneric #-}
+{-# language RankNTypes #-}
 
 module CodeWorld.Tasks.Picture (
   Picture,
@@ -43,183 +42,128 @@ module CodeWorld.Tasks.Picture (
 
 import qualified CodeWorld.Tasks.API    as API
 import CodeWorld.Tasks.Types            (Color, Font, TextStyle, Point)
+import CodeWorld.Test.Normalize         (NormalizedPicture)
 
-import Control.DeepSeq                  (NFData)
+import Control.DeepSeq                  (NFData(..))
 import Data.Text                        (Text)
-import GHC.Generics                     (Generic)
 
 
-data Picture
-  = Rectangle Double Double
-  | ThickRectangle Double Double Double
-  | SolidRectangle Double Double
-  | Circle Double
-  | ThickCircle Double Double
-  | SolidCircle Double
-  | Polygon [Point]
-  | SolidPolygon [Point]
-  | ThickPolygon Double [Point]
-  | Polyline [Point]
-  | ThickPolyline Double [Point]
-  | Sector Double Double Double
-  | Arc Double Double Double
-  | ThickArc Double Double Double Double
-  | Curve [Point]
-  | ThickCurve Double [Point]
-  | ClosedCurve [Point]
-  | SolidClosedCurve [Point]
-  | ThickClosedCurve Double [Point]
-  | Lettering Text
-  | StyledLettering TextStyle Font Text
-  | Color Color Picture
-  | Translate Double Double Picture
-  | Scale Double Double Picture
-  | Dilate Double Picture
-  | Rotate Double Picture
-  | Reflect Double Picture
-  | Clip Double Double Picture
-  | Pictures [Picture]
-  | And Picture Picture
-  | CoordinatePlane
-  | Logo
-  | Blank
-  deriving (Show, Eq, Ord, Generic, NFData)
+newtype Picture = Picture {unPicture :: forall a . API.Drawable a => a}
 
+
+instance Semigroup Picture where
+  (<>) = (&)
+
+instance Monoid Picture where
+  mempty  = blank
+  mconcat = pictures
+
+instance NFData Picture where
+  rnf p = rnf (unPicture p :: NormalizedPicture)
+
+
+toInterface :: API.Drawable a => Picture -> a
+toInterface = unPicture
 
 rectangle :: Double -> Double -> Picture
-rectangle = Rectangle
+rectangle x y = Picture $ API.rectangle x y
 
 thickRectangle :: Double -> Double -> Double -> Picture
-thickRectangle = ThickRectangle
+thickRectangle t x y = Picture $ API.thickRectangle t x y
 
 solidRectangle :: Double -> Double -> Picture
-solidRectangle = SolidRectangle
+solidRectangle x y = Picture $ API.solidRectangle x y
 
 circle :: Double -> Picture
-circle = Circle
+circle r = Picture $ API.circle r
 
 thickCircle :: Double -> Double -> Picture
-thickCircle = ThickCircle
+thickCircle t r = Picture $ API.thickCircle t r
 
 solidCircle :: Double -> Picture
-solidCircle = SolidCircle
+solidCircle r = Picture $ API.solidCircle r
 
 arc :: Double -> Double -> Double -> Picture
-arc = Arc
+arc a1 a2 r = Picture $ API.arc a1 a2 r
 
 sector :: Double -> Double -> Double -> Picture
-sector = Sector
+sector a1 a2 r = Picture $ API.sector a1 a2 r
 
 thickArc :: Double -> Double -> Double -> Double -> Picture
-thickArc = ThickArc
+thickArc t a1 a2 r = Picture $ API.thickArc t a1 a2 r
 
 curve :: [Point] -> Picture
-curve = Curve
+curve ps = Picture $ API.curve ps
 
 thickCurve :: Double -> [Point] -> Picture
-thickCurve = ThickCurve
+thickCurve t ps = Picture $ API.thickCurve t ps
 
 closedCurve :: [Point] -> Picture
-closedCurve = ClosedCurve
+closedCurve ps = Picture $ API.closedCurve ps
 
 thickClosedCurve :: Double -> [Point] -> Picture
-thickClosedCurve = ThickClosedCurve
+thickClosedCurve t ps = Picture $ API.thickClosedCurve t ps
 
 solidClosedCurve :: [Point] -> Picture
-solidClosedCurve = SolidClosedCurve
+solidClosedCurve ps = Picture $ API.solidClosedCurve ps
 
 polyline :: [Point] -> Picture
-polyline = Polyline
+polyline ps = Picture $ API.polyline ps
 
 thickPolyline :: Double -> [Point] -> Picture
-thickPolyline = ThickPolyline
+thickPolyline t ps = Picture $ API.thickPolyline t ps
 
 polygon :: [Point] -> Picture
-polygon = Polygon
+polygon ps = Picture $ API.polygon ps
 
 thickPolygon :: Double -> [Point] -> Picture
-thickPolygon = ThickPolygon
+thickPolygon t ps = Picture $ API.thickPolygon t ps
 
 solidPolygon :: [Point] -> Picture
-solidPolygon = SolidPolygon
+solidPolygon ps = Picture $ API.solidPolygon ps
 
 lettering :: Text -> Picture
-lettering = Lettering
+lettering t = Picture $ API.lettering t
 
 styledLettering :: TextStyle -> Font -> Text -> Picture
-styledLettering = StyledLettering
+styledLettering style font t = Picture $ API.styledLettering style font t
 
 colored :: Color -> Picture -> Picture
-colored = Color
+colored c p = Picture $ API.colored c $ unPicture p
 
 coloured :: Color -> Picture -> Picture
 coloured = colored
 
 translated :: Double -> Double -> Picture -> Picture
-translated = Translate
+translated x y p = Picture $ API.translated x y $ unPicture p
 
 scaled :: Double -> Double -> Picture -> Picture
-scaled = Scale
+scaled f1 f2 p = Picture $ API.scaled f1 f2 $ unPicture p
 
 dilated :: Double -> Picture -> Picture
-dilated = Dilate
+dilated f p = Picture $ API.dilated f $ unPicture p
 
 rotated :: Double -> Picture -> Picture
-rotated = Rotate
+rotated a p = Picture $ API.rotated a $ unPicture p
 
 reflected :: Double -> Picture -> Picture
-reflected = Reflect
+reflected a p = Picture $ API.reflected a $ unPicture p
 
 clipped :: Double -> Double -> Picture -> Picture
-clipped = Clip
+clipped x y p = Picture $ API.clipped x y $ unPicture p
 
 pictures :: [Picture] -> Picture
-pictures = Pictures
+pictures ps = Picture $ API.pictures $ map unPicture ps
 
 (&) :: Picture -> Picture -> Picture
-a & b = And a b
+infixr 0 &
+a & b = Picture $ unPicture a API.& unPicture b
 
 coordinatePlane :: Picture
-coordinatePlane = CoordinatePlane
+coordinatePlane = Picture API.coordinatePlane
 
 codeWorldLogo :: Picture
-codeWorldLogo = Logo
+codeWorldLogo = Picture API.codeWorldLogo
 
 blank :: Picture
-blank = Blank
-
-
-toInterface :: API.Drawable a => Picture -> a
-toInterface (Rectangle x y)         = API.rectangle x y
-toInterface (ThickRectangle t x y)  = API.thickRectangle t x y
-toInterface (SolidRectangle x y)    = API.solidRectangle x y
-toInterface (Circle r)              = API.circle r
-toInterface (ThickCircle t r)       = API.thickCircle t r
-toInterface (SolidCircle r)         = API.solidCircle r
-toInterface (Arc a1 a2 r)           = API.arc a1 a2 r
-toInterface (Sector a1 a2 r)        = API.sector a1 a2 r
-toInterface (ThickArc t a1 a2 r)    = API.thickArc t a1 a2 r
-toInterface (Curve a)               = API.curve a
-toInterface (ThickCurve t a)        = API.thickCurve t a
-toInterface (ClosedCurve a)         = API.closedCurve a
-toInterface (ThickClosedCurve t a)  = API.thickClosedCurve t a
-toInterface (SolidClosedCurve a)    = API.solidClosedCurve a
-toInterface (Polyline ps)           = API.polyline ps
-toInterface (ThickPolyline ps t)    = API.thickPolyline ps t
-toInterface (Polygon ps)            = API.polygon ps
-toInterface (ThickPolygon ps t)     = API.thickPolygon ps t
-toInterface (SolidPolygon ps)       = API.solidPolygon ps
-toInterface (Lettering t)           = API.lettering t
-toInterface (StyledLettering a b t) = API.styledLettering a b t
-toInterface (Color c p)             = API.colored c $ toInterface p
-toInterface (Translate x y p)       = API.translated x y $ toInterface p
-toInterface (Scale f1 f2 p)         = API.scaled f1 f2 $ toInterface p
-toInterface (Dilate f p)            = API.dilated f $ toInterface p
-toInterface (Rotate a p)            = API.rotated a $ toInterface p
-toInterface (Reflect a p)           = API.reflected a $ toInterface p
-toInterface (Clip x y p)            = API.clipped x y $ toInterface p
-toInterface (Pictures ps)           = API.pictures $ map toInterface ps
-toInterface (And a b)               = toInterface a API.& toInterface b
-toInterface CoordinatePlane         = API.coordinatePlane
-toInterface Logo                    = API.codeWorldLogo
-toInterface Blank                   = API.blank
+blank = Picture API.blank
