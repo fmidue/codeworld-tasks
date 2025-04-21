@@ -319,19 +319,21 @@ instance Drawable NormalizedPicture where
     Curve s ps       -> Curve    s $ map (applyToAbsPoint (scaledVector fac1 fac2)) ps
     a                -> Scale (toFactor fac1) (toFactor fac2) a
 
-  rotated 0 p = p
-  rotated a p = case p of
-    Rotate a2 q     -> rotated (a + getExactAngle a2) q
-    Reflect a2 q    -> reflected (getExactAngle a2 + a/2) q
-    Translate x y q -> Translate
-                        (toPosition $ getExactPos x*cos a - getExactPos y*sin a)
-                        (toPosition $ getExactPos x*sin a + getExactPos y*cos a)
-                        $ rotated a q
-    Pictures ps     -> Pictures $ map (rotated a) ps
-    Polyline s ps   -> Polyline s $ map (applyToAbsPoint (rotatedVector a)) ps
-    Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotatedVector a)) ps
-    Circle s r      -> Circle s r
-    q               -> Rotate (toAngle a) q
+  rotated a p
+    | getExactAngle (toAngle a) == 0 = p
+    | otherwise = case p of
+      Rotate a2 q     -> rotated (a + getExactAngle a2) q
+      Reflect a2 q    -> reflected (getExactAngle a2 + a/2) q
+      Translate x y q -> Translate
+                          (toPosition $ getExactPos x*cos a - getExactPos y*sin a)
+                          (toPosition $ getExactPos x*sin a + getExactPos y*cos a)
+                          $ rotated a q
+      Pictures ps     -> Pictures $ map (rotated a) ps
+      Polyline s ps   -> Polyline s $ map (applyToAbsPoint (rotatedVector a)) ps
+      Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotatedVector a)) ps
+      Rectangle s x y |  getExactAngle (toAngle a) == pi -> Rectangle s y x
+      Circle s r      -> Circle s r
+      q               -> Rotate (toAngle a) q
 
   reflected a1 (Reflect a2 p)
     | a1 == getExactAngle a2 = p
