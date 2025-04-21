@@ -160,10 +160,10 @@ infixr 0 &
 a & b = Picture $ unPicture a API.& unPicture b
 
 coordinatePlane :: Picture
-coordinatePlane = Picture $ API.coordinatePlane
+coordinatePlane = Picture API.coordinatePlane
 
 codeWorldLogo :: Picture
-codeWorldLogo = Picture $ API.codeWorldLogo
+codeWorldLogo = Picture API.codeWorldLogo
 
 blank :: Picture
-blank = Picture $ API.blank
+blank = Picture API.blank
