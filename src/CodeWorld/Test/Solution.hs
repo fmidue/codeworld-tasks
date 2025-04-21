@@ -1,3 +1,4 @@
+{-# language RankNTypes#-}
 
 module CodeWorld.Test.Solution (
   --Spec(..),
@@ -22,7 +23,7 @@ module CodeWorld.Test.Solution (
   ) where
 
 
-import CodeWorld.Tasks.Picture (Picture, toInterface)
+import CodeWorld.Tasks.API (Picture)
 import CodeWorld.Test.Normalize (NormalizedPicture, contains)
 import CodeWorld.Test.Relative (
   Components(..),
@@ -111,7 +112,7 @@ evaluatePreds fs pic = all (`evaluatePred` pic) fs
 
 -- Evaluate a single predicate on the student submission
 evaluatePred :: PicPredicate -> Picture -> Bool
-evaluatePred f = f . toRelative . toInterface
+evaluatePred f = f . toRelative
 
 
 -- Input is exactly this relative picture

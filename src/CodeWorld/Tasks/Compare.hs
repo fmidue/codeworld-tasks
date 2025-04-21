@@ -12,13 +12,13 @@ import Data.Maybe                       (fromJust)
 import Data.Tuple.Extra                 (second, both)
 import qualified Data.IntMap            as IM
 
-import CodeWorld.Tasks.API              (Drawable)
+import CodeWorld.Tasks.API              (Picture)
 import CodeWorld.Tasks.HashCons         (BiMap, Node(..), hashconsShare)
 import CodeWorld.Tasks.Reify            (ReifyPicture(..), share)
 
 
 
-runShare :: (forall a . Drawable a => a) -> IO ([(IM.Key, ReifyPicture Int)], [(IM.Key, ReifyPicture Int)])
+runShare :: Picture -> IO ([(IM.Key, ReifyPicture Int)], [(IM.Key, ReifyPicture Int)])
 runShare a = do
   reifyResult <- share a
   let (explicitShares,termIndex) = both IM.toList reifyResult

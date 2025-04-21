@@ -58,6 +58,15 @@ data ReifyPicture a
 newtype PRec a = PRec (ReifyPicture (PRec a))
 
 
+instance Semigroup (PRec a) where
+  (<>) = (&)
+
+
+instance Monoid (PRec a) where
+  mempty  = blank
+  mconcat = pictures
+
+
 instance Drawable (PRec a) where
   rectangle x          = PRec . Rectangle x
   thickRectangle t x   = PRec . ThickRectangle t x

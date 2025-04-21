@@ -63,6 +63,15 @@ newtype Runner = Runner { unRunner :: State DAG NodeId}
 type BiMap a = [(NodeId,a)]
 
 
+instance Semigroup Runner where
+  (<>) = (&)
+
+
+instance Monoid Runner where
+  mempty  = blank
+  mconcat = pictures
+
+
 instance Drawable Runner where
   coordinatePlane      = toRunnerSimple CoordinatePlaneNode
   codeWorldLogo        = toRunnerSimple LogoNode

@@ -36,6 +36,14 @@ instance MonadFail Identity where
   fail = error "Computation Didn't return expected amount of arguments."
 
 
+instance Semigroup Graph where
+  (<>) = (&)
+
+
+instance Monoid Graph where
+  mempty  = blank
+  mconcat = pictures
+
 
 instance Drawable Graph where
 

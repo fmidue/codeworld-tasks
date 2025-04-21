@@ -29,7 +29,6 @@ library
       CodeWorld.Tasks.API
       CodeWorld.Tasks.Compare
       CodeWorld.Tasks.HashCons
-      CodeWorld.Tasks.Picture
       CodeWorld.Tasks.Reify
       CodeWorld.Tasks.Trie
       CodeWorld.Tasks.Types
