@@ -1,4 +1,3 @@
-{-# language RankNTypes#-}
 
 module CodeWorld.Test.Solution (
   --Spec(..),
@@ -23,7 +22,6 @@ module CodeWorld.Test.Solution (
   ) where
 
 
-import CodeWorld.Tasks.API (Picture)
 import CodeWorld.Test.Normalize (NormalizedPicture, contains)
 import CodeWorld.Test.Relative (
   Components(..),
@@ -106,12 +104,12 @@ specPosition f (Components (_,rP)) = f rP
 
 
 -- Evaluate all of the given predicates on the student submission
-evaluatePreds :: [PicPredicate] -> Picture -> Bool
+evaluatePreds :: [PicPredicate] -> NormalizedPicture -> Bool
 evaluatePreds fs pic = all (`evaluatePred` pic) fs
 
 
 -- Evaluate a single predicate on the student submission
-evaluatePred :: PicPredicate -> Picture -> Bool
+evaluatePred :: PicPredicate -> NormalizedPicture -> Bool
 evaluatePred f = f . toRelative
 
 
