@@ -1,4 +1,3 @@
-{-# language RankNTypes #-}
 
 module CodeWorld (
   Picture,
@@ -47,6 +46,7 @@ module CodeWorld (
 import Data.Text                        (Text)
 
 import CodeWorld.Tasks.API
+import CodeWorld.Tasks.Reify (Picture)
 import CodeWorld.Tasks.Types
 import CodeWorld.Tasks.VectorSpace hiding (
   sideLengths,

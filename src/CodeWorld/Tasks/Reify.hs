@@ -3,7 +3,9 @@
 
 module CodeWorld.Tasks.Reify (
   ReifyPicture(..),
+  Picture,
   share,
+  toInterface
   ) where
 
 
@@ -55,19 +57,19 @@ data ReifyPicture a
   deriving (Show, Foldable, Eq, Ord)
 
 
-newtype PRec a = PRec (ReifyPicture (PRec a))
+newtype Picture = PRec (ReifyPicture Picture) deriving Show
 
 
-instance Semigroup (PRec a) where
+instance Semigroup Picture where
   (<>) = (&)
 
 
-instance Monoid (PRec a) where
+instance Monoid Picture where
   mempty  = blank
   mconcat = pictures
 
 
-instance Drawable (PRec a) where
+instance Drawable Picture where
   rectangle x          = PRec . Rectangle x
   thickRectangle t x   = PRec . ThickRectangle t x
   solidRectangle x     = PRec . SolidRectangle x
@@ -103,8 +105,8 @@ instance Drawable (PRec a) where
   blank                = PRec Blank
 
 
-instance MuRef (PRec a) where
-  type DeRef (PRec a) = ReifyPicture
+instance MuRef Picture where
+  type DeRef Picture = ReifyPicture
   mapDeRef f (PRec body) = case body of
     Color c p       -> Color c <$> f p
     Translate x y p -> Translate x y <$> f p
@@ -147,7 +149,7 @@ changeBaseType p = case p of
   _                     -> error "This is a recursive Constructor. You're missing a pattern match!"
 
 
-share :: PRec a -> IO (IntMap (ReifyPicture Int), IntMap (ReifyPicture Int))
+share :: Picture -> IO (IntMap (ReifyPicture Int), IntMap (ReifyPicture Int))
 share d = do
   Graph nodes s <- reifyGraph d
   let universe = IM.fromList nodes
@@ -159,3 +161,40 @@ share d = do
 
 mapInsertWith :: [Key] -> IntMap Int -> IntMap Int
 mapInsertWith b m = Prelude.foldr (\x acc-> IM.insertWith (+) x (1 :: Int) acc) m b
+
+
+toInterface :: Drawable a => Picture -> a
+toInterface (PRec p) = case p of
+  Rectangle x y -> rectangle x y
+  ThickRectangle t x y -> thickRectangle t x y
+  SolidRectangle x y -> solidRectangle x y
+  Circle r -> circle r
+  ThickCircle t r -> thickCircle t r
+  SolidCircle r -> solidCircle r
+  Polygon ps -> polygon ps
+  SolidPolygon ps -> solidPolygon ps
+  ThickPolygon t ps -> thickPolygon t ps
+  ClosedCurve ps -> closedCurve ps
+  SolidClosedCurve ps -> solidClosedCurve ps
+  ThickClosedCurve t ps -> thickClosedCurve t ps
+  Polyline ps -> polyline ps
+  ThickPolyline t ps -> thickPolyline t ps
+  Curve ps -> curve ps
+  ThickCurve t ps -> thickCurve t ps
+  Sector a1 a2 r -> sector a1 a2 r
+  Arc a1 a2 r -> arc a1 a2 r
+  ThickArc t a1 a2 r -> thickArc t a1 a2 r
+  Lettering t -> lettering t
+  StyledLettering ts f t -> styledLettering ts f t
+  Color c q -> colored c $ toInterface q
+  Translate x y q -> translated x y $ toInterface q
+  Scale x y q -> scaled x y $ toInterface q
+  Dilate fac q -> dilated fac $ toInterface q
+  Rotate a q -> rotated a $ toInterface q
+  Reflect a q -> reflected a $ toInterface q
+  Clip x y q -> clipped x y $ toInterface q
+  Pictures ps -> pictures $ map toInterface ps
+  And p1 p2 -> toInterface p1 & toInterface p2
+  CoordinatePlane -> coordinatePlane
+  Logo -> codeWorldLogo
+  Blank -> blank

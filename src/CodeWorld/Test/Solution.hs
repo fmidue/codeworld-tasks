@@ -22,6 +22,7 @@ module CodeWorld.Test.Solution (
   ) where
 
 
+import CodeWorld.Tasks.Reify (Picture, toInterface)
 import CodeWorld.Test.Normalize (NormalizedPicture, contains)
 import CodeWorld.Test.Relative (
   Components(..),
@@ -104,13 +105,13 @@ specPosition f (Components (_,rP)) = f rP
 
 
 -- Evaluate all of the given predicates on the student submission
-evaluatePreds :: [PicPredicate] -> NormalizedPicture -> Bool
+evaluatePreds :: [PicPredicate] -> Picture -> Bool
 evaluatePreds fs pic = all (`evaluatePred` pic) fs
 
 
 -- Evaluate a single predicate on the student submission
-evaluatePred :: PicPredicate -> NormalizedPicture -> Bool
-evaluatePred f = f . toRelative
+evaluatePred :: PicPredicate -> Picture -> Bool
+evaluatePred f = f . toRelative . toInterface
 
 
 -- Input is exactly this relative picture

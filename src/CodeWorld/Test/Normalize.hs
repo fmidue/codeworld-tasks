@@ -186,15 +186,6 @@ thickness d
   | otherwise = Normal
 
 
-
-instance Semigroup NormalizedPicture where
-  (<>) = (&)
-
-instance Monoid NormalizedPicture where
-  mempty  = blank
-  mconcat = pictures
-
-
 instance Drawable NormalizedPicture where
 
   pictures [] = blank
