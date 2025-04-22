@@ -20,27 +20,28 @@ import CodeWorld.Tasks.Reify            (ReifyPicture(..), share)
 testCSE :: Picture -> IO (Maybe String)
 testCSE a = do
   reifyResult <- share a
-  let (explicitShares,termIndex) = both IM.toList reifyResult
-  let (allShares,consTerms) = both toReify $ hashconsShare a
-  let usedBinds = bindMapping explicitShares termIndex
-  let possibleBinds = bindMapping allShares consTerms
+  let
+    (explicitShares,termIndex) = both IM.toList reifyResult
+    (allShares,consTerms) = both toReify $ hashconsShare a
   if length termIndex == length consTerms
     then
       pure Nothing
     else do
-      let completeTerm = restoreTerm usedBinds termIndex $ minimumOn fst termIndex
-      let explicit = map (restoreTerm usedBinds termIndex) explicitShares
-      let sharable = map (restoreTerm possibleBinds consTerms) allShares
-      let completeCons = restoreTerm possibleBinds consTerms $ maximumOn fst consTerms
-      let feedback = unlines
-            [ "There are opportunities for further sharing!"
-            , "Consider your original term (with possibly renamed bindings):"
-            , printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
-            , ""
-            , "It could be rewritten in the following way:"
-            , printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
-            ]
-      pure $ Just feedback
+      let
+        usedBinds = bindMapping explicitShares termIndex
+        possibleBinds = bindMapping allShares consTerms
+        completeTerm = restoreTerm usedBinds termIndex $ minimumOn fst termIndex
+        explicit = map (restoreTerm usedBinds termIndex) explicitShares
+        sharable = map (restoreTerm possibleBinds consTerms) allShares
+        completeCons = restoreTerm possibleBinds consTerms $ maximumOn fst consTerms
+      pure $ Just $ unlines
+        [ "There are opportunities for further sharing!"
+        , "Consider your original term (with possibly renamed bindings):"
+        , printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
+        , ""
+        , "It could be rewritten in the following way:"
+        , printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
+        ]
   where
     restoreTerm bindings termLookup = printOriginal bindings termLookup . snd
     termsWithNames bindings shares = zip (map (fromJust . flip lookup bindings . fst) shares)
