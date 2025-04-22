@@ -1,13 +1,12 @@
 {-# language RankNTypes #-}
 
 module CodeWorld.Tasks.Compare (
-  runShare,
+  testCSE,
 ) where
 
 
-import Control.Monad                    (unless)
-import Data.Char                        (toLower)
-import Data.List.Extra                  (maximumOn, minimumOn)
+import Data.Char                        (toLower, toUpper)
+import Data.List.Extra                  (maximumOn, minimumOn, replace)
 import Data.Maybe                       (fromJust)
 import Data.Tuple.Extra                 (second, both)
 import qualified Data.IntMap            as IM
@@ -18,49 +17,70 @@ import CodeWorld.Tasks.Reify            (ReifyPicture(..), share)
 
 
 
-runShare :: Picture -> IO ([(IM.Key, ReifyPicture Int)], [(IM.Key, ReifyPicture Int)])
-runShare a = do
-  reifyResult <- share a
-  let (explicitShares,termIndex) = both IM.toList reifyResult
-  let (allShares,consTerms) = both toReify $ hashconsShare a
-  let usedBinds = bindMapping explicitShares termIndex
-  let possibleBinds = bindMapping allShares consTerms
+testCSE :: Picture -> IO (Maybe String)
+testCSE p = do
+  reifyResult <- share p
+  let
+    (explicitShares,termIndex) = both IM.toList reifyResult
+    (allShares,consTerms) = both toReify $ hashconsShare p
   if length termIndex == length consTerms
     then
-      putStrLn "You shared everything, good job!"
+      pure Nothing
     else do
-      putStrLn "There are opportunities for further sharing!"
-      putStrLn "Consider your original term (with possibly renamed bindings):"
-      let completeTerm = restoreTerm usedBinds termIndex $ minimumOn fst termIndex
-      let explicit = map (restoreTerm usedBinds termIndex) explicitShares
-      printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
-      putStrLn ""
-      putStrLn "It could be rewritten in the following way:"
-      let sharable = map (restoreTerm possibleBinds consTerms) allShares
-      let completeCons = restoreTerm possibleBinds consTerms $ maximumOn fst consTerms
-      printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
-  pure (explicitShares,allShares)
+      let
+        usedBinds = bindMapping explicitShares termIndex
+        possibleBinds = bindMapping allShares consTerms
+        completeTerm = restoreTerm usedBinds termIndex $ minimumOn fst termIndex
+        explicit = map (restoreTerm usedBinds termIndex) explicitShares
+        sharable = map (restoreTerm possibleBinds consTerms) allShares
+        completeCons = restoreTerm possibleBinds consTerms $ maximumOn fst consTerms
+      pure $ Just $ unlines
+        [ "There are opportunities for common subexpression elimination (CSE) in your submission!"
+        , "Consider this expression resembling your submission, condensed in the following ways:"
+        , "  - Subexpressions distributed over multiple definitions have been combined into a single expression"
+        , "  - Mathematical subexpressions have been fully evaluated"
+        , "  - Already defined bindings might have been renamed"
+        , "  - Used 'where' bindings have been converted to 'let' bindings"
+        , "  - Bindings which are not relevant to CSE have been removed"
+        , ""
+        , printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
+        , ""
+        , ""
+        , "It could be rewritten like this:"
+        , ""
+        , printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
+        , ""
+        , ""
+        , "If the highlighted terms are already defined globally, then consider locally defining them at their use-site instead."
+        , "You can define them with either a 'let' or 'where' binding."
+        , "Of course, you can also change the proposed names to your liking, e.g. make them more concise."
+        , "Also consider that your actual code is most likely structured slightly differently than this suggested improvement."
+        , "As such, the location of the binding as shown here might also have to be adjusted."
+        ]
   where
     restoreTerm bindings termLookup = printOriginal bindings termLookup . snd
     termsWithNames bindings shares = zip (map (fromJust . flip lookup bindings . fst) shares)
 
-    printSharedTerm term shared = do
-      putStrLn ""
-      unless (null shared) $ do
-        putStrLn "let"
-        mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) shared
-        putStrLn "in"
-      putStrLn $ "  " ++ term
+    printSharedTerm term shared
+      | null shared = term
+      | otherwise = unlines $
+        "let" :
+        map (\(name,value) -> "  " ++ name ++ " = " ++ value) shared ++
+        [  "in"
+        ,  "  " ++ term
+        ]
 
 
 bindMapping :: [(Int,ReifyPicture Int)] -> [(Int,ReifyPicture Int)] -> [(Int,String)]
-bindMapping = runMapping (1 :: Int)
+bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTerms)
   where
-    runMapping _ _ [] = []
-    runMapping step sharedTerms (x@(num,_):allTerms)
-      | x `elem` sharedTerms = (num,"name" ++ show step) : runMapping (step+1) sharedTerms allTerms
-      | otherwise = runMapping step sharedTerms allTerms
+    toName = second (formatBinding . printOriginal [] allTerms)
 
+    formatBinding = camelCase . filter (\c -> c `notElem` ['(',')']) . replace "&" "And" . replace "." ""
+    camelCase "" = ""
+    camelCase (' ':' ':s) = camelCase $ ' ' : s
+    camelCase (' ':c:s) = toUpper c : camelCase s
+    camelCase (c:s) = c : camelCase s
 
 printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
 printOriginal bindings termLookup term = sub
