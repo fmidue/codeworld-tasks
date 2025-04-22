@@ -1,11 +1,10 @@
 {-# language RankNTypes #-}
 
 module CodeWorld.Tasks.Compare (
-  runShare,
+  testCSE,
 ) where
 
 
-import Control.Monad                    (unless)
 import Data.Char                        (toLower)
 import Data.List.Extra                  (maximumOn, minimumOn)
 import Data.Maybe                       (fromJust)
@@ -18,8 +17,8 @@ import CodeWorld.Tasks.Reify            (ReifyPicture(..), share)
 
 
 
-runShare :: Picture -> IO ([(IM.Key, ReifyPicture Int)], [(IM.Key, ReifyPicture Int)])
-runShare a = do
+testCSE :: Picture -> IO (Maybe String)
+testCSE a = do
   reifyResult <- share a
   let (explicitShares,termIndex) = both IM.toList reifyResult
   let (allShares,consTerms) = both toReify $ hashconsShare a
@@ -27,30 +26,33 @@ runShare a = do
   let possibleBinds = bindMapping allShares consTerms
   if length termIndex == length consTerms
     then
-      putStrLn "You shared everything, good job!"
+      pure Nothing
     else do
-      putStrLn "There are opportunities for further sharing!"
-      putStrLn "Consider your original term (with possibly renamed bindings):"
       let completeTerm = restoreTerm usedBinds termIndex $ minimumOn fst termIndex
       let explicit = map (restoreTerm usedBinds termIndex) explicitShares
-      printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
-      putStrLn ""
-      putStrLn "It could be rewritten in the following way:"
       let sharable = map (restoreTerm possibleBinds consTerms) allShares
       let completeCons = restoreTerm possibleBinds consTerms $ maximumOn fst consTerms
-      printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
-  pure (explicitShares,allShares)
+      let feedback = unlines
+            [ "There are opportunities for further sharing!"
+            , "Consider your original term (with possibly renamed bindings):"
+            , printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
+            , ""
+            , "It could be rewritten in the following way:"
+            , printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
+            ]
+      pure $ Just feedback
   where
     restoreTerm bindings termLookup = printOriginal bindings termLookup . snd
     termsWithNames bindings shares = zip (map (fromJust . flip lookup bindings . fst) shares)
 
-    printSharedTerm term shared = do
-      putStrLn ""
-      unless (null shared) $ do
-        putStrLn "let"
-        mapM_ (\(name,value) -> putStrLn $ "  " ++ name ++ " = " ++ value) shared
-        putStrLn "in"
-      putStrLn $ "  " ++ term
+    printSharedTerm term shared = unlines $
+      [ ""
+      , "let"
+      ] ++
+      map (\(name,value) -> "  " ++ name ++ " = " ++ value) shared ++
+      [  "in"
+      ,  "  " ++ term
+      ]
 
 
 bindMapping :: [(Int,ReifyPicture Int)] -> [(Int,ReifyPicture Int)] -> [(Int,String)]
