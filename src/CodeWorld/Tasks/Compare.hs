@@ -39,6 +39,7 @@ testCSE p = do
         , "Consider this expression resembling your submission, condensed in the following ways:"
         , "  - Subexpressions distributed over multiple definitions have been combined into a single expression"
         , "  - Already defined bindings might have been renamed"
+        , "  - Used 'where' bindings have been converted to 'let' bindings"
         , "  - Bindings which are not relevant to CSE have been removed"
         , ""
         , printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
