@@ -18,11 +18,11 @@ import CodeWorld.Tasks.Reify            (ReifyPicture(..), share)
 
 
 testCSE :: Picture -> IO (Maybe String)
-testCSE a = do
-  reifyResult <- share a
+testCSE p = do
+  reifyResult <- share p
   let
     (explicitShares,termIndex) = both IM.toList reifyResult
-    (allShares,consTerms) = both toReify $ hashconsShare a
+    (allShares,consTerms) = both toReify $ hashconsShare p
   if length termIndex == length consTerms
     then
       pure Nothing
@@ -35,8 +35,11 @@ testCSE a = do
         sharable = map (restoreTerm possibleBinds consTerms) allShares
         completeCons = restoreTerm possibleBinds consTerms $ maximumOn fst consTerms
       pure $ Just $ unlines
-        [ "There are opportunities for further sharing!"
-        , "Consider your original term (with possibly renamed bindings):"
+        [ "There are opportunities for common subexpression elimination (CSE) in your submission!"
+        , "Consider this expression resembling your submission, condensed in the following ways:"
+        , "  - Subexpressions distributed over multiple definitions have been combined into a single expression"
+        , "  - Already defined bindings might have been renamed"
+        , "  - Bindings which are not relevant to CSE have been removed"
         , ""
         , printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
         , ""
@@ -44,6 +47,12 @@ testCSE a = do
         , "It could be rewritten in the following way:"
         , ""
         , printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
+        , ""
+        , ""
+        , "If the highlighted terms are already defined globally, then consider locally defining them at their use-site instead."
+        , "You can define them with either a 'let' or 'where' binding."
+        , "Also consider that your actual code is most likely structured slightly differently than this suggested improvement."
+        , "As such, the location of the binding as shown here might also have to be adjusted."
         ]
   where
     restoreTerm bindings termLookup = printOriginal bindings termLookup . snd
