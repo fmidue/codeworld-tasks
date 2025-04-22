@@ -9,7 +9,6 @@ module CodeWorld.Test.Normalize (
   couldHaveTranslation,
   getExactPos,
   getTranslation,
-  stripToColor,
   stripToShape,
   stripTranslation,
   ) where
@@ -289,14 +288,12 @@ instance Drawable NormalizedPicture where
     Translate a b q -> translated (x + getExactPos a) (y + getExactPos b) q
     Pictures ps     -> Pictures $ map (translated x y) ps
     Blank           -> Blank
+    Color c q       -> Color c $ translated x y q
     Polyline s ps   -> Polyline s $ map (applyToAbsPoint (vectorSum (x,y))) ps
     Curve s ps      -> Curve    s $ map (applyToAbsPoint (vectorSum (x,y))) ps
     a               -> Translate (toPosition x) (toPosition y) a
 
   colored c p = case p of
-    Translate x y q -> Translate x y $ colored c q
-    Rotate a q     -> Rotate a $ colored c q
-    Scale f1 f2 q  -> Scale f1 f2 $ colored c q
     Color _ q      -> colored c q
     Pictures ps    -> Pictures $ map (colored c) ps
     Blank          -> Blank
@@ -314,6 +311,7 @@ instance Drawable NormalizedPicture where
                          (toPosition $ getExactPos y*fac2)
                          $ scaled fac1 fac2 q
     Blank            -> Blank
+    Color c q        -> Color c $ scaled fac1 fac2 q
     Pictures ps      -> Pictures $ map (scaled fac1 fac2) ps
     Polyline s ps    -> Polyline s $ map (applyToAbsPoint (scaledVector fac1 fac2)) ps
     Curve s ps       -> Curve    s $ map (applyToAbsPoint (scaledVector fac1 fac2)) ps
@@ -328,6 +326,7 @@ instance Drawable NormalizedPicture where
                           (toPosition $ getExactPos x*cos a - getExactPos y*sin a)
                           (toPosition $ getExactPos x*sin a + getExactPos y*cos a)
                           $ rotated a q
+      Color c q       -> Color c $ rotated a q
       Pictures ps     -> Pictures $ map (rotated a) ps
       Polyline s ps   -> Polyline s $ map (applyToAbsPoint (rotatedVector a)) ps
       Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotatedVector a)) ps
@@ -346,6 +345,7 @@ instance Drawable NormalizedPicture where
   reflected a p@(Translate _ y _) = let d = a*2 in
     translated (2*getExactPos y*sin d) (-(2*getExactPos y*cos d)) $ rotated d p
   reflected a (Rotate a2 p) = reflected (a - (getExactAngle a2/2)) p
+  reflected a (Color c q)   = Color c $ reflected a q
   reflected a p = Reflect (toAngle a) p
 
    -- TODO: clip free shapes?
@@ -500,20 +500,9 @@ boundingRect ps = polygon [(xMax,yMax), (xMin,yMax), (xMin,yMin), (xMax,yMin)]
     (xMin,yMin) = both minimum coordList
 
 
-
-stripToColor :: NormalizedPicture -> NormalizedPicture
-stripToColor (Translate _ _ p) = p
-stripToColor (Rotate _ p)  = p
-stripToColor (Reflect _ p) = p
-stripToColor (Scale _ _ p) = p
-stripToColor (Clip _ _ p)  = p
-stripToColor p = p
-
 stripToShape :: NormalizedPicture -> NormalizedPicture
 stripToShape (Color _ p) = p
-stripToShape p = case stripToColor p of
-  Color _ q -> q
-  q -> q
+stripToShape p = p
 
 
 contains :: NormalizedPicture -> NormalizedPicture -> Bool
@@ -538,6 +527,7 @@ concretePoint = both getExactPos
 
 stripTranslation :: NormalizedPicture -> NormalizedPicture
 stripTranslation (Translate _ _ p) = p
+stripTranslation (Color c p) = Color c $ stripTranslation p
 stripTranslation p                 = p
 
 
@@ -545,6 +535,7 @@ getTranslation :: NormalizedPicture -> (Moved, Moved)
 getTranslation (Translate x y _)   = (x,y)
 getTranslation (Polyline _ points) = getTranslation (boundingRect points)
 getTranslation (Curve _ points)    = getTranslation (boundingRect points)
+getTranslation (Color _ p)         = getTranslation p
 getTranslation _                   = (0,0)
 
 
@@ -552,4 +543,5 @@ couldHaveTranslation :: NormalizedPicture -> Bool
 couldHaveTranslation Translate {} = True
 couldHaveTranslation Polyline {}  = True
 couldHaveTranslation Curve {}     = True
+couldHaveTranslation (Color _ (Translate {})) = True
 couldHaveTranslation _            = False

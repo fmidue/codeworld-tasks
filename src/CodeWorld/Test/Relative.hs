@@ -171,16 +171,15 @@ orientation
     -> NormalizedPicture
     -> RelativePicSpec
      )
-orientation (Translate a b _) = case (a,b) of
-      (Zero , Neg _)   -> northOf
-      (Zero , Pos _)   -> southOf
-      (Neg _, Zero)   -> eastOf
-      (Pos _, Zero)   -> westOf
+orientation = toDirection . getTranslation
+  where
+    toDirection (a,b) = case (a,b) of
+      (Zero , Neg _) -> northOf
+      (Zero , Pos _) -> southOf
+      (Neg _, Zero ) -> eastOf
+      (Pos _, Zero ) -> westOf
       (Pos _, Pos _) -> southwestOf
-      (Pos _, Neg _)  -> northwestOf
-      (Neg _, Pos _)  -> southeastOf
-      (Neg _, Neg _)  -> northeastOf
-      _               -> error $
-                           "This should never happen. " ++
-                           "translated smart constructor wasn't used."
-orientation _ = onTopOf
+      (Pos _, Neg _) -> northwestOf
+      (Neg _, Pos _) -> southeastOf
+      (Neg _, Neg _) -> northeastOf
+      (Zero , Zero ) -> onTopOf
