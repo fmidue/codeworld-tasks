@@ -5,8 +5,8 @@ module CodeWorld.Tasks.Compare (
 ) where
 
 
-import Data.Char                        (toLower)
-import Data.List.Extra                  (maximumOn, minimumOn)
+import Data.Char                        (toLower, toUpper)
+import Data.List.Extra                  (maximumOn, minimumOn, replace)
 import Data.Maybe                       (fromJust)
 import Data.Tuple.Extra                 (second, both)
 import qualified Data.IntMap            as IM
@@ -70,13 +70,15 @@ testCSE p = do
 
 
 bindMapping :: [(Int,ReifyPicture Int)] -> [(Int,ReifyPicture Int)] -> [(Int,String)]
-bindMapping = runMapping (1 :: Int)
+bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTerms)
   where
-    runMapping _ _ [] = []
-    runMapping step sharedTerms (x@(num,_):allTerms)
-      | x `elem` sharedTerms = (num,"name" ++ show step) : runMapping (step+1) sharedTerms allTerms
-      | otherwise = runMapping step sharedTerms allTerms
+    toName = second (formatBinding . printOriginal [] allTerms)
 
+    formatBinding = camelCase . replace "(" "" . replace ")" ""
+
+    camelCase "" = ""
+    camelCase (' ':c:s) = toUpper c : camelCase s
+    camelCase (c:s) = c: camelCase s
 
 printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
 printOriginal bindings termLookup term = sub
