@@ -1,4 +1,6 @@
 {-# language DeriveTraversable #-}
+{-# language DeriveGeneric #-}
+{-# language DeriveAnyClass #-}
 {-# language TypeFamilies #-}
 
 module CodeWorld.Tasks.Reify (
@@ -9,10 +11,12 @@ module CodeWorld.Tasks.Reify (
   ) where
 
 
+import Control.DeepSeq                  (NFData)
 import Data.Foldable                    (toList)
 import Data.IntMap                      (IntMap, Key)
 import Data.Reify                       (Graph(..), MuRef(..), reifyGraph)
 import Data.Text                        (Text)
+import GHC.Generics                     (Generic)
 import qualified Data.IntMap            as IM
 
 import CodeWorld.Tasks.API              (Drawable(..))
@@ -54,10 +58,10 @@ data ReifyPicture a
   | CoordinatePlane
   | Logo
   | Blank
-  deriving (Show, Foldable, Eq, Ord)
+  deriving (Show, Foldable, Eq, Ord, Generic, NFData)
 
 
-newtype Picture = PRec (ReifyPicture Picture) deriving Show
+newtype Picture = PRec (ReifyPicture Picture) deriving (Show,Generic,NFData)
 
 
 instance Semigroup Picture where
