@@ -37,23 +37,26 @@ testCSE a = do
       pure $ Just $ unlines
         [ "There are opportunities for further sharing!"
         , "Consider your original term (with possibly renamed bindings):"
+        , ""
         , printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
         , ""
+        , ""
         , "It could be rewritten in the following way:"
+        , ""
         , printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
         ]
   where
     restoreTerm bindings termLookup = printOriginal bindings termLookup . snd
     termsWithNames bindings shares = zip (map (fromJust . flip lookup bindings . fst) shares)
 
-    printSharedTerm term shared = unlines $
-      [ ""
-      , "let"
-      ] ++
-      map (\(name,value) -> "  " ++ name ++ " = " ++ value) shared ++
-      [  "in"
-      ,  "  " ++ term
-      ]
+    printSharedTerm term shared
+      | null shared = term
+      | otherwise = unlines $
+        "let" :
+        map (\(name,value) -> "  " ++ name ++ " = " ++ value) shared ++
+        [  "in"
+        ,  "  " ++ term
+        ]
 
 
 bindMapping :: [(Int,ReifyPicture Int)] -> [(Int,ReifyPicture Int)] -> [(Int,String)]
