@@ -38,6 +38,7 @@ testCSE p = do
         [ "There are opportunities for common subexpression elimination (CSE) in your submission!"
         , "Consider this expression resembling your submission, condensed in the following ways:"
         , "  - Subexpressions distributed over multiple definitions have been combined into a single expression"
+        , "  - Mathematical subexpressions have been fully evaluated"
         , "  - Already defined bindings might have been renamed"
         , "  - Used 'where' bindings have been converted to 'let' bindings"
         , "  - Bindings which are not relevant to CSE have been removed"
@@ -45,13 +46,14 @@ testCSE p = do
         , printSharedTerm completeTerm $ termsWithNames usedBinds explicitShares explicit
         , ""
         , ""
-        , "It could be rewritten in the following way:"
+        , "It could be rewritten like this:"
         , ""
         , printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
         , ""
         , ""
         , "If the highlighted terms are already defined globally, then consider locally defining them at their use-site instead."
         , "You can define them with either a 'let' or 'where' binding."
+        , "Of course, you can also change the proposed names to your liking, e.g. make them more concise."
         , "Also consider that your actual code is most likely structured slightly differently than this suggested improvement."
         , "As such, the location of the binding as shown here might also have to be adjusted."
         ]
@@ -74,11 +76,11 @@ bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTe
   where
     toName = second (formatBinding . printOriginal [] allTerms)
 
-    formatBinding = camelCase . replace "(" "" . replace ")" ""
-
+    formatBinding = camelCase . filter (\c -> c `notElem` ['(',')']) . replace "&" "And" . replace "." ""
     camelCase "" = ""
+    camelCase (' ':' ':s) = camelCase $ ' ' : s
     camelCase (' ':c:s) = toUpper c : camelCase s
-    camelCase (c:s) = c: camelCase s
+    camelCase (c:s) = c : camelCase s
 
 printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
 printOriginal bindings termLookup term = sub
