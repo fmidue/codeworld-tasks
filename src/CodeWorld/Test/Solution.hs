@@ -24,6 +24,7 @@ module CodeWorld.Test.Solution (
   findAllAnd,
   findMaybeAnd,
   oneOf,
+  getComponents,
   ) where
 
 
@@ -143,7 +144,12 @@ evaluatePreds fs pic = all (`evaluatePred` pic) fs
 
 -- Evaluate a single predicate on the student submission
 evaluatePred :: PicPredicate -> Picture -> Bool
-evaluatePred f = f . toRelative . toInterface
+evaluatePred f = f . getComponents
+
+
+-- Turn input picture into abstract ŕepresentation
+getComponents :: Picture -> Components
+getComponents = toRelative . toInterface
 
 
 -- Input is exactly this relative picture
