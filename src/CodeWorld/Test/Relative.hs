@@ -15,6 +15,14 @@ module CodeWorld.Test.Relative (
   onTopOf,
   alone,
   toRelative,
+  isSouthOf,
+  isNorthOf,
+  isWestOf,
+  isEastOf,
+  isSouthEastOf,
+  isSouthWestOf,
+  isNorthEastOf,
+  isNorthWestOf,
   isBelow,
   isAbove,
   isLeftOf,
@@ -111,6 +119,48 @@ northeastOf = flip southwestOf
 
 alone :: NormalizedPicture -> RelativePicSpec
 alone = Alone
+
+
+isSouthOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isSouthOf p q (Is p1 (Direction (Just South) Nothing) p2) = p1 `contains` p && p2 `contains` q
+isSouthOf _ _ _ = False
+
+
+isNorthOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isNorthOf p q (Is p1 (Direction (Just South) Nothing) p2) = p1 `contains` q && p2 `contains` p
+isNorthOf _ _ _ = False
+
+
+isWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isWestOf p q (Is p1 (Direction Nothing (Just West)) p2) = p1 `contains` p && p2 `contains` q
+isWestOf p q (Is p1 (Direction Nothing (Just East)) p2) = p1 `contains` q && p2 `contains` p
+isWestOf _ _ _ = False
+
+
+isEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isEastOf p q (Is p1 (Direction Nothing (Just East)) p2) = p1 `contains` p && p2 `contains` q
+isEastOf p q (Is p1 (Direction Nothing (Just West)) p2) = p1 `contains` q && p2 `contains` p
+isEastOf _ _ _ = False
+
+
+isSouthWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isSouthWestOf p q (Is p1 (Direction (Just South) (Just West)) p2) = p1 `contains` p && p2 `contains` q
+isSouthWestOf _ _ _ = False
+
+
+isSouthEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isSouthEastOf p q (Is p1 (Direction (Just South) (Just East)) p2) = p1 `contains` p && p2 `contains` q
+isSouthEastOf _ _ _ = False
+
+
+isNorthWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isNorthWestOf p q (Is p1 (Direction (Just South) (Just East)) p2) = p1 `contains` q && p2 `contains` p
+isNorthWestOf _ _ _ = False
+
+
+isNorthEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+isNorthEastOf p q (Is p1 (Direction (Just South) (Just West)) p2) = p1 `contains` q && p2 `contains` p
+isNorthEastOf _ _ _ = False
 
 
 isAbove :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
