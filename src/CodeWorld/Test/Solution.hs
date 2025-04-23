@@ -23,7 +23,7 @@ module CodeWorld.Test.Solution (
   findAll,
   findAllAnd,
   findMaybeAnd,
-
+  oneOf,
   ) where
 
 
@@ -57,6 +57,11 @@ options ps c = any (\p -> p c) ps
 -- Alias for (<||>)
 option :: PicPredicate -> PicPredicate -> PicPredicate
 option = (<||>)
+
+
+-- Atleast one of the given options satisfies the predicate p.
+oneOf :: (a -> PicPredicate) -> [a] ->  PicPredicate
+oneOf p = foldr ((<||>) . p) (const False)
 
 
 -- Use a predicate on the list of sub images

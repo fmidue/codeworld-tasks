@@ -33,6 +33,7 @@ import CodeWorld.Test.Normalize (
   stripTranslation,
   getTranslation,
   couldHaveTranslation,
+  contains,
   )
 
 
@@ -113,29 +114,29 @@ alone = Alone
 
 
 isAbove :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isAbove p q (Is p1 (Direction (Just South) _) p2) = p1 == q && p2 == p
+isAbove p q (Is p1 (Direction (Just South) _) p2) = p1 `contains` q && p2 `contains` p
 isAbove _ _ _ = False
 
 
 isBelow :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isBelow p q (Is p1 (Direction (Just South) _) p2) = p1 == p && p2 == q
+isBelow p q (Is p1 (Direction (Just South) _) p2) = p1 `contains` p && p2 `contains` q
 isBelow _ _ _ = False
 
 
 isLeftOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isLeftOf p q (Is p1 (Direction _ (Just West)) p2) = p1 == p && p2 == q
-isLeftOf p q (Is p1 (Direction _ (Just East)) p2) = p1 == q && p2 == p
+isLeftOf p q (Is p1 (Direction _ (Just West)) p2) = p1 `contains` p && p2 `contains` q
+isLeftOf p q (Is p1 (Direction _ (Just East)) p2) = p1 `contains` q && p2 `contains` p
 isLeftOf _ _ _ = False
 
 
 isRightOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isRightOf p q (Is p1 (Direction _ (Just East)) p2) = p1 == p && p2 == q
-isRightOf p q (Is p1 (Direction _ (Just West)) p2) = p1 == q && p2 == p
+isRightOf p q (Is p1 (Direction _ (Just East)) p2) = p1 `contains` p && p2 `contains` q
+isRightOf p q (Is p1 (Direction _ (Just West)) p2) = p1 `contains` q && p2 `contains` p
 isRightOf _ _ _ = False
 
 
 atSamePosition :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-atSamePosition p q (Is p1 (Direction Nothing Nothing) p2) = p1 == p && p2 == q || p1 == q && p2 == p
+atSamePosition p q (Is p1 (Direction Nothing Nothing) p2) = p1 `contains` p && p2 `contains` q || p1 `contains` q && p2 `contains` p
 atSamePosition _ _ _ = False
 
 
