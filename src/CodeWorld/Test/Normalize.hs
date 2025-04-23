@@ -569,11 +569,21 @@ contains :: NormalizedPicture -> NormalizedPicture -> Bool
 p `contains` (Pictures ps) = all (contains p) ps
 (Pictures ps) `contains` p = any (`contains` p) ps
 p `contains` q = p == q || case p of
-  Translate _ _ pic -> pic `contains` q
-  Rotate _ pic ->  pic `contains` q
-  Reflect _ pic -> pic `contains` q
-  Scale _ _ pic -> pic `contains` q
-  Color _ pic -> pic `contains` q
+  Translate x y pic -> case q of
+    Translate x2 y2 innerP -> x2 == x && y == y2 && pic `contains` innerP
+    _                      -> pic `contains` q
+  Rotate a pic -> case q of
+    Rotate a2 innerP -> a2 == a && pic `contains` innerP
+    _                -> pic `contains` q
+  Reflect a pic -> case q of
+    Reflect a2 innerP -> a == a2 && pic `contains` innerP
+    _                 -> pic `contains` q
+  Scale f1 f2 pic -> case q of
+    Scale g1 g2 innerP -> f1 == g1 && f2 == g2 && pic `contains` innerP
+    _                  -> pic `contains` q
+  Color c pic -> case q of
+    Color c2 innerP -> c == c2 && pic `contains` innerP
+    _               -> pic `contains` q
   _ -> False
 
 
