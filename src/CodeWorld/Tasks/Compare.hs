@@ -5,7 +5,7 @@ module CodeWorld.Tasks.Compare (
 ) where
 
 
-import Data.Char                        (toLower, toUpper)
+import Data.Char                        (isNumber, toLower, toUpper)
 import Data.List.Extra                  (maximumOn, minimumOn, replace)
 import Data.Maybe                       (fromJust)
 import Data.Tuple.Extra                 (second, both)
@@ -39,6 +39,7 @@ testCSE p = do
         , "Consider this expression resembling your submission, condensed in the following ways:"
         , "  - Subexpressions distributed over multiple definitions have been combined into a single expression"
         , "  - Mathematical subexpressions have been fully evaluated"
+        , "  - Some picture related subexpressions might also be fully or partially evaluated."
         , "  - Already defined bindings might have been renamed"
         , "  - Used 'where' bindings have been converted to 'let' bindings"
         , "  - Bindings which are not relevant to CSE have been removed"
@@ -74,10 +75,17 @@ testCSE p = do
 bindMapping :: [(Int,ReifyPicture Int)] -> [(Int,ReifyPicture Int)] -> [(Int,String)]
 bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTerms)
   where
-    toName = second (formatBinding . printOriginal [] allTerms)
+    toName = second (formatBinding . ('a':) . capitalFirst . printOriginal [] allTerms)
 
-    formatBinding = camelCase . filter (\c -> c `notElem` ['(',')']) . replace "&" "And" . replace "." ""
+    formatBinding = camelCase . filter keep . replace "&" "And" . replace "." ""
+
+    keep c = c `notElem` ['(',')'] && not (isNumber c)
+
+    capitalFirst [] = []
+    capitalFirst (x:xs) = toUpper x : xs
+
     camelCase "" = ""
+    camelCase " " = ""
     camelCase (' ':' ':s) = camelCase $ ' ' : s
     camelCase (' ':c:s) = toUpper c : camelCase s
     camelCase (c:s) = c : camelCase s
