@@ -7,6 +7,8 @@ module CodeWorld.Test.Normalize (
   couldHaveTranslation,
   getExactPos,
   getColor,
+  getRotation,
+  getScalingFactors,
   getTranslation,
   stripToShape,
   stripTranslation,
@@ -622,3 +624,21 @@ couldHaveTranslation _            = False
 getColor :: NormalizedPicture -> Maybe AbsColor
 getColor (Color c _) = Just c
 getColor _           = Nothing
+
+
+getScalingFactors :: NormalizedPicture -> (Maybe Factor,Maybe Factor)
+getScalingFactors (Scale f1 f2 _)   = (f1,f2)
+getScalingFactors (Translate _ _ p) = getScalingFactors p
+getScalingFactors (Reflect _ p)     = getScalingFactors p
+getScalingFactors (Rotate _ p)      = getScalingFactors p
+getScalingFactors (Color _ p)       = getScalingFactors p
+getScalingFactors _                 = (Nothing,Nothing)
+
+
+getRotation :: NormalizedPicture -> Maybe Angle
+getRotation (Scale _ _ p)   = getRotation p
+getRotation (Translate _ _ p) = getRotation p
+getRotation (Reflect _ p)     = getRotation p
+getRotation (Color _ p)       = getRotation p
+getRotation (Rotate a _)      = Just a
+getRotation _                 = Nothing
