@@ -12,6 +12,7 @@ module CodeWorld.Test.Normalize (
   getTranslation,
   stripToShape,
   stripTranslation,
+  isSameColor,
   ) where
 
 
@@ -139,6 +140,25 @@ toAbsColor color = case color of
   T.HSL h s l -> HSL h s l
   where
     withModified = Modified . toAbsColor
+
+
+isSameColor :: AbsColor -> AbsColor -> Bool
+isSameColor Yellow Yellow = True
+isSameColor Green Green = True
+isSameColor Red Red = True
+isSameColor Black Black = True
+isSameColor White White = True
+isSameColor Blue Blue = True
+isSameColor Orange Orange = True
+isSameColor Brown Brown = True
+isSameColor Pink Pink = True
+isSameColor Purple Purple = True
+isSameColor Grey Grey = True
+isSameColor (Modified c1) (Modified c2) = isSameColor c1 c2
+isSameColor (Modified _) _ = False
+isSameColor _ (Modified _) = False
+isSameColor (Mixed cs1) (Mixed cs2) = all (uncurry isSameColor) $ zip (sort cs1) (sort cs2)
+isSameColor a b = a == b
 
 
 newtype AbsPoint = AbsPoint {unAbsPoint :: (Moved,Moved)} deriving (Ord,Show)
