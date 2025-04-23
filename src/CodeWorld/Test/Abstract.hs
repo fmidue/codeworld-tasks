@@ -2,6 +2,7 @@
 module CodeWorld.Test.Abstract where
 
 
+import Data.Tuple.Extra                 (both)
 import CodeWorld.Tasks.API              (Drawable(..))
 
 
@@ -47,3 +48,11 @@ smallerY = scaled 1 0.5
 
 largerY :: Drawable a => a -> a
 largerY = scaled 1 2
+
+
+someCurve :: Drawable a => Int -> a
+someCurve points = curve $ take points $ iterate (both (+0.1)) (1,0)
+
+
+someSolidCurve :: Drawable a => Int -> a
+someSolidCurve points = solidClosedCurve $ take points $ iterate (both (+0.1)) (1,0)
