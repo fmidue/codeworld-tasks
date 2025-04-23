@@ -566,6 +566,7 @@ stripToShape p = p
 
 
 contains :: NormalizedPicture -> NormalizedPicture -> Bool
+p `contains` (Pictures ps) = all (contains p) ps
 (Pictures ps) `contains` p = any (`contains` p) ps
 p `contains` q = p == q || case p of
   Translate _ _ pic -> pic `contains` q
