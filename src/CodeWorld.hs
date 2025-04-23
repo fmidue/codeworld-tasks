@@ -1,7 +1,7 @@
 
 module CodeWorld (
   Picture,
-  T.Color(T.HSL,T.RGB),
+  T.Color(HSL,RGB),
   rectangle,
   solidRectangle,
   thickRectangle,
@@ -48,7 +48,7 @@ import Data.Text                        (Text)
 
 import CodeWorld.Tasks.API
 import CodeWorld.Tasks.Reify (Picture)
-import CodeWorld.Tasks.Types hiding (Color)
+import CodeWorld.Tasks.Types hiding (Color(..))
 import qualified CodeWorld.Tasks.Types as T
 import CodeWorld.Tasks.VectorSpace hiding (
   sideLengths,
