@@ -5,7 +5,7 @@ module CodeWorld.Tasks.Types (
   Point,
   Vector,
 
-  Color,
+  Color(..),
   Colour,
   TextStyle,
   Font,
@@ -41,7 +41,6 @@ module CodeWorld.Tasks.Types (
 
 
 import Control.DeepSeq                  (NFData)
-import Data.List                        (sort)
 import Data.Text                        (Text)
 import GHC.Generics                     (Generic)
 
@@ -79,34 +78,21 @@ data Color
   | Grey
   | White
   | Black
-  | Modified Color
+  | Bright Color
+  | Brighter Double Color
+  | Dull Color
+  | Duller Double Color
+  | Light Color
+  | Lighter Double Color
+  | Dark Color
+  | Darker Double Color
+  | Translucent Color
   | Mixed [Color]
   | RGB Double Double Double
   | HSL Double Double Double
-  deriving (Ord,Show,Generic,NFData)
+  deriving (Eq,Ord,Show,Generic,NFData)
 
 type Colour = Color
-
-
-instance Eq Color where
-  Yellow == Yellow = True
-  Green == Green = True
-  Red == Red = True
-  Blue == Blue = True
-  Orange == Orange = True
-  Brown == Brown = True
-  Pink == Pink = True
-  Purple == Purple = True
-  Grey == Grey = True
-  White == White = True
-  Black == Black = True
-  Modified c1 == Modified c2 = c1 == c2
-  Modified c1 == c2 = c1 == c2
-  c1 == Modified c2 = c1 == c2
-  Mixed xs == Mixed ys = sort xs == sort ys
-  RGB r1 g1 b1 == RGB r2 g2 b2 = r1 == r2 && g1 == g2 && b1 == b2
-  HSL h1 s1 l1 == HSL h2 s2 l2 = h1 == h2 && s1 == s2 && l1 == l2
-  _ == _ = False
 
 
 green, red, yellow, black, white, blue, orange, brown, pink, purple, gray, grey :: Color
@@ -124,43 +110,38 @@ grey = Grey
 gray = grey
 
 
-oneLayer :: Color -> Color
-oneLayer (Modified c) = Modified c
-oneLayer c            = Modified c
-
-
 mixed :: [Color] -> Color
 mixed = Mixed
 
 lighter :: Double -> Color -> Color
-lighter _ = oneLayer
+lighter = Lighter
 
 light :: Color -> Color
-light = oneLayer
+light = Light
 
 darker :: Double -> Color -> Color
-darker _ = oneLayer
+darker = Darker
 
 dark :: Color -> Color
-dark = oneLayer
+dark = Dark
 
 brighter :: Double -> Color -> Color
-brighter _ = oneLayer
+brighter = Brighter
 
 bright :: Color -> Color
-bright = oneLayer
+bright = Bright
 
 duller :: Double -> Color -> Color
-duller _ = oneLayer
+duller = Duller
 
 dull :: Color -> Color
-dull = oneLayer
+dull = Dull
 
 translucent :: Color -> Color
-translucent = oneLayer
+translucent = Translucent
 
 assortedColors :: [Color]
-assortedColors = iterate Modified red
+assortedColors = iterate bright red
 
 
 -- Don't know what to do with these. Never seen anyone use them,

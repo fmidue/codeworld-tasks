@@ -19,8 +19,15 @@ module CodeWorld.Test.Solution (
   atLeast,
   atMost,
   inRangeOf,
+  findMaybe,
+  findAll,
+  findAllAnd,
+  findMaybeAnd,
+
   ) where
 
+
+import Data.Maybe (listToMaybe)
 
 import CodeWorld.Tasks.Reify (Picture, toInterface)
 import CodeWorld.Test.Normalize (NormalizedPicture, contains)
@@ -55,6 +62,26 @@ option = (<||>)
 -- Use a predicate on the list of sub images
 specElems :: ([NormalizedPicture] -> Bool) -> PicPredicate
 specElems f (Components (ps,_)) = f ps
+
+
+-- return the first picture element satsifying the predicate if it exists.
+findMaybe :: (NormalizedPicture -> Bool) -> Components -> Maybe NormalizedPicture
+findMaybe f = listToMaybe . findAll f
+
+
+-- return all picture elements satisfying the predicate.
+findAll :: (NormalizedPicture -> Bool) -> Components -> [NormalizedPicture]
+findAll f (Components (ps,_)) = filter f ps
+
+
+-- find all picture elements satisfying a predicate, then apply a function.
+findAllAnd :: (NormalizedPicture -> Bool) -> (NormalizedPicture -> a) -> Components -> [a]
+findAllAnd f g = map g . findAll f
+
+
+-- find the first element satisfying a predicate, then apply a function if it exists.
+findMaybeAnd :: (NormalizedPicture -> Bool) -> (NormalizedPicture -> a) -> Components -> Maybe a
+findMaybeAnd f g = listToMaybe . findAllAnd f g
 
 
 -- Input contains exactly these sub pictures

@@ -6,18 +6,20 @@ module CodeWorld.Test.Normalize (
   contains,
   couldHaveTranslation,
   getExactPos,
+  getColor,
   getTranslation,
   stripToShape,
   stripTranslation,
   ) where
 
 
-import Data.List.Extra                  (takeEnd)
+import Data.List.Extra                  (sort, takeEnd)
 import Data.Text                        (Text)
 import Data.Tuple.Extra                 (both)
 
 import CodeWorld.Tasks.API              (Drawable(..))
-import CodeWorld.Tasks.Types            (Color, Point)
+import CodeWorld.Tasks.Types            (Point, Color)
+import qualified CodeWorld.Tasks.Types as T
 import CodeWorld.Tasks.VectorSpace (
   vectorSum,
   atOriginWithOffset,
@@ -65,6 +67,77 @@ data Factor
   = Smaller Double
   | Larger Double
   deriving (Ord)
+
+
+data AbsColor
+  = Yellow
+  | Green
+  | Red
+  | Blue
+  | Orange
+  | Brown
+  | Pink
+  | Purple
+  | Grey
+  | White
+  | Black
+  | Modified AbsColor
+  | Mixed [AbsColor]
+  | RGB Double Double Double
+  | HSL Double Double Double
+  deriving (Ord,Show)
+
+
+
+instance Eq AbsColor where
+  Yellow == Yellow = True
+  Green == Green = True
+  Red == Red = True
+  Blue == Blue = True
+  Orange == Orange = True
+  Brown == Brown = True
+  Pink == Pink = True
+  Purple == Purple = True
+  Grey == Grey = True
+  White == White = True
+  Black == Black = True
+  Modified c1 == Modified c2 = c1 == c2
+  Modified c1 == c2 = c1 == c2
+  c1 == Modified c2 = c1 == c2
+  Mixed xs == Mixed ys = sort xs == sort ys
+  RGB r1 g1 b1 == RGB r2 g2 b2 = r1 == r2 && g1 == g2 && b1 == b2
+  HSL h1 s1 l1 == HSL h2 s2 l2 = h1 == h2 && s1 == s2 && l1 == l2
+  _ == _ = False
+
+
+toAbsColor :: Color -> AbsColor
+toAbsColor color = case color of
+  T.Yellow -> Yellow
+  T.Green  -> Green
+  T.Red    -> Red
+  T.Black  -> Black
+  T.White  -> White
+  T.Blue   -> Blue
+  T.Orange -> Orange
+  T.Brown  -> Brown
+  T.Pink   -> Pink
+  T.Purple -> Purple
+  T.Grey   -> Grey
+  T.Bright c -> withModified c
+  T.Brighter _ c -> withModified c
+  T.Dull c -> withModified c
+  T.Duller _ c -> withModified c
+  T.Light c -> withModified c
+  T.Lighter _ c -> withModified c
+  T.Dark c -> withModified c
+  T.Darker _ c -> withModified c
+  T.Translucent c -> withModified c
+  T.Mixed cs -> Mixed $ map toAbsColor cs
+  T.RGB r g b -> RGB r g b
+  T.HSL h s l -> HSL h s l
+  where
+    withModified = Modified . toAbsColor
+
 
 type AbsPoint = (Moved,Moved)
 
@@ -160,7 +233,7 @@ data NormalizedPicture
   = Rectangle !ShapeKind !Size !Size
   | Circle !ShapeKind !Size
   | Lettering !Text
-  | Color !Color !NormalizedPicture
+  | Color !AbsColor !NormalizedPicture
   | Translate !Moved !Moved !NormalizedPicture
   | Scale !(Maybe Factor) !(Maybe Factor) !NormalizedPicture
   | Rotate !Angle !NormalizedPicture
@@ -284,7 +357,7 @@ instance Drawable NormalizedPicture where
     Color _ q      -> colored c q
     Pictures ps    -> Pictures $ map (colored c) ps
     Blank          -> Blank
-    q              -> Color c q
+    q              -> Color (toAbsColor c) q
 
   dilated fac = scaled fac fac
 
@@ -532,3 +605,8 @@ couldHaveTranslation Polyline {}  = True
 couldHaveTranslation Curve {}     = True
 couldHaveTranslation (Color _ (Translate {})) = True
 couldHaveTranslation _            = False
+
+
+getColor :: NormalizedPicture -> Maybe AbsColor
+getColor (Color c _) = Just c
+getColor _           = Nothing
