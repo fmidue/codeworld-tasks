@@ -147,7 +147,7 @@ evaluatePred :: PicPredicate -> Picture -> Bool
 evaluatePred f = f . getComponents
 
 
--- Turn input picture into abstract ŕepresentation
+-- Turn input picture into abstract representation
 getComponents :: Picture -> Components
 getComponents = toRelative . toInterface
 
