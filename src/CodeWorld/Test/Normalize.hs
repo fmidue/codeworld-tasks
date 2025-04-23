@@ -164,6 +164,7 @@ instance Show Moved where
 instance Eq Moved where
   (Neg _) == (Neg _) = True
   (Pos _) == (Pos _) = True
+  Zero    == Zero    = True
   _       == _       = False
 
 
