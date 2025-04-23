@@ -64,7 +64,7 @@ specElems :: ([NormalizedPicture] -> Bool) -> PicPredicate
 specElems f (Components (ps,_)) = f ps
 
 
--- return the first picture element satsifying the predicate if it exists.
+-- return the first picture element satisfying the predicate if it exists.
 findMaybe :: (NormalizedPicture -> Bool) -> Components -> Maybe NormalizedPicture
 findMaybe f = listToMaybe . findAll f
 
