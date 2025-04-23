@@ -141,7 +141,10 @@ toAbsColor color = case color of
     withModified = Modified . toAbsColor
 
 
-type AbsPoint = (Moved,Moved)
+newtype AbsPoint = AbsPoint {unAbsPoint :: (Moved,Moved)} deriving (Ord,Show)
+
+instance Eq AbsPoint where
+  _ == _ = True
 
 
 instance Show Size where
@@ -499,7 +502,7 @@ toPosition d
 
 
 toAbstractPoint :: Point -> AbsPoint
-toAbstractPoint (x,y) = (toPosition x, toPosition y)
+toAbstractPoint (x,y) = AbsPoint (toPosition x, toPosition y)
 
 
 
@@ -558,7 +561,7 @@ same for Curves, but arc edges may also extend outside the rectangle slightly
 boundingRect :: Drawable a => [AbsPoint] -> a
 boundingRect ps = polygon [(xMax,yMax), (xMin,yMax), (xMin,yMin), (xMax,yMin)]
   where
-    coordList = both (map getExactPos) $ unzip ps
+    coordList = both (map getExactPos) $ unzip $ map unAbsPoint ps
     (xMax,yMax) = both maximum coordList
     (xMin,yMin) = both minimum coordList
 
@@ -596,7 +599,7 @@ toSize = Size
 
 
 concretePoint :: AbsPoint -> Point
-concretePoint = both getExactPos
+concretePoint = both getExactPos . unAbsPoint
 
 
 stripTranslation :: NormalizedPicture -> NormalizedPicture
