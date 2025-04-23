@@ -6,7 +6,7 @@ module CodeWorld.Tasks.Compare (
 
 
 import Data.Char                        (isNumber, toLower, toUpper)
-import Data.List.Extra                  (maximumOn, minimumOn, replace)
+import Data.List.Extra                  (intercalate, maximumOn, minimumOn, replace)
 import Data.Maybe                       (fromJust)
 import Data.Tuple.Extra                 (second, both)
 import qualified Data.IntMap            as IM
@@ -114,7 +114,7 @@ printOriginal bindings termLookup term = sub
       Rotate a i      -> ["rotated", show a, printNext i]
       Reflect a i     -> ["reflected", show a, printNext i]
       Clip x y i      -> ["clipped", show x, show y, printNext i]
-      Pictures is     -> ["pictures", concatMap printNext is]
+      Pictures is     -> ["pictures [", intercalate "," (map printNext is) ++ "]"]
       And i1 i2       -> [printNextAnd i1, "&", printNextAnd i2]
       _               -> case show term of
         (x:xs) -> [toLower x:xs]
