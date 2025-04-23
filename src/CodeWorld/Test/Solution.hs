@@ -59,7 +59,7 @@ option :: PicPredicate -> PicPredicate -> PicPredicate
 option = (<||>)
 
 
--- Atleast one of the given options satisfies the predicate p.
+-- At least one of the given options satisfies the predicate p.
 oneOf :: (a -> PicPredicate) -> [a] ->  PicPredicate
 oneOf p = foldr ((<||>) . p) (const False)
 
