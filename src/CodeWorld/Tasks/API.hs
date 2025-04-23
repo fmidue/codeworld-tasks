@@ -2,16 +2,12 @@
 
 module CodeWorld.Tasks.API (
   Drawable(..),
-  Picture,
   ) where
 
 
 import Data.Text (Text)
 import CodeWorld.Tasks.Types (Color, Font, Point, TextStyle)
 
-
-
-type Picture = forall a . (Drawable a, Semigroup a, Monoid a) => a
 
 
 class Drawable a where

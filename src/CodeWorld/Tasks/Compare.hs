@@ -1,7 +1,7 @@
 {-# language RankNTypes #-}
 
 module CodeWorld.Tasks.Compare (
-  testCSE,
+  testCSE
 ) where
 
 
@@ -11,9 +11,9 @@ import Data.Maybe                       (fromJust)
 import Data.Tuple.Extra                 (second, both)
 import qualified Data.IntMap            as IM
 
-import CodeWorld.Tasks.API              (Picture)
+import CodeWorld                        (Picture)
 import CodeWorld.Tasks.HashCons         (BiMap, Node(..), hashconsShare)
-import CodeWorld.Tasks.Reify            (ReifyPicture(..), share)
+import CodeWorld.Tasks.Reify            (ReifyPicture(..), share, toInterface)
 
 
 
@@ -22,7 +22,7 @@ testCSE p = do
   reifyResult <- share p
   let
     (explicitShares,termIndex) = both IM.toList reifyResult
-    (allShares,consTerms) = both toReify $ hashconsShare p
+    (allShares,consTerms) = both toReify $ hashconsShare $ toInterface p
   if length termIndex == length consTerms
     then
       pure Nothing

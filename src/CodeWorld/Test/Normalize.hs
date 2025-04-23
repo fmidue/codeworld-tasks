@@ -1,6 +1,4 @@
 {-# language OverloadedStrings #-}
-{-# language DeriveGeneric #-}
-{-# language DeriveAnyClass #-}
 
 module CodeWorld.Test.Normalize (
   Moved(..),
@@ -14,8 +12,6 @@ module CodeWorld.Test.Normalize (
   ) where
 
 
-import GHC.Generics                     (Generic)
-import Control.DeepSeq                  (NFData)
 import Data.List.Extra                  (takeEnd)
 import Data.Text                        (Text)
 import Data.Tuple.Extra                 (both)
@@ -35,19 +31,19 @@ import CodeWorld.Tasks.VectorSpace (
 
 
 
-newtype Size = Size Double deriving (Ord,Generic,NFData)
+newtype Size = Size Double deriving (Ord)
 
 
 data Thickness
   = Normal
   | Thick
-  deriving (Show,Eq,Ord,Generic,NFData)
+  deriving (Show,Eq,Ord)
 
 
 data ShapeKind
   = Hollow Thickness
   | Solid
-  deriving (Ord,Show,Generic,NFData)
+  deriving (Ord,Show)
 
 
 data Angle
@@ -55,20 +51,20 @@ data Angle
   | ToHalf Double
   | ToThreeQuarter Double
   | ToFull Double
-  deriving (Ord,Generic,NFData)
+  deriving (Ord)
 
 
 data Moved
   = Neg Double
   | Pos Double
   | Zero
-  deriving (Ord,Generic,NFData)
+  deriving (Ord)
 
 
 data Factor
   = Smaller Double
   | Larger Double
-  deriving (Ord,Generic,NFData)
+  deriving (Ord)
 
 type AbsPoint = (Moved,Moved)
 
@@ -177,22 +173,13 @@ data NormalizedPicture
   | Arc !ShapeKind !Angle !Angle !Size
   | Reflect !Angle !NormalizedPicture
   | Clip !Size !Size !NormalizedPicture
-  deriving (Show,Eq,Ord,Generic,NFData)
+  deriving (Show,Eq,Ord)
 
 
 thickness :: (Eq a, Fractional a) => a -> Thickness
 thickness d
   | d /= 0 = Thick
   | otherwise = Normal
-
-
-
-instance Semigroup NormalizedPicture where
-  (<>) = (&)
-
-instance Monoid NormalizedPicture where
-  mempty  = blank
-  mconcat = pictures
 
 
 instance Drawable NormalizedPicture where
