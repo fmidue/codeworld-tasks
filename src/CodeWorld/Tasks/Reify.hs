@@ -61,7 +61,7 @@ data ReifyPicture a
   deriving (Show, Foldable, Eq, Ord, Generic, NFData)
 
 
-newtype Picture = PRec (ReifyPicture Picture) deriving (Show,Generic,NFData)
+newtype Picture = PRec (ReifyPicture Picture) deriving (Show,Eq,Generic,NFData)
 
 
 instance Semigroup Picture where
