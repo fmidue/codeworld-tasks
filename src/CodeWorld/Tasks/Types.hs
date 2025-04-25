@@ -90,6 +90,7 @@ data Color
   | Mixed [Color]
   | RGB Double Double Double
   | HSL Double Double Double
+  | RGBA Double Double Double Double
   deriving (Eq,Ord,Show,Generic,NFData)
 
 type Colour = Color
@@ -144,20 +145,43 @@ assortedColors :: [Color]
 assortedColors = iterate bright red
 
 
--- Don't know what to do with these. Never seen anyone use them,
--- but could be problematic if this is used in program logic.
-
 hue :: Color -> Double
 hue (HSL h _ _) = h
+hue (RGBA r g b _) = hue (RGB r g b)
+hue (RGB r g b)
+  | hi - lo < epsilon = 0
+  | r == hi && g >= b = (g - b) / (hi - lo) * pi / 3
+  | r == hi = (g - b) / (hi - lo) * pi / 3 + 2 * pi
+  | g == hi = (b - r) / (hi - lo) * pi / 3 + 2 / 3 * pi
+  | otherwise = (r - g) / (hi - lo) * pi / 3 + 4 / 3 * pi
+  where
+    hi = max r (max g b)
+    lo = min r (min g b)
+    epsilon = 0.000001
 hue _ = 0.5
 
 saturation :: Color -> Double
 saturation (HSL _ s _) = s
+saturation (RGBA r g b _) = saturation (RGB r g b)
+saturation (RGB r g b)
+  | hi - lo < epsilon = 0
+  | otherwise = (hi - lo) / (1 - abs (hi + lo - 1))
+  where
+    hi = max r (max g b)
+    lo = min r (min g b)
+    epsilon = 0.000001
 saturation _ = 0.5
 
 luminosity :: Color -> Double
 luminosity (HSL _ _ l) = l
+luminosity (RGBA r g b _) = luminosity (RGB r g b)
+luminosity (RGB r g b) = (lo + hi) / 2
+  where
+    hi = max r (max g b)
+    lo = min r (min g b)
 luminosity _ = 0.5
 
 alpha :: Color -> Double
-alpha _ = 1
+alpha (RGBA _ _ _ a)  = a
+alpha (Translucent c) = alpha c / 2
+alpha _               = 1

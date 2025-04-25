@@ -136,8 +136,25 @@ toAbsColor color = case color of
   T.Darker _ c -> withModified c
   T.Translucent c -> withModified c
   T.Mixed cs -> Mixed $ map toAbsColor cs
-  T.RGB r g b -> RGB r g b
-  T.HSL h s l -> HSL h s l
+  T.RGB r g b -> case (r,g,b) of
+    (1,1,1) -> White
+    (0,0,0) -> Black
+    (0.5,0.5,0.5) -> Grey
+    _ -> RGB r g b
+  T.HSL h s l -> case (h,s,l) of
+    (0   , 0   , 1   ) -> White
+    (0   , 0   , 0   ) -> Black
+    (0   , 0   , 0.5 ) -> Grey
+    (0   , 0.75, 0.5 ) -> Red
+    (0.61, 0.75, 0.5 ) -> Orange
+    (0.98, 0.75, 0.5 ) -> Yellow
+    (2.09, 0.75, 0.5 ) -> Green
+    (3.84, 0.75, 0.5 ) -> Blue
+    (4.8 , 0.75, 0.5 ) -> Purple
+    (5.76, 0.75, 0.75) -> Pink
+    (0.52, 0.6 , 0.4 ) -> Brown
+    _                  -> HSL h s l
+  T.RGBA r g b _       -> RGB r g b
   where
     withModified = Modified . toAbsColor
 
