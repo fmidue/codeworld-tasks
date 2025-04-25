@@ -1,4 +1,3 @@
-{-# language RankNTypes #-}
 
 module CodeWorld.Tasks.Compare (
   testCSE
