@@ -154,7 +154,8 @@ toAbsColor color = case color of
     (5.76, 0.75, 0.75) -> Pink
     (0.52, 0.6 , 0.4 ) -> Brown
     _                  -> HSL h s l
-  T.RGBA r g b _       -> RGB r g b
+  T.RGBA r g b 1       -> RGB r g b
+  T.RGBA r g b _       -> Modified (RGB r g b)
   where
     withModified = Modified . toAbsColor
 

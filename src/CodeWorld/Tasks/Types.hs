@@ -42,6 +42,7 @@ module CodeWorld.Tasks.Types (
 
 import Control.DeepSeq                  (NFData)
 import Data.Text                        (Text)
+import Data.Tuple.Extra                 (fst3, snd3, thd3)
 import GHC.Generics                     (Generic)
 
 
@@ -145,6 +146,40 @@ assortedColors :: [Color]
 assortedColors = iterate bright red
 
 
+innerColor :: Color -> Color
+innerColor col = case col of
+  Bright c      -> c
+  Brighter _ c  -> c
+  Dull c        -> c
+  Duller _ c    -> c
+  Light c       -> c
+  Lighter _ c   -> c
+  Dark c        -> c
+  Darker _ c    -> c
+  Translucent c -> c
+  _             -> col
+
+
+isPredefined :: Color -> Bool
+isPredefined c = c `elem`
+  [ Yellow
+  , Green
+  , Red
+  , Blue
+  , Orange
+  , Brown
+  , Pink
+  , Purple
+  , Grey
+  , White
+  , Black
+  ]
+
+
+clamp :: Double -> Double
+clamp = max 0 . min 1
+
+
 hue :: Color -> Double
 hue (HSL h _ _) = h
 hue (RGBA r g b _) = hue (RGB r g b)
@@ -158,7 +193,10 @@ hue (RGB r g b)
     hi = max r (max g b)
     lo = min r (min g b)
     epsilon = 0.000001
-hue _ = 0.5
+hue c
+  | isPredefined c = maybe (error "could not find color's hue!") fst3 $ lookup c colorHSL
+  | otherwise = hue $ innerColor c
+
 
 saturation :: Color -> Double
 saturation (HSL _ s _) = s
@@ -170,7 +208,14 @@ saturation (RGB r g b)
     hi = max r (max g b)
     lo = min r (min g b)
     epsilon = 0.000001
-saturation _ = 0.5
+saturation (Bright c) = clamp $ saturation c + 0.25
+saturation (Brighter d c) = clamp $ saturation c + d
+saturation (Dull c) = clamp $ saturation c - 0.25
+saturation (Duller d c) = clamp $ saturation c - d
+saturation c
+  | isPredefined c = maybe (error "could not find color's saturation!") snd3 $ lookup c colorHSL
+  | otherwise = saturation $ innerColor c
+
 
 luminosity :: Color -> Double
 luminosity (HSL _ _ l) = l
@@ -179,9 +224,31 @@ luminosity (RGB r g b) = (lo + hi) / 2
   where
     hi = max r (max g b)
     lo = min r (min g b)
-luminosity _ = 0.5
+luminosity (Light c) = clamp $ luminosity c + 0.15
+luminosity (Lighter d c) = clamp $ luminosity c + d
+luminosity (Dark c) = clamp $ luminosity c - 0.15
+luminosity (Darker d c) = clamp $ luminosity c - d
+luminosity c
+  | isPredefined c = maybe (error "could not find color's luminosity!") thd3 $ lookup c colorHSL
+  | otherwise = luminosity $ innerColor c
 
 alpha :: Color -> Double
 alpha (RGBA _ _ _ a)  = a
 alpha (Translucent c) = alpha c / 2
 alpha _               = 1
+
+
+colorHSL :: [(Color, (Double, Double, Double))]
+colorHSL =
+  [ (White, (0,0,1))
+  , (Black, (0,0,0))
+  , (Grey, (0,0,0.5))
+  , (Red, (0,0.75,0.5))
+  , (Orange, (0.61,0.75,0.5))
+  , (Yellow,(0.98,0.75,0.5))
+  , (Green,(2.09,0.75,0.5))
+  , (Blue,(3.84,0.75,0.5))
+  , (Purple,(4.8,0.75,0.5))
+  , (Pink,(5.76,0.75,0.75))
+  , (Brown,(0.52,0.6,0.4))
+  ]
