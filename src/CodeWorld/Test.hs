@@ -7,6 +7,8 @@ module CodeWorld.Test (
   module Relative,
   module Solution,
   module Types,
+  Picture,
+  normalize,
 ) where
 
 
@@ -18,3 +20,8 @@ import CodeWorld.Test.Relative as Relative
 import CodeWorld.Tasks.Compare as Compare
 import CodeWorld.Test.Solution as Solution
 
+import CodeWorld.Tasks.Reify (Picture, toInterface)
+
+
+normalize :: Picture -> Normalize.NormalizedPicture
+normalize = toInterface
