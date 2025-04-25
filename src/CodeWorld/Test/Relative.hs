@@ -61,7 +61,7 @@ data RelativePicSpec
   deriving(Eq,Ord)
 
 
-newtype Components = Components ([NormalizedPicture],[RelativePicSpec]) deriving (Eq,Show)
+newtype Components = Components ([NormalizedPicture],[RelativePicSpec]) deriving (Eq,Ord,Show)
 
 
 instance Show Direction where
