@@ -285,7 +285,11 @@ instance Drawable NormalizedPicture where
 
   pictures [] = blank
   pictures [x] = x
-  pictures xs = Pictures xs
+  pictures xs = Pictures $ foldr getPics [] xs
+    where
+      getPics p acc = case p of
+        Pictures pics -> pics ++ acc
+        _             -> p     : acc
 
   Blank & p = p
   p & Blank = p
