@@ -1,6 +1,5 @@
 
 module CodeWorld.Test.Solution (
-  --Spec(..),
   specElems,
   containsElem,
   containsElems,
@@ -39,8 +38,6 @@ import CodeWorld.Test.Relative (
   )
 
 
-
---data Spec = Only Components | ReqAndOpt (Components,Components)
 
 type PicPredicate = Components -> Bool
 

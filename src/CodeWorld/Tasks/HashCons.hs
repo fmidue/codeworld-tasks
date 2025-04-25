@@ -1,5 +1,3 @@
-{-# language MultiParamTypeClasses#-}
-{-# language FlexibleContexts #-}
 
 module CodeWorld.Tasks.HashCons (
   Node(..),
@@ -61,15 +59,6 @@ data Node
 newtype DAG = DAG (BiMap Node) deriving Show
 newtype Runner = Runner { unRunner :: State DAG NodeId}
 type BiMap a = [(NodeId,a)]
-
-
-instance Semigroup Runner where
-  (<>) = (&)
-
-
-instance Monoid Runner where
-  mempty  = blank
-  mconcat = pictures
 
 
 instance Drawable Runner where
