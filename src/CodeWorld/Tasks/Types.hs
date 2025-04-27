@@ -43,7 +43,6 @@ module CodeWorld.Tasks.Types (
 
 import Control.DeepSeq                  (NFData)
 import Data.Text                        (Text)
-import Data.Tuple.Extra                 (fst3, snd3, thd3)
 import GHC.Generics                     (Generic)
 
 
@@ -161,22 +160,6 @@ innerColor col = case col of
   _             -> col
 
 
-isPredefined :: Color -> Bool
-isPredefined c = c `elem`
-  [ Yellow
-  , Green
-  , Red
-  , Blue
-  , Orange
-  , Brown
-  , Pink
-  , Purple
-  , Grey
-  , White
-  , Black
-  ]
-
-
 clamp :: Double -> Double
 clamp = max 0 . min 1
 
@@ -206,8 +189,15 @@ hue (clampColor -> RGB r g b)
     lo = min r (min g b)
     epsilon = 0.000001
 hue (Mixed cs) = hue $ mix cs
+hue Orange = 0.61
+hue Yellow = 0.98
+hue Green = 2.09
+hue Blue = 3.84
+hue Purple = 4.8
+hue Pink = 5.76
+hue Brown = 0.52
 hue c
-  | isPredefined c = maybe (error "could not find color's hue!") fst3 $ lookup c colorHSL
+  | c `elem` [White, Black, Grey, Red] = 0
   | otherwise = hue $ innerColor c
 
 
@@ -226,8 +216,10 @@ saturation (Bright c) = clamp $ saturation c + 0.25
 saturation (Brighter d c) = clamp $ saturation c + d
 saturation (Dull c) = clamp $ saturation c - 0.25
 saturation (Duller d c) = clamp $ saturation c - d
+saturation Brown = 0.6
 saturation c
-  | isPredefined c = maybe (error "could not find color's saturation!") snd3 $ lookup c colorHSL
+  | c `elem` [White, Black, Grey] = 0
+  | c `elem` [Red, Orange, Yellow, Green, Blue, Purple, Pink] = 0.75
   | otherwise = saturation $ innerColor c
 
 
@@ -243,30 +235,19 @@ luminosity (Light c) = clamp $ luminosity c + 0.15
 luminosity (Lighter d c) = clamp $ luminosity c + d
 luminosity (Dark c) = clamp $ luminosity c - 0.15
 luminosity (Darker d c) = clamp $ luminosity c - d
+luminosity White = 1
+luminosity Black = 0
+luminosity Pink = 0.75
+luminosity Brown = 0.4
 luminosity c
-  | isPredefined c = maybe (error "could not find color's luminosity!") thd3 $ lookup c colorHSL
+  | c `elem` [Grey, Red, Orange, Yellow, Green, Blue, Purple] = 0.5
   | otherwise = luminosity $ innerColor c
+
 
 alpha :: Color -> Double
 alpha (RGBA _ _ _ (clamp -> a))  = a
 alpha (Translucent c) = alpha c / 2
 alpha _               = 1
-
-
-colorHSL :: [(Color, (Double, Double, Double))]
-colorHSL =
-  [ (White, (0,0,1))
-  , (Black, (0,0,0))
-  , (Grey, (0,0,0.5))
-  , (Red, (0,0.75,0.5))
-  , (Orange, (0.61,0.75,0.5))
-  , (Yellow,(0.98,0.75,0.5))
-  , (Green,(2.09,0.75,0.5))
-  , (Blue,(3.84,0.75,0.5))
-  , (Purple,(4.8,0.75,0.5))
-  , (Pink,(5.76,0.75,0.75))
-  , (Brown,(0.52,0.6,0.4))
-  ]
 
 
 -- taken and slightly adapted from codeworld-api
