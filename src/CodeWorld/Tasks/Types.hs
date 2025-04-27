@@ -142,8 +142,30 @@ dull = Dull
 translucent :: Color -> Color
 translucent = Translucent
 
+
 assortedColors :: [Color]
-assortedColors = iterate bright red
+assortedColors = [HSL (adjusted h) 0.75 0.5 | h <- [0, 2 * pi / phi ..]]
+  where
+    phi = (1 + sqrt 5) / 2
+    adjusted x =
+      x + a0
+        + a1 * sin (1 * x)
+        + b1 * cos (1 * x)
+        + a2 * sin (2 * x)
+        + b2 * cos (2 * x)
+        + a3 * sin (3 * x)
+        + b3 * cos (3 * x)
+        + a4 * sin (4 * x)
+        + b4 * cos (4 * x)
+    a0 = -8.6870353473225553e-02
+    a1 = 8.6485747604766350e-02
+    b1 = -9.6564816819163041e-02
+    a2 = -3.0072759267059756e-03
+    b2 = 1.5048456422494966e-01
+    a3 = 9.3179137558373148e-02
+    b3 = 2.9002513227535595e-03
+    a4 = -6.6275768228887290e-03
+    b4 = -1.0451841243520298e-02
 
 
 innerColor :: Color -> Color
