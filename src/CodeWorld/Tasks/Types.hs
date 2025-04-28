@@ -269,7 +269,26 @@ luminosity c
 alpha :: Color -> Double
 alpha (RGBA _ _ _ (clamp -> a))  = a
 alpha (Translucent c) = alpha c / 2
-alpha _               = 1
+alpha (HSL {}) = 1
+alpha (RGB {}) = 1
+alpha (Mixed cs) = alpha $ mix cs
+alpha c
+  | c `elem` predefinedColors = 1
+  | otherwise = alpha $ innerColor c
+  where
+    predefinedColors =
+      [ Yellow
+      , Green
+      , Red
+      , Black
+      , White
+      , Blue
+      , Orange
+      , Brown
+      , Pink
+      , Purple
+      , Grey
+      ]
 
 
 -- taken and slightly adapted from codeworld-api

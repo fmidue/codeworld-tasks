@@ -16,7 +16,7 @@ module CodeWorld.Test.Normalize (
   ) where
 
 
-import Data.List.Extra                  (sort, takeEnd)
+import Data.List.Extra                  (takeEnd)
 import Data.Text                        (Text)
 import Data.Tuple.Extra                 (both)
 
@@ -73,109 +73,34 @@ data Factor
 
 
 data AbsColor
-  = Yellow
-  | Green
-  | Red
-  | Blue
-  | Orange
-  | Brown
-  | Pink
-  | Purple
-  | Grey
-  | White
-  | Black
-  | Modified AbsColor
-  | Mixed [AbsColor]
-  | RGB Double Double Double
-  | HSL Double Double Double
+  = HSL Double Double Double
+  | Translucent Double AbsColor
+  | AnyColor -- used as a wildcard in tests
   deriving (Ord,Show)
 
 
 
 instance Eq AbsColor where
-  Yellow == Yellow = True
-  Green == Green = True
-  Red == Red = True
-  Blue == Blue = True
-  Orange == Orange = True
-  Brown == Brown = True
-  Pink == Pink = True
-  Purple == Purple = True
-  Grey == Grey = True
-  White == White = True
-  Black == Black = True
-  Modified c1 == Modified c2 = c1 == c2
-  Modified c1 == c2 = c1 == c2
-  c1 == Modified c2 = c1 == c2
-  Mixed xs == Mixed ys = sort xs == sort ys
-  RGB r1 g1 b1 == RGB r2 g2 b2 = r1 == r2 && g1 == g2 && b1 == b2
   HSL h1 s1 l1 == HSL h2 s2 l2 = h1 == h2 && s1 == s2 && l1 == l2
+  Translucent a1 c1 == Translucent a2 c2 = a1 == a2 && c1 == c2
+  AnyColor == _ = True
+  _ == AnyColor = True
   _ == _ = False
 
 
 toAbsColor :: Color -> AbsColor
 toAbsColor color = case color of
-  T.Yellow -> Yellow
-  T.Green  -> Green
-  T.Red    -> Red
-  T.Black  -> Black
-  T.White  -> White
-  T.Blue   -> Blue
-  T.Orange -> Orange
-  T.Brown  -> Brown
-  T.Pink   -> Pink
-  T.Purple -> Purple
-  T.Grey   -> Grey
-  T.Bright c -> withModified c
-  T.Brighter _ c -> withModified c
-  T.Dull c -> withModified c
-  T.Duller _ c -> withModified c
-  T.Light c -> withModified c
-  T.Lighter _ c -> withModified c
-  T.Dark c -> withModified c
-  T.Darker _ c -> withModified c
-  T.Translucent c -> withModified c
-  T.Mixed cs -> Mixed $ map toAbsColor cs
-  T.RGB r g b -> case (r,g,b) of
-    (1,1,1) -> White
-    (0,0,0) -> Black
-    (0.5,0.5,0.5) -> Grey
-    _ -> RGB r g b
-  T.HSL h s l -> case (h,s,l) of
-    (0   , 0   , 1   ) -> White
-    (0   , 0   , 0   ) -> Black
-    (0   , 0   , 0.5 ) -> Grey
-    (0   , 0.75, 0.5 ) -> Red
-    (0.61, 0.75, 0.5 ) -> Orange
-    (0.98, 0.75, 0.5 ) -> Yellow
-    (2.09, 0.75, 0.5 ) -> Green
-    (3.84, 0.75, 0.5 ) -> Blue
-    (4.8 , 0.75, 0.5 ) -> Purple
-    (5.76, 0.75, 0.75) -> Pink
-    (0.52, 0.6 , 0.4 ) -> Brown
-    _                  -> HSL h s l
-  T.RGBA r g b 1       -> RGB r g b
-  T.RGBA r g b _       -> Modified (RGB r g b)
-  where
-    withModified = Modified . toAbsColor
+  T.RGB 1 1 1       -> HSL 0 0 1
+  T.RGB 0 0 0       -> HSL 0 0 0
+  T.RGB 0.5 0.5 0.5 -> HSL 0 0 0.5
+  T.RGBA r g b 1    -> toAbsColor $ T.RGB r g b
+  T.RGBA r g b a    -> Translucent a $ toAbsColor $ T.RGB r g b
+  c
+    | T.alpha c == 1 -> HSL (T.hue c) (T.saturation c) (T.luminosity c)
+    | otherwise      -> Translucent (T.alpha c) $ HSL (T.hue c) (T.saturation c) (T.luminosity c)
 
 
 isSameColor :: AbsColor -> AbsColor -> Bool
-isSameColor Yellow Yellow = True
-isSameColor Green Green = True
-isSameColor Red Red = True
-isSameColor Black Black = True
-isSameColor White White = True
-isSameColor Blue Blue = True
-isSameColor Orange Orange = True
-isSameColor Brown Brown = True
-isSameColor Pink Pink = True
-isSameColor Purple Purple = True
-isSameColor Grey Grey = True
-isSameColor (Modified c1) (Modified c2) = isSameColor c1 c2
-isSameColor (Modified _) _ = False
-isSameColor _ (Modified _) = False
-isSameColor (Mixed cs1) (Mixed cs2) = all (uncurry isSameColor) $ zip (sort cs1) (sort cs2)
 isSameColor a b = a == b
 
 
