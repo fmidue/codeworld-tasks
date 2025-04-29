@@ -85,7 +85,7 @@ instance Eq AbsColor where
   HSL h1 s1 l1      == HSL h2 s2 l2
     -- Luminosity at extremes => almost pure white/black
     | (l2 >= 0.98 && l1 >= 0.98) ||
-      (l2 <= 0.05  || l1 <= 0.05) = True
+      (l2 <= 0.05 && l1 <= 0.05) = True
     -- Saturation extremely low => almost pure grey
     | s1 <= 0.05 && s2 <= 0.05    = lDiff <= 0.15
     -- Difference of hsl values is in certain range (hue range depends on saturation)
