@@ -76,9 +76,9 @@ bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTe
   where
     toName = second (formatBinding . ('a':) . capitalFirst . printOriginal [] allTerms)
 
-    formatBinding = camelCase . filter keep . replace "&" "And" . replace "." ""
+    formatBinding = camelCase . filter keep . replace "&" "And"
 
-    keep c = c `notElem` ['(',')'] && not (isNumber c)
+    keep c = c `notElem` ['(',')',',','[',']','-','.'] && not (isNumber c)
 
     capitalFirst [] = []
     capitalFirst (x:xs) = toUpper x : xs
