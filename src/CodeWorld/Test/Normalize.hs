@@ -11,6 +11,7 @@ module CodeWorld.Test.Normalize (
   getColor,
   getRotation,
   getScalingFactors,
+  getExactScalingFactors,
   getTranslation,
   stripToShape,
   stripTranslation,
@@ -665,6 +666,10 @@ getScalingFactors (Reflect _ p)     = getScalingFactors p
 getScalingFactors (Rotate _ p)      = getScalingFactors p
 getScalingFactors (Color _ p)       = getScalingFactors p
 getScalingFactors _                 = (Same,Same)
+
+
+getExactScalingFactors :: NormalizedPicture -> (Double,Double)
+getExactScalingFactors = both fromFactor . getScalingFactors
 
 
 getRotation :: NormalizedPicture -> Maybe Angle
