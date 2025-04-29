@@ -33,8 +33,6 @@ class Drawable a where
   thickCircle :: Double -> Double -> a
   translated :: Double -> Double -> a -> a
   colored :: Color -> a -> a
-  coloured :: Color -> a -> a
-  coloured = colored
   dilated :: Double -> a -> a
   scaled :: Double -> Double -> a -> a
   rotated :: Double -> a -> a
