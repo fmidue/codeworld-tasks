@@ -1,6 +1,6 @@
 
 module CodeWorld (
-  Picture,
+  P.Picture,
   T.Color(HSL,RGB),
   rectangle,
   solidRectangle,
@@ -46,8 +46,8 @@ module CodeWorld (
 
 import Data.Text                        (Text)
 
-import CodeWorld.Tasks.API
-import CodeWorld.Tasks.Reify (Picture)
+import CodeWorld.Tasks.Reify hiding (Picture)
+import qualified CodeWorld.Tasks.Reify as P
 import CodeWorld.Tasks.Types hiding (Color(..))
 import qualified CodeWorld.Tasks.Types as T
 import CodeWorld.Tasks.VectorSpace hiding (
@@ -58,11 +58,11 @@ import CodeWorld.Tasks.VectorSpace hiding (
   )
 
 
-drawingOf :: Picture -> IO ()
+drawingOf :: P.Picture -> IO ()
 drawingOf = const $ pure ()
 
 
-animationOf :: (Double -> Picture) -> IO ()
+animationOf :: (Double -> P.Picture) -> IO ()
 animationOf = const $ pure ()
 
 
