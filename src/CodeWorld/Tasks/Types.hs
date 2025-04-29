@@ -1,5 +1,6 @@
 {-# language DeriveAnyClass #-}
 {-# language DeriveGeneric #-}
+{-# language ViewPatterns #-}
 
 module CodeWorld.Tasks.Types (
   Point,
@@ -90,6 +91,7 @@ data Color
   | Mixed [Color]
   | RGB Double Double Double
   | HSL Double Double Double
+  | RGBA Double Double Double Double
   deriving (Eq,Ord,Show,Generic,NFData)
 
 type Colour = Color
@@ -140,24 +142,185 @@ dull = Dull
 translucent :: Color -> Color
 translucent = Translucent
 
+
 assortedColors :: [Color]
-assortedColors = iterate bright red
+assortedColors = [HSL (adjusted h) 0.75 0.5 | h <- [0, 2 * pi / phi ..]]
+  where
+    phi = (1 + sqrt 5) / 2
+    adjusted x =
+      x + a0
+        + a1 * sin (1 * x)
+        + b1 * cos (1 * x)
+        + a2 * sin (2 * x)
+        + b2 * cos (2 * x)
+        + a3 * sin (3 * x)
+        + b3 * cos (3 * x)
+        + a4 * sin (4 * x)
+        + b4 * cos (4 * x)
+    a0 = -8.6870353473225553e-02
+    a1 = 8.6485747604766350e-02
+    b1 = -9.6564816819163041e-02
+    a2 = -3.0072759267059756e-03
+    b2 = 1.5048456422494966e-01
+    a3 = 9.3179137558373148e-02
+    b3 = 2.9002513227535595e-03
+    a4 = -6.6275768228887290e-03
+    b4 = -1.0451841243520298e-02
 
 
--- Don't know what to do with these. Never seen anyone use them,
--- but could be problematic if this is used in program logic.
+innerColor :: Color -> Color
+innerColor col = case col of
+  Bright c      -> c
+  Brighter _ c  -> c
+  Dull c        -> c
+  Duller _ c    -> c
+  Light c       -> c
+  Lighter _ c   -> c
+  Dark c        -> c
+  Darker _ c    -> c
+  Translucent c -> c
+  _             -> col
+
+
+clamp :: Double -> Double
+clamp = max 0 . min 1
+
+
+clampColor :: Color -> Color
+clampColor (RGBA r g b a) = RGBA (clamp r) (clamp g) (clamp b) (clamp a)
+clampColor (RGB r g b) = RGB (clamp r) (clamp g) (clamp b)
+clampColor (HSL h s l) = HSL (moduloTwoPi h) (clamp s) (clamp l)
+clampColor c = c
+
+
+moduloTwoPi :: Double -> Double
+moduloTwoPi x = x - fromInteger (floor (x / (2*pi))) * 2*pi
+
 
 hue :: Color -> Double
-hue (HSL h _ _) = h
-hue _ = 0.5
+hue (HSL (moduloTwoPi -> h) _ _) = h
+hue (RGBA r g b _) = hue (RGB r g b)
+hue (clampColor -> RGB r g b)
+  | hi - lo < epsilon = 0
+  | r == hi && g >= b = (g - b) / (hi - lo) * pi / 3
+  | r == hi = (g - b) / (hi - lo) * pi / 3 + 2 * pi
+  | g == hi = (b - r) / (hi - lo) * pi / 3 + 2 / 3 * pi
+  | otherwise = (r - g) / (hi - lo) * pi / 3 + 4 / 3 * pi
+  where
+    hi = max r (max g b)
+    lo = min r (min g b)
+    epsilon = 0.000001
+hue (Mixed cs) = hue $ mix cs
+hue Orange = 0.61
+hue Yellow = 0.98
+hue Green = 2.09
+hue Blue = 3.84
+hue Purple = 4.8
+hue Pink = 5.76
+hue Brown = 0.52
+hue c
+  | c `elem` [White, Black, Grey, Red] = 0
+  | otherwise = hue $ innerColor c
+
 
 saturation :: Color -> Double
-saturation (HSL _ s _) = s
-saturation _ = 0.5
+saturation (HSL _ (clamp -> s) _) = s
+saturation (RGBA r g b _) = saturation (RGB r g b)
+saturation (clampColor -> RGB r g b)
+  | hi - lo < epsilon = 0
+  | otherwise = (hi - lo) / (1 - abs (hi + lo - 1))
+  where
+    hi = max r (max g b)
+    lo = min r (min g b)
+    epsilon = 0.000001
+saturation (Mixed cs) = saturation $ mix cs
+saturation (Bright c) = clamp $ saturation c + 0.25
+saturation (Brighter d c) = clamp $ saturation c + d
+saturation (Dull c) = clamp $ saturation c - 0.25
+saturation (Duller d c) = clamp $ saturation c - d
+saturation Brown = 0.6
+saturation c
+  | c `elem` [White, Black, Grey] = 0
+  | c `elem` [Red, Orange, Yellow, Green, Blue, Purple, Pink] = 0.75
+  | otherwise = saturation $ innerColor c
+
 
 luminosity :: Color -> Double
-luminosity (HSL _ _ l) = l
-luminosity _ = 0.5
+luminosity (HSL _ _ (clamp -> l)) = l
+luminosity (RGBA r g b _) = luminosity (RGB r g b)
+luminosity (clampColor -> RGB r g b) = (lo + hi) / 2
+  where
+    hi = max r (max g b)
+    lo = min r (min g b)
+luminosity (Mixed cs) = luminosity $ mix cs
+luminosity (Light c) = clamp $ luminosity c + 0.15
+luminosity (Lighter d c) = clamp $ luminosity c + d
+luminosity (Dark c) = clamp $ luminosity c - 0.15
+luminosity (Darker d c) = clamp $ luminosity c - d
+luminosity White = 1
+luminosity Black = 0
+luminosity Pink = 0.75
+luminosity Brown = 0.4
+luminosity c
+  | c `elem` [Grey, Red, Orange, Yellow, Green, Blue, Purple] = 0.5
+  | otherwise = luminosity $ innerColor c
+
 
 alpha :: Color -> Double
-alpha _ = 1
+alpha (RGBA _ _ _ (clamp -> a))  = a
+alpha (Translucent c) = alpha c / 2
+alpha (HSL {}) = 1
+alpha (RGB {}) = 1
+alpha (Mixed cs) = alpha $ mix cs
+alpha c
+  | c `elem` predefinedColors = 1
+  | otherwise = alpha $ innerColor c
+  where
+    predefinedColors =
+      [ Yellow
+      , Green
+      , Red
+      , Black
+      , White
+      , Blue
+      , Orange
+      , Brown
+      , Pink
+      , Purple
+      , Grey
+      ]
+
+
+-- taken and slightly adapted from codeworld-api
+mix :: [Color] -> Color
+mix = go 0 0 0 0 0
+  where
+    go rr gg bb aa n (c:cs) = let (r, g, b, a) = toRGBA c in
+      go (rr + r * r * a) (gg + g * g * a) (bb + b * b * a) (aa + a) (n + 1) cs
+    go rr gg bb aa n []
+      | aa == 0 = RGBA 0 0 0 0
+      | otherwise = RGBA (sqrt (rr / aa)) (sqrt (gg / aa)) (sqrt (bb / aa)) (aa / n)
+
+
+-- taken and slightly adapted from codeworld-api
+toRGBA :: Color -> (Double,Double,Double,Double)
+toRGBA (clampColor -> RGB r g b) = (r, b, g, 1)
+toRGBA (clampColor -> RGBA r b g a) = (r, b, g, a)
+toRGBA (clampColor -> HSL h s l) = (r, g, b, 1)
+  where
+    m1 = l * 2 - m2
+    m2
+      | l <= 0.5 = l * (s + 1)
+      | otherwise = l + s - l * s
+    r = convert m1 m2 (h / 2 / pi + 1 / 3)
+    g = convert m1 m2 (h / 2 / pi)
+    b = convert m1 m2 (h / 2 / pi - 1 / 3)
+    convert m1' m2' h'
+      | h' < 0 = convert m1' m2' (h' + 1)
+      | h' > 1 = convert m1' m2' (h' - 1)
+      | h' * 6 < 1 = m1' + (m2' - m1') * h' * 6
+      | h' * 2 < 1 = m2'
+      | h' * 3 < 2 = m1' + (m2' - m1') * (2 / 3 - h') * 6
+      | otherwise = m1'
+toRGBA (Translucent c) = let (r, g, b, a) = toRGBA c in (r, g, b, a/2)
+toRGBA c = toRGBA $ HSL (hue c) (saturation c) (luminosity c)

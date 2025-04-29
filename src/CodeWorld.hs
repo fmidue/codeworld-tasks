@@ -1,7 +1,7 @@
 
 module CodeWorld (
   P.Picture,
-  T.Color(HSL,RGB),
+  T.Color(HSL,RGB,RGBA),
   rectangle,
   solidRectangle,
   thickRectangle,

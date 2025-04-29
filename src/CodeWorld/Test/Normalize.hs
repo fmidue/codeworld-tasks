@@ -13,10 +13,12 @@ module CodeWorld.Test.Normalize (
   stripToShape,
   stripTranslation,
   isSameColor,
+  equalColorCustom,
+  toAbsColor,
   ) where
 
 
-import Data.List.Extra                  (sort, takeEnd)
+import Data.List.Extra                  (takeEnd)
 import Data.Text                        (Text)
 import Data.Tuple.Extra                 (both)
 
@@ -73,92 +75,77 @@ data Factor
 
 
 data AbsColor
-  = Yellow
-  | Green
-  | Red
-  | Blue
-  | Orange
-  | Brown
-  | Pink
-  | Purple
-  | Grey
-  | White
-  | Black
-  | Modified AbsColor
-  | Mixed [AbsColor]
-  | RGB Double Double Double
-  | HSL Double Double Double
+  = HSL Double Double Double
+  | Translucent Double AbsColor
+  | AnyColor -- used as a wildcard in tests
   deriving (Ord,Show)
 
 
 
 instance Eq AbsColor where
-  Yellow == Yellow = True
-  Green == Green = True
-  Red == Red = True
-  Blue == Blue = True
-  Orange == Orange = True
-  Brown == Brown = True
-  Pink == Pink = True
-  Purple == Purple = True
-  Grey == Grey = True
-  White == White = True
-  Black == Black = True
-  Modified c1 == Modified c2 = c1 == c2
-  Modified c1 == c2 = c1 == c2
-  c1 == Modified c2 = c1 == c2
-  Mixed xs == Mixed ys = sort xs == sort ys
-  RGB r1 g1 b1 == RGB r2 g2 b2 = r1 == r2 && g1 == g2 && b1 == b2
-  HSL h1 s1 l1 == HSL h2 s2 l2 = h1 == h2 && s1 == s2 && l1 == l2
-  _ == _ = False
+  HSL h1 s1 l1      == HSL h2 s2 l2
+    -- Luminosity at extremes => almost pure white/black
+    | (l2 >= 0.98 && l1 >= 0.98) ||
+      (l2 <= 0.05 && l1 <= 0.05) = True
+    -- Saturation extremely low => almost pure grey
+    | s1 <= 0.05 && s2 <= 0.05    = lDiff <= 0.15
+    -- Difference of hsl values is in certain range (hue range depends on saturation)
+    | otherwise                   =
+      hDiff <= 0.15 + (0.1*hueMod) && sDiff <= 0.25 && lDiff <= 0.15
+    where
+      lDiff = abs (l1 - l2)
+      sDiff = abs (s1 - s2)
+      hDiff = abs (h1 - h2)
+      hueMod = 1 - min s1 s2 - sDiff
+
+  Translucent a1 c1 == Translucent a2 c2 = abs (a1 - a2) <= 0.15 && c1 == c2
+  Translucent a c1  == c                 = a <= 0.15 && c1 == c
+  c                 == Translucent a c1  = a <= 0.15 && c1 == c
+  AnyColor          == _                 = True
+  _                 == AnyColor          = True
 
 
 toAbsColor :: Color -> AbsColor
-toAbsColor color = case color of
-  T.Yellow -> Yellow
-  T.Green  -> Green
-  T.Red    -> Red
-  T.Black  -> Black
-  T.White  -> White
-  T.Blue   -> Blue
-  T.Orange -> Orange
-  T.Brown  -> Brown
-  T.Pink   -> Pink
-  T.Purple -> Purple
-  T.Grey   -> Grey
-  T.Bright c -> withModified c
-  T.Brighter _ c -> withModified c
-  T.Dull c -> withModified c
-  T.Duller _ c -> withModified c
-  T.Light c -> withModified c
-  T.Lighter _ c -> withModified c
-  T.Dark c -> withModified c
-  T.Darker _ c -> withModified c
-  T.Translucent c -> withModified c
-  T.Mixed cs -> Mixed $ map toAbsColor cs
-  T.RGB r g b -> RGB r g b
-  T.HSL h s l -> HSL h s l
-  where
-    withModified = Modified . toAbsColor
+toAbsColor (T.RGB 1   1   1  ) = HSL 0 0 1
+toAbsColor (T.RGB 0   0   0  ) = HSL 0 0 0
+toAbsColor (T.RGB 0.5 0.5 0.5) = HSL 0 0 0.5
+toAbsColor c
+  | T.alpha c == 1 = HSL (T.hue c) (T.saturation c) (T.luminosity c)
+  | otherwise      = Translucent (T.alpha c) $ HSL (T.hue c) (T.saturation c) (T.luminosity c)
 
 
 isSameColor :: AbsColor -> AbsColor -> Bool
-isSameColor Yellow Yellow = True
-isSameColor Green Green = True
-isSameColor Red Red = True
-isSameColor Black Black = True
-isSameColor White White = True
-isSameColor Blue Blue = True
-isSameColor Orange Orange = True
-isSameColor Brown Brown = True
-isSameColor Pink Pink = True
-isSameColor Purple Purple = True
-isSameColor Grey Grey = True
-isSameColor (Modified c1) (Modified c2) = isSameColor c1 c2
-isSameColor (Modified _) _ = False
-isSameColor _ (Modified _) = False
-isSameColor (Mixed cs1) (Mixed cs2) = all (uncurry isSameColor) $ zip (sort cs1) (sort cs2)
-isSameColor a b = a == b
+isSameColor (HSL h1 s1 l1)      (HSL h2 s2 l2)      =
+  h1 == h2 && s1 == s2 && l1 == l2
+isSameColor (Translucent a1 c1) (Translucent a2 c2) =
+  a1 == a2 && c1 `isSameColor` c2
+isSameColor AnyColor            _                   = True
+isSameColor _                   AnyColor            = True
+isSameColor _                   _                   = False
+
+
+-- Allows for custom thresholds on color similarity detection.
+-- Export to be able to correct test failures.
+equalColorCustom :: Double -> Double -> Double -> Double -> AbsColor -> AbsColor -> Bool
+equalColorCustom hRange sRange lRange _ (HSL h1 s1 l1) (HSL h2 s2 l2)
+    | (l2 >= 0.98 && l1 >= 0.98) ||
+      (l2 <= 0.05 && l1 <= 0.05) = True
+    | s1 <= 0.05 && s2 <= 0.05    = lDiff <= lRange
+    | otherwise                   =
+      hDiff <= hRange && sDiff <= sRange && lDiff <= lRange
+    where
+      lDiff = abs (l1 - l2)
+      sDiff = abs (s1 - s2)
+      hDiff = abs (h1 - h2)
+equalColorCustom h s l aRange (Translucent a1 c1) (Translucent a2 c2) =
+  abs (a1 - a2) <= aRange && equalColorCustom h s l aRange c1 c2
+equalColorCustom h s l aRange (Translucent a c1)  c                   =
+  a <= aRange && equalColorCustom h s l aRange c1 c
+equalColorCustom h s l aRange c                   (Translucent a c1)  =
+  a <= aRange && equalColorCustom h s l aRange c1 c
+equalColorCustom _ _ _ _      AnyColor            _                   = True
+equalColorCustom _ _ _ _      _                   AnyColor            = True
+
 
 
 newtype AbsPoint = AbsPoint {unAbsPoint :: (Moved,Moved)} deriving (Ord,Show)
@@ -387,7 +374,9 @@ instance Drawable NormalizedPicture where
     Color _ q      -> colored c q
     Pictures ps    -> Pictures $ map (colored c) ps
     Blank          -> Blank
-    q              -> Color (toAbsColor c) q
+    q              -> case toAbsColor c of
+      HSL 0 0 0 -> q
+      absC      -> Color absC q
 
   dilated fac = scaled fac fac
 
@@ -650,7 +639,9 @@ couldHaveTranslation _            = False
 
 getColor :: NormalizedPicture -> Maybe AbsColor
 getColor (Color c _) = Just c
-getColor _           = Nothing
+getColor Blank       = Nothing
+getColor Logo        = Nothing
+getColor _           = Just $ HSL 0 0 0
 
 
 getScalingFactors :: NormalizedPicture -> (Maybe Factor,Maybe Factor)
