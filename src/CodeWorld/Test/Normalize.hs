@@ -1,4 +1,6 @@
+{-# language FlexibleInstances #-}
 {-# language OverloadedStrings #-}
+{-# language ViewPatterns #-}
 
 module CodeWorld.Test.Normalize (
   Moved(..),
@@ -71,7 +73,7 @@ data Moved
 data Factor
   = Smaller Double
   | Larger Double
-  deriving (Ord)
+  | Same
 
 
 data AbsColor
@@ -217,14 +219,26 @@ instance Num Moved where
 
 
 instance Eq Factor where
-  (Smaller _) == (Smaller _) = True
-  (Larger _)  == (Larger _)  = True
-  _           == _           = False
+  Smaller _ == Smaller _ = True
+  Larger _  == Larger _  = True
+  Same      == Same      = True
+  _         == _         = False
+
+
+instance Ord Factor where
+  Smaller f1 <= Smaller f2 = f1 <= f2
+  Larger f1  <= Larger f2  = f1 <= f2
+  Smaller _  <= Larger _   = True
+  Smaller _  <= Same       = True
+  Same       <= Larger _   = True
+  Same       <= Same       = True
+  _          <= _          = False
 
 
 instance Show Factor where
   show (Smaller _) = "Smaller"
   show (Larger _)  = "Larger"
+  show Same        = "Same"
 
 
 instance Eq Angle where
@@ -248,7 +262,7 @@ data NormalizedPicture
   | Lettering !Text
   | Color !AbsColor !NormalizedPicture
   | Translate !Moved !Moved !NormalizedPicture
-  | Scale !(Maybe Factor) !(Maybe Factor) !NormalizedPicture
+  | Scale !Factor !Factor !NormalizedPicture
   | Rotate !Angle !NormalizedPicture
   | Pictures [NormalizedPicture]
   | CoordinatePlane
@@ -463,17 +477,17 @@ toOpenShape :: [Point] -> [Point]
 toOpenShape ps = ps ++ take 1 ps
 
 
-toFactor :: Double -> Maybe Factor
-toFactor 1 = Nothing
-toFactor x
-  | x > 1 = Just $ Larger x
-  | otherwise = Just $ Smaller x
+toFactor :: Double -> Factor
+toFactor (abs -> 1) = Same
+toFactor (abs -> x)
+  | x > 1 = Larger x
+  | otherwise = Smaller x
 
 
-fromFactor :: Maybe Factor -> Double
-fromFactor Nothing = 1
-fromFactor (Just ( Smaller x)) = x
-fromFactor (Just (Larger x)) = x
+fromFactor :: Factor -> Double
+fromFactor Same = 1
+fromFactor (Smaller x) = x
+fromFactor (Larger x) = x
 
 
 removeDupes :: Eq a => [a] -> [a]
@@ -644,13 +658,13 @@ getColor Logo        = Nothing
 getColor _           = Just $ HSL 0 0 0
 
 
-getScalingFactors :: NormalizedPicture -> (Maybe Factor,Maybe Factor)
+getScalingFactors :: NormalizedPicture -> (Factor,Factor)
 getScalingFactors (Scale f1 f2 _)   = (f1,f2)
 getScalingFactors (Translate _ _ p) = getScalingFactors p
 getScalingFactors (Reflect _ p)     = getScalingFactors p
 getScalingFactors (Rotate _ p)      = getScalingFactors p
 getScalingFactors (Color _ p)       = getScalingFactors p
-getScalingFactors _                 = (Nothing,Nothing)
+getScalingFactors _                 = (Same,Same)
 
 
 getRotation :: NormalizedPicture -> Maybe Angle
