@@ -74,8 +74,8 @@ data Angle
 
 data Moved
   = Neg Double
-  | Pos Double
   | Zero
+  | Pos Double
   deriving (Ord)
 
 
