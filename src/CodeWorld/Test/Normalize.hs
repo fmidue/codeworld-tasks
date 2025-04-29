@@ -81,8 +81,9 @@ data Moved
 
 data Factor
   = Smaller Double
-  | Larger Double
   | Same
+  | Larger Double
+  deriving (Ord)
 
 
 data AbsColor
@@ -233,16 +234,6 @@ instance Eq Factor where
   Larger _  == Larger _  = True
   Same      == Same      = True
   _         == _         = False
-
-
-instance Ord Factor where
-  Smaller f1 <= Smaller f2 = f1 <= f2
-  Larger f1  <= Larger f2  = f1 <= f2
-  Smaller _  <= Larger _   = True
-  Smaller _  <= Same       = True
-  Same       <= Larger _   = True
-  Same       <= Same       = True
-  _          <= _          = False
 
 
 instance Show Factor where
