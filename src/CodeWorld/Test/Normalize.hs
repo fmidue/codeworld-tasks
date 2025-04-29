@@ -117,7 +117,7 @@ isSameColor :: AbsColor -> AbsColor -> Bool
 isSameColor (HSL h1 s1 l1)      (HSL h2 s2 l2)      =
   h1 == h2 && s1 == s2 && l1 == l2
 isSameColor (Translucent a1 c1) (Translucent a2 c2) =
-  a1 == a2 && c1 `isExactColor` c2
+  a1 == a2 && c1 `isSameColor` c2
 isSameColor AnyColor            _                   = True
 isSameColor _                   AnyColor            = True
 isSameColor _                   _                   = False
