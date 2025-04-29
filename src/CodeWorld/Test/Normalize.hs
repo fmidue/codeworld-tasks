@@ -12,7 +12,7 @@ module CodeWorld.Test.Normalize (
   getTranslation,
   stripToShape,
   stripTranslation,
-  isExactColor,
+  isSameColor,
   toAbsColor,
   ) where
 
@@ -113,14 +113,14 @@ toAbsColor c
   | otherwise      = Translucent (T.alpha c) $ HSL (T.hue c) (T.saturation c) (T.luminosity c)
 
 
-isExactColor :: AbsColor -> AbsColor -> Bool
-isExactColor (HSL h1 s1 l1)      (HSL h2 s2 l2)      =
+isSameColor :: AbsColor -> AbsColor -> Bool
+isSameColor (HSL h1 s1 l1)      (HSL h2 s2 l2)      =
   h1 == h2 && s1 == s2 && l1 == l2
-isExactColor (Translucent a1 c1) (Translucent a2 c2) =
+isSameColor (Translucent a1 c1) (Translucent a2 c2) =
   a1 == a2 && c1 `isExactColor` c2
-isExactColor AnyColor            _                   = True
-isExactColor _                   AnyColor            = True
-isExactColor _                   _                   = False
+isSameColor AnyColor            _                   = True
+isSameColor _                   AnyColor            = True
+isSameColor _                   _                   = False
 
 
 newtype AbsPoint = AbsPoint {unAbsPoint :: (Moved,Moved)} deriving (Ord,Show)
