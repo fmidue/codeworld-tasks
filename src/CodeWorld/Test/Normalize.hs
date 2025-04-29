@@ -349,7 +349,9 @@ instance Drawable NormalizedPicture where
     Color _ q      -> colored c q
     Pictures ps    -> Pictures $ map (colored c) ps
     Blank          -> Blank
-    q              -> Color (toAbsColor c) q
+    q              -> case toAbsColor c of
+      HSL 0 0 0 -> q
+      absC      -> Color absC q
 
   dilated fac = scaled fac fac
 
