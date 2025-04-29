@@ -10,9 +10,11 @@ module CodeWorld.Test.Normalize (
   getExactPos,
   getColor,
   getRotation,
+  getExactRotation,
   getScalingFactors,
   getExactScalingFactors,
   getTranslation,
+  getExactTranslation,
   stripToShape,
   stripTranslation,
   isSameColor,
@@ -645,6 +647,10 @@ getTranslation (Color _ p)         = getTranslation p
 getTranslation _                   = (0,0)
 
 
+getExactTranslation :: NormalizedPicture -> (Double, Double)
+getExactTranslation = both getExactPos . getTranslation
+
+
 couldHaveTranslation :: NormalizedPicture -> Bool
 couldHaveTranslation Translate {} = True
 couldHaveTranslation Polyline {}  = True
@@ -680,3 +686,7 @@ getRotation (Reflect _ p)     = getRotation p
 getRotation (Color _ p)       = getRotation p
 getRotation (Rotate a _)      = Just a
 getRotation _                 = Nothing
+
+
+getExactRotation :: NormalizedPicture -> Double
+getExactRotation = maybe 0 getExactAngle . getRotation
