@@ -15,6 +15,12 @@ module CodeWorld.Test.Normalize (
   getExactScalingFactors,
   getTranslation,
   getExactTranslation,
+  getReflectionAngle,
+  getExactReflectionAngle,
+  getCircleRadius,
+  getExactCircleRadius,
+  getRectangleLengths,
+  getExactRectangleLengths,
   stripToShape,
   stripTranslation,
   isSameColor,
@@ -629,6 +635,10 @@ toSize :: Double -> Size
 toSize = Size
 
 
+fromSize :: Size -> Double
+fromSize (Size d) = d
+
+
 concretePoint :: AbsPoint -> Point
 concretePoint = both getExactPos . unAbsPoint
 
@@ -690,3 +700,45 @@ getRotation _                 = Nothing
 
 getExactRotation :: NormalizedPicture -> Double
 getExactRotation = maybe 0 getExactAngle . getRotation
+
+
+getReflectionAngle :: NormalizedPicture -> Maybe Angle
+getReflectionAngle (Scale _ _ p)     = getReflectionAngle p
+getReflectionAngle (Translate _ _ p) = getReflectionAngle p
+getReflectionAngle (Color _ p)       = getReflectionAngle p
+getReflectionAngle (Rotate _ p)      = getReflectionAngle p
+getReflectionAngle (Reflect a _)     = Just a
+getReflectionAngle _                 = Nothing
+
+
+getExactReflectionAngle :: NormalizedPicture -> Double
+getExactReflectionAngle = maybe 0 getExactAngle . getReflectionAngle
+
+
+getCircleRadius :: NormalizedPicture -> Maybe Size
+getCircleRadius (Scale _ _ p)     = getCircleRadius p
+getCircleRadius (Translate _ _ p) = getCircleRadius p
+getCircleRadius (Color _ p)       = getCircleRadius p
+getCircleRadius (Rotate _ p)      = getCircleRadius p
+getCircleRadius (Reflect _ p)     = getCircleRadius p
+getCircleRadius (Circle _ s)      = Just s
+getCircleRadius (Arc _ _ _ s)     = Just s
+getCircleRadius _                 = Nothing
+
+
+getExactCircleRadius :: NormalizedPicture -> Maybe Double
+getExactCircleRadius = fmap fromSize . getCircleRadius
+
+
+getRectangleLengths :: NormalizedPicture -> Maybe (Size,Size)
+getRectangleLengths (Scale _ _ p)       = getRectangleLengths p
+getRectangleLengths (Translate _ _ p)   = getRectangleLengths p
+getRectangleLengths (Color _ p)         = getRectangleLengths p
+getRectangleLengths (Rotate _ p)        = getRectangleLengths p
+getRectangleLengths (Reflect _ p)       = getRectangleLengths p
+getRectangleLengths (Rectangle _ sx sy) = Just (sx,sy)
+getRectangleLengths _                   = Nothing
+
+
+getExactRectangleLengths :: NormalizedPicture -> Maybe (Double,Double)
+getExactRectangleLengths = fmap (both fromSize) . getRectangleLengths
