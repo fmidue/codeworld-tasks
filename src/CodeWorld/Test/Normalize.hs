@@ -101,6 +101,8 @@ instance Eq AbsColor where
       (l2 <= 0.051 && l1 <= 0.051) = True
     -- Saturation extremely low => almost pure grey
     | s1 <= 0.051 && s2 <= 0.051  = lDiff <= 0.151
+    -- Same hue and non-extreme luminosity/saturation => allow for larger range
+    | h1 == h2                    = sDiff <= 0.51 && lDiff <= 0.251
     -- Difference of hsl values is in certain range (hue range depends on saturation)
     | otherwise                   =
       hDiff <= 0.151 + (0.1*hueMod) && sDiff <= 0.251 && lDiff <= 0.151
