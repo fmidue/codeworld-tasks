@@ -12,7 +12,8 @@ module CodeWorld.Test.Normalize (
   getTranslation,
   stripToShape,
   stripTranslation,
-  isSameColor,
+  isExactColor,
+  toAbsColor,
   ) where
 
 
@@ -81,27 +82,43 @@ data AbsColor
 
 
 instance Eq AbsColor where
-  HSL h1 s1 l1 == HSL h2 s2 l2 = h1 == h2 && s1 == s2 && l1 == l2
-  Translucent a1 c1 == Translucent a2 c2 = a1 == a2 && c1 == c2
-  AnyColor == _ = True
-  _ == AnyColor = True
-  _ == _ = False
+  HSL h1 s1 l1      == HSL h2 s2 l2
+    -- Luminosity at extremes => almost pure white/black
+    | (l2 >= 0.98 && l1 >= 0.98) ||
+      (l2 <= 0.05  || l1 <= 0.05)
+      = True
+    -- Saturation extremely low => almost pure grey
+    | s1 <= 0.05 && s2 <= 0.05
+      = abs (l1 - l2) <= 0.15
+    -- Difference of hsl values is in certain range (hue range depends on saturation)
+    | otherwise
+      = abs (h1 - h2) <= 0.15 + (0.1*(1-s1)) &&
+        abs (s1 - s2) <= 0.25 &&
+        abs (l1 - l2) <= 0.15
+  Translucent a1 c1 == Translucent a2 c2 = abs (a1 - a2) <= 0.15 && c1 == c2
+  Translucent a c1  == c                 = a <= 0.15 && c1 == c
+  c                 == Translucent a c1  = a <= 0.15 && c1 == c
+  AnyColor          == _                 = True
+  _                 == AnyColor          = True
 
 
 toAbsColor :: Color -> AbsColor
-toAbsColor color = case color of
-  T.RGB 1 1 1       -> HSL 0 0 1
-  T.RGB 0 0 0       -> HSL 0 0 0
-  T.RGB 0.5 0.5 0.5 -> HSL 0 0 0.5
-  T.RGBA r g b 1    -> toAbsColor $ T.RGB r g b
-  T.RGBA r g b a    -> Translucent a $ toAbsColor $ T.RGB r g b
-  c
-    | T.alpha c == 1 -> HSL (T.hue c) (T.saturation c) (T.luminosity c)
-    | otherwise      -> Translucent (T.alpha c) $ HSL (T.hue c) (T.saturation c) (T.luminosity c)
+toAbsColor (T.RGB 1   1   1  ) = HSL 0 0 1
+toAbsColor (T.RGB 0   0   0  ) = HSL 0 0 0
+toAbsColor (T.RGB 0.5 0.5 0.5) = HSL 0 0 0.5
+toAbsColor c
+  | T.alpha c == 1 = HSL (T.hue c) (T.saturation c) (T.luminosity c)
+  | otherwise      = Translucent (T.alpha c) $ HSL (T.hue c) (T.saturation c) (T.luminosity c)
 
 
-isSameColor :: AbsColor -> AbsColor -> Bool
-isSameColor a b = a == b
+isExactColor :: AbsColor -> AbsColor -> Bool
+isExactColor (HSL h1 s1 l1)      (HSL h2 s2 l2)      =
+  h1 == h2 && s1 == s2 && l1 == l2
+isExactColor (Translucent a1 c1) (Translucent a2 c2) =
+  a1 == a2 && c1 `isExactColor` c2
+isExactColor AnyColor            _                   = True
+isExactColor _                   AnyColor            = True
+isExactColor _                   _                   = False
 
 
 newtype AbsPoint = AbsPoint {unAbsPoint :: (Moved,Moved)} deriving (Ord,Show)
