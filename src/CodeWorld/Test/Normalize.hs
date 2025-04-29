@@ -614,7 +614,9 @@ couldHaveTranslation _            = False
 
 getColor :: NormalizedPicture -> Maybe AbsColor
 getColor (Color c _) = Just c
-getColor _           = Nothing
+getColor Blank       = Nothing
+getColor Logo        = Nothing
+getColor _           = Just $ HSL 0 0 0
 
 
 getScalingFactors :: NormalizedPicture -> (Maybe Factor,Maybe Factor)
