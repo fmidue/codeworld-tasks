@@ -92,6 +92,7 @@ data Color
   | RGB Double Double Double
   | HSL Double Double Double
   | RGBA Double Double Double Double
+  | AnyColor
   deriving (Eq,Ord,Show,Generic,NFData)
 
 type Colour = Color

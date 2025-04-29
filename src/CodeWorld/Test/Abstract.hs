@@ -4,8 +4,7 @@ module CodeWorld.Test.Abstract where
 
 import Data.Tuple.Extra                 (both)
 import CodeWorld.Tasks.API              (Drawable(..))
-
-
+import CodeWorld.Tasks.Types (Color(..))
 
 someRectangle :: Drawable a => a
 someRectangle = rectangle 1 1
@@ -18,6 +17,9 @@ someCircle = circle 1
 
 someSolidCircle :: Drawable a => a
 someSolidCircle = solidCircle 1
+
+someColor :: Drawable a => a -> a
+someColor = colored AnyColor
 
 rotatedQuarter :: Drawable a => a -> a
 rotatedQuarter = rotated (pi/2)

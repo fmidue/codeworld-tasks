@@ -106,6 +106,7 @@ instance Eq AbsColor where
 
 
 toAbsColor :: Color -> AbsColor
+toAbsColor T.AnyColor          = AnyColor
 toAbsColor (T.RGB 1   1   1  ) = HSL 0 0 1
 toAbsColor (T.RGB 0   0   0  ) = HSL 0 0 0
 toAbsColor (T.RGB 0.5 0.5 0.5) = HSL 0 0 0.5
