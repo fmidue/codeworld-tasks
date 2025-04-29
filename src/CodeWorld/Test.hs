@@ -8,6 +8,8 @@ module CodeWorld.Test (
   module Solution,
   module Types,
   Picture(..),
+  ReifyPicture(..),
+  N.NormalizedPicture,
   normalize,
 ) where
 
@@ -15,13 +17,14 @@ module CodeWorld.Test (
 import CodeWorld.Tasks.API as API
 import CodeWorld.Tasks.Types as Types
 import CodeWorld.Test.Abstract as Abstract
-import CodeWorld.Test.Normalize as Normalize
+import CodeWorld.Test.Normalize as Normalize hiding (NormalizedPicture(..))
+import CodeWorld.Test.Normalize as N
 import CodeWorld.Test.Relative as Relative
 import CodeWorld.Tasks.Compare as Compare
 import CodeWorld.Test.Solution as Solution
 
-import CodeWorld.Tasks.Reify (Picture(..), toInterface)
+import CodeWorld.Tasks.Reify (Picture(..), ReifyPicture(..), toInterface)
 
 
-normalize :: Picture -> Normalize.NormalizedPicture
+normalize :: Picture -> N.NormalizedPicture
 normalize = toInterface
