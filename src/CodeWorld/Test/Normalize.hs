@@ -10,9 +10,17 @@ module CodeWorld.Test.Normalize (
   getExactPos,
   getColor,
   getRotation,
+  getExactRotation,
   getScalingFactors,
   getExactScalingFactors,
   getTranslation,
+  getExactTranslation,
+  getReflectionAngle,
+  getExactReflectionAngle,
+  getCircleRadius,
+  getExactCircleRadius,
+  getRectangleLengths,
+  getExactRectangleLengths,
   stripToShape,
   stripTranslation,
   isSameColor,
@@ -66,15 +74,16 @@ data Angle
 
 data Moved
   = Neg Double
-  | Pos Double
   | Zero
+  | Pos Double
   deriving (Ord)
 
 
 data Factor
   = Smaller Double
-  | Larger Double
   | Same
+  | Larger Double
+  deriving (Ord)
 
 
 data AbsColor
@@ -225,16 +234,6 @@ instance Eq Factor where
   Larger _  == Larger _  = True
   Same      == Same      = True
   _         == _         = False
-
-
-instance Ord Factor where
-  Smaller f1 <= Smaller f2 = f1 <= f2
-  Larger f1  <= Larger f2  = f1 <= f2
-  Smaller _  <= Larger _   = True
-  Smaller _  <= Same       = True
-  Same       <= Larger _   = True
-  Same       <= Same       = True
-  _          <= _          = False
 
 
 instance Show Factor where
@@ -627,6 +626,10 @@ toSize :: Double -> Size
 toSize = Size
 
 
+fromSize :: Size -> Double
+fromSize (Size d) = d
+
+
 concretePoint :: AbsPoint -> Point
 concretePoint = both getExactPos . unAbsPoint
 
@@ -643,6 +646,10 @@ getTranslation (Polyline _ points) = getTranslation (boundingRect points)
 getTranslation (Curve _ points)    = getTranslation (boundingRect points)
 getTranslation (Color _ p)         = getTranslation p
 getTranslation _                   = (0,0)
+
+
+getExactTranslation :: NormalizedPicture -> (Double, Double)
+getExactTranslation = both getExactPos . getTranslation
 
 
 couldHaveTranslation :: NormalizedPicture -> Bool
@@ -680,3 +687,49 @@ getRotation (Reflect _ p)     = getRotation p
 getRotation (Color _ p)       = getRotation p
 getRotation (Rotate a _)      = Just a
 getRotation _                 = Nothing
+
+
+getExactRotation :: NormalizedPicture -> Double
+getExactRotation = maybe 0 getExactAngle . getRotation
+
+
+getReflectionAngle :: NormalizedPicture -> Maybe Angle
+getReflectionAngle (Scale _ _ p)     = getReflectionAngle p
+getReflectionAngle (Translate _ _ p) = getReflectionAngle p
+getReflectionAngle (Color _ p)       = getReflectionAngle p
+getReflectionAngle (Rotate _ p)      = getReflectionAngle p
+getReflectionAngle (Reflect a _)     = Just a
+getReflectionAngle _                 = Nothing
+
+
+getExactReflectionAngle :: NormalizedPicture -> Double
+getExactReflectionAngle = maybe 0 getExactAngle . getReflectionAngle
+
+
+getCircleRadius :: NormalizedPicture -> Maybe Size
+getCircleRadius (Scale _ _ p)     = getCircleRadius p
+getCircleRadius (Translate _ _ p) = getCircleRadius p
+getCircleRadius (Color _ p)       = getCircleRadius p
+getCircleRadius (Rotate _ p)      = getCircleRadius p
+getCircleRadius (Reflect _ p)     = getCircleRadius p
+getCircleRadius (Circle _ s)      = Just s
+getCircleRadius (Arc _ _ _ s)     = Just s
+getCircleRadius _                 = Nothing
+
+
+getExactCircleRadius :: NormalizedPicture -> Maybe Double
+getExactCircleRadius = fmap fromSize . getCircleRadius
+
+
+getRectangleLengths :: NormalizedPicture -> Maybe (Size,Size)
+getRectangleLengths (Scale _ _ p)       = getRectangleLengths p
+getRectangleLengths (Translate _ _ p)   = getRectangleLengths p
+getRectangleLengths (Color _ p)         = getRectangleLengths p
+getRectangleLengths (Rotate _ p)        = getRectangleLengths p
+getRectangleLengths (Reflect _ p)       = getRectangleLengths p
+getRectangleLengths (Rectangle _ sx sy) = Just (sx,sy)
+getRectangleLengths _                   = Nothing
+
+
+getExactRectangleLengths :: NormalizedPicture -> Maybe (Double,Double)
+getExactRectangleLengths = fmap (both fromSize) . getRectangleLengths
