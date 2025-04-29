@@ -5,7 +5,7 @@
 
 module CodeWorld.Tasks.Reify (
   ReifyPicture(..),
-  Picture,
+  Picture(..),
   share,
   toInterface
   ) where
