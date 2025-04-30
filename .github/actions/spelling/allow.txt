@@ -22,6 +22,7 @@ rnf
 scanl
 snd
 subpicture
+subpictures
 uncurry
 unlines
 unwords
