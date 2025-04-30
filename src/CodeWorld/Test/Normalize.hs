@@ -21,6 +21,7 @@ module CodeWorld.Test.Normalize (
   getExactCircleRadius,
   getRectangleLengths,
   getExactRectangleLengths,
+  getSubPictures,
   stripToShape,
   stripTranslation,
   isSameColor,
@@ -735,3 +736,9 @@ getRectangleLengths _                   = Nothing
 
 getExactRectangleLengths :: NormalizedPicture -> Maybe (Double,Double)
 getExactRectangleLengths = fmap (both fromSize) . getRectangleLengths
+
+
+-- To access translation before it is abstracted away
+getSubPictures :: NormalizedPicture -> [NormalizedPicture]
+getSubPictures (Pictures xs) = xs
+getSubPictures p = [p]
