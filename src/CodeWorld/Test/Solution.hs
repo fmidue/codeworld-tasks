@@ -22,6 +22,10 @@ module CodeWorld.Test.Solution (
   findAll,
   findAllAnd,
   findMaybeAnd,
+  findAllActual,
+  findMaybeActual,
+  findAllActualAnd,
+  findMaybeActualAnd,
   oneOf,
   getComponents,
   ) where
@@ -30,7 +34,7 @@ module CodeWorld.Test.Solution (
 import Data.Maybe (listToMaybe)
 
 import CodeWorld.Tasks.Reify (Picture, toInterface)
-import CodeWorld.Test.Normalize (NormalizedPicture, contains)
+import CodeWorld.Test.Normalize (NormalizedPicture, contains, getSubPictures)
 import CodeWorld.Test.Relative (
   Components(..),
   RelativePicSpec,
@@ -67,22 +71,42 @@ specElems :: ([NormalizedPicture] -> Bool) -> PicPredicate
 specElems f (Components (ps,_)) = f ps
 
 
--- return the first picture element satisfying the predicate if it exists.
+-- return the first picture element satisfying the predicate if it exists. (translation is removed)
 findMaybe :: (NormalizedPicture -> Bool) -> Components -> Maybe NormalizedPicture
 findMaybe f = listToMaybe . findAll f
 
 
--- return all picture elements satisfying the predicate.
+-- return all picture elements satisfying the predicate. (translation is removed)
 findAll :: (NormalizedPicture -> Bool) -> Components -> [NormalizedPicture]
 findAll f (Components (ps,_)) = filter f ps
 
 
--- find all picture elements satisfying a predicate, then apply a function.
+-- return all subpictures satisfying the predicate. (includes translation)
+findAllActual :: (NormalizedPicture -> Bool) -> Picture -> [NormalizedPicture]
+findAllActual f = filter f . getSubPictures . toInterface
+
+
+-- return the first subpicture satisfying the predicate if it exists. (includes translation)
+findMaybeActual :: (NormalizedPicture -> Bool) -> Picture -> Maybe NormalizedPicture
+findMaybeActual f = listToMaybe . findAllActual f
+
+
+-- find all subpictures satisfying a predicate, then apply a function. (includes translation)
+findAllActualAnd :: (NormalizedPicture -> Bool) -> (NormalizedPicture -> a) -> Picture -> [a]
+findAllActualAnd f g = map g . findAllActual f
+
+
+-- find the first subpicture satisfying a predicate, then apply a function if it exists. (includes translation)
+findMaybeActualAnd :: (NormalizedPicture -> Bool) -> (NormalizedPicture -> a) -> Picture -> Maybe a
+findMaybeActualAnd f g = listToMaybe . findAllActualAnd f g
+
+
+-- find all picture elements satisfying a predicate, then apply a function. (translation is removed)
 findAllAnd :: (NormalizedPicture -> Bool) -> (NormalizedPicture -> a) -> Components -> [a]
 findAllAnd f g = map g . findAll f
 
 
--- find the first element satisfying a predicate, then apply a function if it exists.
+-- find the first element satisfying a predicate, then apply a function if it exists. (translation is removed)
 findMaybeAnd :: (NormalizedPicture -> Bool) -> (NormalizedPicture -> a) -> Components -> Maybe a
 findMaybeAnd f g = listToMaybe . findAllAnd f g
 
