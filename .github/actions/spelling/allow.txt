@@ -21,6 +21,7 @@ println
 rnf
 scanl
 snd
+subpicture
 uncurry
 unlines
 unwords
