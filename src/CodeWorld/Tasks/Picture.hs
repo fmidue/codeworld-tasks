@@ -100,15 +100,6 @@ data ReifyPicture a
 newtype Picture = PRec (ReifyPicture Picture) deriving (Show,Eq,Ord,Generic,NFData)
 
 
-instance Semigroup Picture where
-  (<>) = (&)
-
-
-instance Monoid Picture where
-  mempty  = blank
-  mconcat = pictures
-
-
 rectangle :: Double -> Double -> Picture
 rectangle x = PRec . Rectangle x
 
