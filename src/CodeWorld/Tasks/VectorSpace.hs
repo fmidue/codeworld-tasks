@@ -17,12 +17,16 @@ module CodeWorld.Tasks.VectorSpace (
   rotationAngle,
   isRectangle,
   atOriginWithOffset,
+  wasTranslatedBy,
+  wasScaledBy,
+  wasRotatedBy
   ) where
 
 
 import Data.Containers.ListUtils        (nubOrd)
 import Data.List.Extra                  (takeEnd)
 import Data.Maybe                       (fromMaybe)
+import Data.Tuple.Extra                 (both)
 import CodeWorld.Tasks.Types            (Point, Vector)
 
 
@@ -94,9 +98,9 @@ sideLengths (p1:p2:p3:_) = (vectorLength (getVector p1 p2), vectorLength (getVec
 sideLengths _ = (0,0)
 
 
-wasRotatedBy :: [Point] -> Maybe Double
-wasRotatedBy (p1:p2:_) = angleToAxes (getVector p1 p2)
-wasRotatedBy _ = Nothing
+rectangleSideRotation :: [Point] -> Maybe Double
+rectangleSideRotation (p1:p2:_) = angleToAxes (getVector p1 p2)
+rectangleSideRotation _ = Nothing
 
 
 angleToAxes :: Vector -> Maybe Double
@@ -110,7 +114,59 @@ angleToAxes v
 
 
 rotationAngle :: [Point] -> Double
-rotationAngle ps = fromMaybe 0 $ wasRotatedBy ps
+rotationAngle = fromMaybe 0 . rectangleSideRotation
+
+
+tupleAbs :: (Ord a, Num a) => a -> (a, a) -> Bool
+tupleAbs threshold (d1,d2) = abs d1 < threshold && abs d2 < threshold
+
+
+wasTranslatedBy :: [Point] -> [Point] -> Maybe Point
+wasTranslatedBy (p11:p12:ps1) (p21:p22:ps2)
+  | tupleAbs eta (vectorDifference firstDiff (vectorDifference p22 p12)) &&
+    length ps1 == length ps2 = Just firstDiff
+  | otherwise = Nothing
+  where
+    firstDiff = vectorDifference p21 p11
+wasTranslatedBy _ _ = Nothing
+
+
+wasScaledBy :: [Point] -> [Point] -> Maybe (Maybe Double,Maybe Double)
+wasScaledBy ps1 ps2 | length ps1 == length ps2 =
+  case both factor (matchX, matchY) of
+    (Just a, Just b) -> Just (a,b)
+    _                -> Nothing
+  where
+    (matchX, matchY) =
+      let (x1s,y1s) = unzip ps1
+          (x2s,y2s) = unzip ps2
+      in  both (uncurry (zipWith (/))) ((x2s, x1s), (y2s, y1s))
+
+    -- Nothing: Not a scaled version of the other list
+    -- Just Nothing: is a scaled Version of the other list, but factor can't be determined
+    -- Just fac: is a scaled version of the other list with factor fac
+    handleResult [] = Just Nothing
+    handleResult (ref:xs) | all (\x -> abs (ref - x) < eta) xs = Just $ Just ref
+    handleResult _ = Nothing
+
+    factor = handleResult . filter (not . isNaN)
+
+wasScaledBy _ _ = Nothing
+
+
+wasRotatedBy :: [Point] -> [Point] -> Maybe Double
+wasRotatedBy ((x,y):(x2,y2):ps1) ((rx,ry):(rx2,ry2):ps2)
+  | abs (firstRotation - atan2 (x2*ry2-y2*rx2) (x2*rx2+y2*ry2)) < eta &&
+    length ps1 == length ps2 = Just firstRotation
+  | otherwise = Nothing
+  where
+    firstRotation = atan2 (x*ry-y*rx) (x*rx+y*ry)
+wasRotatedBy _ _ = Nothing
+
+
+-- allowed difference to be considered "equal".
+eta :: Double
+eta = 0.0001
 
 
 mean :: [Point] -> Point

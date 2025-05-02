@@ -7,6 +7,7 @@ module CodeWorld.Test (
   module Relative,
   module Solution,
   module Types,
+  module VectorSpace,
   Picture(..),
   ReifyPicture(..),
   N.NormalizedPicture,
@@ -22,6 +23,7 @@ import CodeWorld.Test.Normalize as N
 import CodeWorld.Test.Relative as Relative
 import CodeWorld.Tasks.Compare as Compare
 import CodeWorld.Test.Solution as Solution
+import CodeWorld.Tasks.VectorSpace as VectorSpace
 
 import CodeWorld.Tasks.Reify (Picture(..), ReifyPicture(..), toInterface)
 
