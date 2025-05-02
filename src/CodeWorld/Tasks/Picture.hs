@@ -125,7 +125,9 @@ circle :: Double -> Picture
 circle = PRec . Circle
 
 thickCircle :: Double -> Double -> Picture
-thickCircle t = PRec . ThickCircle t
+thickCircle t r
+  | t <= 2 * r = PRec $ ThickCircle t r
+  | otherwise = error "The line width of a thickCircle must not be greater than the diameter."
 
 solidCircle :: Double -> Picture
 solidCircle = PRec . SolidCircle

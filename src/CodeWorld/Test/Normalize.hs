@@ -107,8 +107,12 @@ instance Drawable NormalizedPicture where
   solidCircle 0 = blank
   solidCircle r = Circle Solid $ toSize r
 
-  thickCircle _ 0 = blank
-  thickCircle (max 0 -> t) (abs -> r) = Circle shape $ toSize (r + t/2)
+  thickCircle 0 _ = blank
+  thickCircle t (abs -> r)
+    | t <= 2 * r = Circle shape $ toSize (r + t/2)
+    | otherwise = error $
+        "The line width of a thickCircle must not be greater than the diameter. " ++
+        "(This error was thrown inside the test suite)"
     where
       shape
         | t == 2*r = Solid
