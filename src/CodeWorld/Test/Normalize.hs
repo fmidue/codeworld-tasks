@@ -585,17 +585,13 @@ handleFreeShape isPolyline s1 s2 ps1 ps2
 
 
 {-
-over-approximated (heavily) for PolyLines
-same for Curves, but arc edges may also extend outside the rectangle slightly
-=> both may need more accuracy to detect overlap better (or this rough estimate is enough for most pictures)
--}
 boundingRect :: Drawable a => [AbsPoint] -> a
 boundingRect ps = polygon [(xMax,yMax), (xMin,yMax), (xMin,yMin), (xMax,yMin)]
   where
     coordList = both (map getExactPos) $ unzip $ map unAbsPoint ps
     (xMax,yMax) = both maximum coordList
     (xMin,yMin) = both minimum coordList
-
+-}
 
 stripToShape :: NormalizedPicture -> NormalizedPicture
 stripToShape (Color _ p) = p
@@ -645,10 +641,15 @@ stripTranslation p                 = p
 
 getTranslation :: NormalizedPicture -> (Moved, Moved)
 getTranslation (Translate x y _)   = (x,y)
-getTranslation (Polyline _ points) = getTranslation (boundingRect points)
-getTranslation (Curve _ points)    = getTranslation (boundingRect points)
+getTranslation (Polyline _ points) = absPointsToAbsTranslation points
+getTranslation (Curve _ points)    = absPointsToAbsTranslation points
 getTranslation (Color _ p)         = getTranslation p
 getTranslation _                   = (0,0)
+
+
+absPointsToAbsTranslation :: [AbsPoint] -> (Moved, Moved)
+absPointsToAbsTranslation =
+  both toPosition . snd . atOriginWithOffset . map (both getExactPos . unAbsPoint)
 
 
 getExactTranslation :: NormalizedPicture -> (Double, Double)
