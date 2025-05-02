@@ -55,6 +55,9 @@ import CodeWorld.Tasks.VectorSpace hiding (
   rotationAngle,
   isRectangle,
   atOriginWithOffset,
+  wasRotatedBy,
+  wasTranslatedBy,
+  wasScaledBy,
   )
 
 

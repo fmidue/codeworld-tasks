@@ -21,6 +21,7 @@ module CodeWorld.Test.Normalize (
   getExactCircleRadius,
   getRectangleLengths,
   getExactRectangleLengths,
+  getExactPointList,
   getSubPictures,
   stripToShape,
   stripTranslation,
@@ -584,15 +585,6 @@ handleFreeShape isPolyline s1 s2 ps1 ps2
           | otherwise  -> solidCurveHelper
 
 
-{-
-boundingRect :: Drawable a => [AbsPoint] -> a
-boundingRect ps = polygon [(xMax,yMax), (xMin,yMax), (xMin,yMin), (xMax,yMin)]
-  where
-    coordList = both (map getExactPos) $ unzip $ map unAbsPoint ps
-    (xMax,yMax) = both maximum coordList
-    (xMin,yMin) = both minimum coordList
--}
-
 stripToShape :: NormalizedPicture -> NormalizedPicture
 stripToShape (Color _ p) = p
 stripToShape p = p
@@ -737,6 +729,12 @@ getRectangleLengths _                   = Nothing
 
 getExactRectangleLengths :: NormalizedPicture -> Maybe (Double,Double)
 getExactRectangleLengths = fmap (both fromSize) . getRectangleLengths
+
+
+getExactPointList :: NormalizedPicture -> [Point]
+getExactPointList (Curve _ ps) = map (both getExactPos . unAbsPoint) ps
+getExactPointList (Polyline _ ps) = map (both getExactPos . unAbsPoint) ps
+getExactPointList _               = []
 
 
 -- To access translation before it is abstracted away
