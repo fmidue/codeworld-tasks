@@ -8,6 +8,8 @@ module CodeWorld.Tasks.Reify (
   Picture(..),
   share,
   toInterface,
+  innerPicture,
+  hasInnerPicture,
   rectangle,
   thickRectangle,
   solidRectangle,
@@ -298,3 +300,25 @@ toInterface (PRec p) = case p of
   CoordinatePlane -> API.coordinatePlane
   Logo -> API.codeWorldLogo
   Blank -> API.blank
+
+
+innerPicture :: ReifyPicture Picture -> ReifyPicture Picture
+innerPicture (Color _ (PRec p)) = p
+innerPicture (Translate _ _ (PRec p)) = p
+innerPicture (Rotate _ (PRec p)) = p
+innerPicture (Scale _ _ (PRec p)) = p
+innerPicture (Dilate _ (PRec p)) = p
+innerPicture (Reflect _ (PRec p)) = p
+innerPicture (Clip _ _ (PRec p)) = p
+innerPicture p = p
+
+
+hasInnerPicture :: ReifyPicture a -> Bool
+hasInnerPicture Color {} = True
+hasInnerPicture Translate {} = True
+hasInnerPicture Rotate {} = True
+hasInnerPicture Scale {} = True
+hasInnerPicture Dilate {} = True
+hasInnerPicture Reflect {} = True
+hasInnerPicture Clip {} = True
+hasInnerPicture _ = False
