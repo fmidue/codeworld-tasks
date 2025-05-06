@@ -333,7 +333,7 @@ instance Drawable NormalizedPicture where
   solidCircle r = Circle Solid $ toSize r
 
   thickCircle 0 _ = blank
-  thickCircle t r = Circle shape $ toSize (r + t/2)
+  thickCircle (abs -> t) (abs -> r) = Circle shape $ toSize (r + t/2)
     where
       shape
         | t == 2*r = Solid
@@ -349,7 +349,8 @@ instance Drawable NormalizedPicture where
 
   thickRectangle _ 0 _ = blank
   thickRectangle _ _ 0 = blank
-  thickRectangle t l w = Rectangle shape (toSize $ l + t/2) $ toSize $ w + t/2
+  thickRectangle (abs -> t) (abs -> l) (abs -> w) =
+      Rectangle shape (toSize $ l + t/2) $ toSize $ w + t/2
     where
       shape
         | t >= 2*l || t >= 2*w = Solid
@@ -614,7 +615,7 @@ p `contains` q = p == q || case p of
 
 
 toSize :: Double -> Size
-toSize = Size
+toSize = Size . abs
 
 
 fromSize :: Size -> Double
