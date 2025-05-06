@@ -28,13 +28,15 @@ module CodeWorld.Test.Solution (
   findMaybeActualAnd,
   oneOf,
   getComponents,
+  count
   ) where
 
 
+import Data.List ((\\))
 import Data.Maybe (listToMaybe)
 
 import CodeWorld.Tasks.Reify (Picture, toInterface)
-import CodeWorld.Test.Normalize (NormalizedPicture, contains, getSubPictures)
+import CodeWorld.Test.Normalize (NormalizedPicture(..), contains, getSubPictures)
 import CodeWorld.Test.Relative (
   Components(..),
   RelativePicSpec,
@@ -67,7 +69,7 @@ oneOf p = foldr ((<||>) . p) (const False)
 
 
 -- Use a predicate on the list of sub images
-specElems :: ([NormalizedPicture] -> Bool) -> PicPredicate
+specElems :: (NormalizedPicture -> Bool) -> PicPredicate
 specElems f (Components (ps,_)) = f ps
 
 
@@ -78,7 +80,7 @@ findMaybe f = listToMaybe . findAll f
 
 -- return all picture elements satisfying the predicate. (translation is removed)
 findAll :: (NormalizedPicture -> Bool) -> Components -> [NormalizedPicture]
-findAll f (Components (ps,_)) = filter f ps
+findAll f (Components (ps,_)) = filter f $ getSubPictures ps
 
 
 -- return all subpictures satisfying the predicate. (includes translation)
@@ -113,15 +115,15 @@ findMaybeAnd f g = listToMaybe . findAllAnd f g
 
 -- Input contains exactly these sub pictures
 containsExactElems :: [NormalizedPicture] -> PicPredicate
-containsExactElems ps = specElems (all (`elem` ps))
+containsExactElems ps = specElems (all (\tp -> Pictures ps `contains` tp) . getSubPictures)
 
 -- Input contains at least this sub picture
 containsElem :: NormalizedPicture -> PicPredicate
-containsElem p = specElems (any (`contains` p))
+containsElem p = specElems (`contains` p)
 
 -- Input contains at least these sub pictures
 containsElems :: [NormalizedPicture] -> PicPredicate
-containsElems ps = specElems (any (or . (\c -> map (c `contains`) ps)))
+containsElems ps = specElems (\t -> all (\p -> t `contains` p) ps)
 
 
 -- Sub picture occurs exactly this many times in submission
@@ -144,8 +146,12 @@ inRangeOf :: NormalizedPicture -> (Int,Int) -> PicPredicate
 inRangeOf p (lower,upper) = specElems (\ps -> let occurs = count p ps in occurs >= lower && occurs <= upper)
 
 
-count :: NormalizedPicture -> [NormalizedPicture] -> Int
-count thing = length . filter (`contains` thing)
+count :: NormalizedPicture -> NormalizedPicture -> Int
+count thing inside = internalCount 0 (getSubPictures thing) (getSubPictures inside)
+  where
+    internalCount c ts is
+      | all (`elem` is) ts = internalCount (c+1) ts (is\\ts)
+      | otherwise = c
 
 
 -- run a predicate on the input only if another succeeded already

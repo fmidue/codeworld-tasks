@@ -61,7 +61,7 @@ data RelativePicSpec
   deriving(Eq,Ord)
 
 
-newtype Components = Components ([NormalizedPicture],[RelativePicSpec]) deriving (Eq,Ord,Show)
+newtype Components = Components (NormalizedPicture,[RelativePicSpec]) deriving (Eq,Ord,Show)
 
 
 instance Show Direction where
@@ -192,9 +192,9 @@ atSamePosition _ _ _ = False
 
 toRelative :: NormalizedPicture -> Components
 toRelative p = case p of
-  Pictures ps -> Components (map stripTranslation ps, sort $ relativePosition ps)
+  Pictures ps -> Components (Pictures $ map stripTranslation ps, sort $ relativePosition ps)
   a           -> let noTranslation = stripTranslation a in
-    Components ([noTranslation],[alone noTranslation])
+    Components (noTranslation,[alone noTranslation])
 
 
 relativePosition :: [NormalizedPicture] -> [RelativePicSpec]
