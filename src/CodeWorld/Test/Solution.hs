@@ -39,7 +39,7 @@ import CodeWorld.Tasks.Reify (Picture, toInterface)
 import CodeWorld.Test.Normalize (NormalizedPicture(..), contains, getSubPictures)
 import CodeWorld.Test.Relative (
   Components(..),
-  RelativePicSpec,
+  RelativePicSpec(..),
   toRelative,
   )
 
@@ -186,9 +186,13 @@ isExactly a = specPosition (==[a])
 
 -- Input contains elements satisfying exact spatial predicate
 hasExactly :: RelativePicSpec -> PicPredicate
-hasExactly a = specPosition (a `elem`)
+hasExactly (Is p1 d p2) = specPosition (\rs -> all (`elem` rs) allOfThem)
+  where
+    allOfThem = [Is x d y | x <- getSubPictures p1, y <- getSubPictures p2]
+
+hasExactly p = specPosition (p `elem`)
 
 
 -- Input contains elements satisfying the given spatial predicate
-hasBroadly :: (RelativePicSpec -> Bool) -> PicPredicate
-hasBroadly f = specPosition (any f)
+hasBroadly :: ([RelativePicSpec] -> Bool) -> PicPredicate
+hasBroadly = specPosition

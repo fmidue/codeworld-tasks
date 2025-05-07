@@ -38,6 +38,7 @@ import CodeWorld.Test.Normalize (
   NormalizedPicture(..),
   Moved(..),
   getExactPos,
+  getSubPictures,
   stripTranslation,
   getTranslation,
   couldHaveTranslation,
@@ -121,73 +122,136 @@ alone :: NormalizedPicture -> RelativePicSpec
 alone = Alone
 
 
-isSouthOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isSouthOf p q (Is p1 (Direction (Just South) Nothing) p2) = p1 `contains` p && p2 `contains` q
-isSouthOf _ _ _ = False
+containedSouthOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedSouthOf p q (Is p1 (Direction (Just South) Nothing) p2) = p1 `contains` p && p2 `contains` q
+containedSouthOf _ _ _ = False
 
 
-isNorthOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isNorthOf p q (Is p1 (Direction (Just South) Nothing) p2) = p1 `contains` q && p2 `contains` p
-isNorthOf _ _ _ = False
+containedNorthOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedNorthOf p q (Is p1 (Direction (Just South) Nothing) p2) = p1 `contains` q && p2 `contains` p
+containedNorthOf _ _ _ = False
 
 
-isWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isWestOf p q (Is p1 (Direction Nothing (Just West)) p2) = p1 `contains` p && p2 `contains` q
-isWestOf p q (Is p1 (Direction Nothing (Just East)) p2) = p1 `contains` q && p2 `contains` p
-isWestOf _ _ _ = False
+containedWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedWestOf p q (Is p1 (Direction Nothing (Just West)) p2) = p1 `contains` p && p2 `contains` q
+containedWestOf p q (Is p1 (Direction Nothing (Just East)) p2) = p1 `contains` q && p2 `contains` p
+containedWestOf _ _ _ = False
 
 
-isEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isEastOf p q (Is p1 (Direction Nothing (Just East)) p2) = p1 `contains` p && p2 `contains` q
-isEastOf p q (Is p1 (Direction Nothing (Just West)) p2) = p1 `contains` q && p2 `contains` p
-isEastOf _ _ _ = False
+containedEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedEastOf p q (Is p1 (Direction Nothing (Just East)) p2) = p1 `contains` p && p2 `contains` q
+containedEastOf p q (Is p1 (Direction Nothing (Just West)) p2) = p1 `contains` q && p2 `contains` p
+containedEastOf _ _ _ = False
 
 
-isSouthWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isSouthWestOf p q (Is p1 (Direction (Just South) (Just West)) p2) = p1 `contains` p && p2 `contains` q
-isSouthWestOf _ _ _ = False
+containedSouthWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedSouthWestOf p q (Is p1 (Direction (Just South) (Just West)) p2) = p1 `contains` p && p2 `contains` q
+containedSouthWestOf _ _ _ = False
 
 
-isSouthEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isSouthEastOf p q (Is p1 (Direction (Just South) (Just East)) p2) = p1 `contains` p && p2 `contains` q
-isSouthEastOf _ _ _ = False
+containedSouthEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedSouthEastOf p q (Is p1 (Direction (Just South) (Just East)) p2) = p1 `contains` p && p2 `contains` q
+containedSouthEastOf _ _ _ = False
 
 
-isNorthWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isNorthWestOf p q (Is p1 (Direction (Just South) (Just East)) p2) = p1 `contains` q && p2 `contains` p
-isNorthWestOf _ _ _ = False
+containedNorthWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedNorthWestOf p q (Is p1 (Direction (Just South) (Just East)) p2) = p1 `contains` q && p2 `contains` p
+containedNorthWestOf _ _ _ = False
 
 
-isNorthEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isNorthEastOf p q (Is p1 (Direction (Just South) (Just West)) p2) = p1 `contains` q && p2 `contains` p
-isNorthEastOf _ _ _ = False
+containedNorthEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedNorthEastOf p q (Is p1 (Direction (Just South) (Just West)) p2) = p1 `contains` q && p2 `contains` p
+containedNorthEastOf _ _ _ = False
 
 
-isAbove :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isAbove p q (Is p1 (Direction (Just South) _) p2) = p1 `contains` q && p2 `contains` p
-isAbove _ _ _ = False
+containedAbove :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedAbove p q (Is p1 (Direction (Just South) _) p2) = p1 `contains` q && p2 `contains` p
+containedAbove _ _ _ = False
 
 
-isBelow :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isBelow p q (Is p1 (Direction (Just South) _) p2) = p1 `contains` p && p2 `contains` q
-isBelow _ _ _ = False
+containedBelow :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedBelow p q (Is p1 (Direction (Just South) _) p2) = p1 `contains` p && p2 `contains` q
+containedBelow _ _ _ = False
 
 
-isLeftOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isLeftOf p q (Is p1 (Direction _ (Just West)) p2) = p1 `contains` p && p2 `contains` q
-isLeftOf p q (Is p1 (Direction _ (Just East)) p2) = p1 `contains` q && p2 `contains` p
-isLeftOf _ _ _ = False
+containedLeftOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedLeftOf p q (Is p1 (Direction _ (Just West)) p2) = p1 `contains` p && p2 `contains` q
+containedLeftOf p q (Is p1 (Direction _ (Just East)) p2) = p1 `contains` q && p2 `contains` p
+containedLeftOf _ _ _ = False
 
 
-isRightOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-isRightOf p q (Is p1 (Direction _ (Just East)) p2) = p1 `contains` p && p2 `contains` q
-isRightOf p q (Is p1 (Direction _ (Just West)) p2) = p1 `contains` q && p2 `contains` p
-isRightOf _ _ _ = False
+containedRightOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedRightOf p q (Is p1 (Direction _ (Just East)) p2) = p1 `contains` p && p2 `contains` q
+containedRightOf p q (Is p1 (Direction _ (Just West)) p2) = p1 `contains` q && p2 `contains` p
+containedRightOf _ _ _ = False
 
 
-atSamePosition :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
-atSamePosition p q (Is p1 (Direction Nothing Nothing) p2) = p1 `contains` p && p2 `contains` q || p1 `contains` q && p2 `contains` p
-atSamePosition _ _ _ = False
+containedSameSpot :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedSameSpot p q (Is p1 (Direction Nothing Nothing) p2) = p1 `contains` p && p2 `contains` q || p1 `contains` q && p2 `contains` p
+containedSameSpot _ _ _ = False
+
+
+isSouthOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isSouthOf = compositeRelation containedSouthOf
+
+
+isNorthOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isNorthOf = compositeRelation containedNorthOf
+
+
+isWestOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isWestOf = compositeRelation containedWestOf
+
+
+isEastOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isEastOf = compositeRelation containedEastOf
+
+
+isSouthWestOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isSouthWestOf = compositeRelation containedSouthWestOf
+
+
+isSouthEastOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isSouthEastOf = compositeRelation containedSouthEastOf
+
+
+isNorthWestOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isNorthWestOf = compositeRelation containedNorthWestOf
+
+
+isNorthEastOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isNorthEastOf = compositeRelation containedNorthEastOf
+
+
+isAbove :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isAbove = compositeRelation containedAbove
+
+
+isBelow :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isBelow = compositeRelation containedBelow
+
+
+isLeftOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isLeftOf = compositeRelation containedLeftOf
+
+
+isRightOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+isRightOf = compositeRelation containedRightOf
+
+
+atSamePosition :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+atSamePosition = compositeRelation containedSameSpot
+
+
+compositeRelation
+  :: (NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool)
+  -> NormalizedPicture
+  -> NormalizedPicture
+  -> [RelativePicSpec]
+  -> Bool
+compositeRelation g p q rs = length [ () | f <- allRelations, r <- rs, f r] == length allRelations
+   where
+      allRelations = [g x y | x <- getSubPictures p, y <- getSubPictures q]
 
 
 toRelative :: NormalizedPicture -> Components
