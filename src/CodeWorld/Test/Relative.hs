@@ -249,7 +249,7 @@ compositeRelation
   -> NormalizedPicture
   -> [RelativePicSpec]
   -> Bool
-compositeRelation g p q rs = length [ () | f <- allRelations, r <- rs, f r] == length allRelations
+compositeRelation g p q rs = all (`any` rs) allRelations
    where
       allRelations = [g x y | x <- getSubPictures p, y <- getSubPictures q]
 
