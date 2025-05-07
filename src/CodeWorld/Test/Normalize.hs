@@ -332,8 +332,8 @@ instance Drawable NormalizedPicture where
   solidCircle 0 = blank
   solidCircle r = Circle Solid $ toSize r
 
-  thickCircle 0 _ = blank
-  thickCircle (abs -> t) (abs -> r) = Circle shape $ toSize (r + t/2)
+  thickCircle _ 0 = blank
+  thickCircle (max 0 -> t) (abs -> r) = Circle shape $ toSize (r + t/2)
     where
       shape
         | t == 2*r = Solid
@@ -349,7 +349,7 @@ instance Drawable NormalizedPicture where
 
   thickRectangle _ 0 _ = blank
   thickRectangle _ _ 0 = blank
-  thickRectangle (abs -> t) (abs -> l) (abs -> w) =
+  thickRectangle (max 0 -> t) (abs -> l) (abs -> w) =
       Rectangle shape (toSize $ l + t/2) $ toSize $ w + t/2
     where
       shape
