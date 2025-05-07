@@ -32,7 +32,6 @@ module CodeWorld.Test.Solution (
   ) where
 
 
-import Data.List ((\\))
 import Data.Maybe (listToMaybe)
 
 import CodeWorld.Tasks.Reify (Picture, toInterface)
@@ -147,11 +146,13 @@ inRangeOf p (lower,upper) = specElems (\ps -> let occurs = count p ps in occurs 
 
 
 count :: NormalizedPicture -> NormalizedPicture -> Int
-count thing inside = internalCount 0 (getSubPictures thing) (getSubPictures inside)
+count thing inside = internalCount (getSubPictures thing) (getSubPictures inside)
   where
-    internalCount c ts is
-      | all (`elem` is) ts = internalCount (c+1) ts (is\\ts)
-      | otherwise = c
+    internalCount ms ts
+       | null msOccurs = 0
+       | otherwise = length msOccurs `div` length ms
+      where
+        msOccurs = [t `contains` m | m <- ms, t <- ts]
 
 
 -- run a predicate on the input only if another succeeded already
