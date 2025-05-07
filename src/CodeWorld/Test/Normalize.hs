@@ -403,6 +403,10 @@ instance Drawable NormalizedPicture where
   scaled 0 _ _ = blank
   scaled _ 0 _ = blank
   scaled 1 1 p = p
+  scaled fac1 fac2 (Circle sk s) | fac1 == fac2 =
+    Circle sk (toSize $ fromSize s *fac1)
+  scaled fac1 fac2 (Rectangle sk s1 s2) =
+    Rectangle sk (toSize $ fromSize s1 *fac1) (toSize $ fromSize s2 *fac2)
   scaled fac1 fac2 p = case p of
     Scale f1 f2 q    -> scaled (fromFactor f1 * fac1) (fromFactor f2 * fac2) q
     Translate x y q  -> Translate
