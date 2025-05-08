@@ -1,4 +1,6 @@
 
+{-# language TypeApplications #-}
+
 module CodeWorld.Tasks.Compare (
   testCSE
 ) where
@@ -92,11 +94,11 @@ bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTe
 printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
 printOriginal bindings termLookup term = case term of
   Color c i       -> unwords ["colored", map toLower (show c), printNext i]
-  Translate x y i -> unwords ["translated", show x, show y, printNext i]
+  Translate x y i -> unwords ["translated", truncatedShow x, truncatedShow y, printNext i]
   Scale x y i     -> unwords ["scaled", show x, show y, printNext i]
   Dilate fac i    -> unwords ["dilated", show fac, printNext i]
-  Rotate a i      -> unwords ["rotated", show a, printNext i]
-  Reflect a i     -> unwords ["reflected", show a, printNext i]
+  Rotate a i      -> unwords ["rotated", truncatedShow a, printNext i]
+  Reflect a i     -> unwords ["reflected", truncatedShow a, printNext i]
   Clip x y i      -> unwords ["clipped", show x, show y, printNext i]
   Pictures is     -> unwords ["pictures [", intercalate ", " (map printNextAnd is) ++ " ]"]
   And i1 i2       -> printNextAnd i1 ++ " &\n" ++ printNextAnd i2
@@ -116,6 +118,12 @@ printOriginal bindings termLookup term = case term of
     printNextAnd i = case lookup i bindings of
       Nothing -> printOriginal bindings termLookup $ fromJust $ lookup i termLookup
       Just name -> name
+
+    roundTo :: Integer -> Double -> Double
+    roundTo places d = (fromIntegral @Int . round $ d * fac) / fac
+      where fac = 10^places
+
+    truncatedShow = show . roundTo 3
 
 
 hasArguments :: ReifyPicture a -> Bool
