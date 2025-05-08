@@ -146,15 +146,9 @@ inRangeOf p (lower,upper) = specElems (\ps -> let occurs = count p ps in occurs 
 
 
 count :: NormalizedPicture -> NormalizedPicture -> Int
-count thing inside
-  | null thingOccurs = 0
-  | otherwise = length thingOccurs `div` length subPictures
-      where
-        subPictures = getSubPictures thing
-        thingOccurs =
-          [ subInside `contains` subPicture
-          | subPicture <- subPictures, subInside <- getSubPictures inside
-          ]
+count thing inside = minimum $ map singleCount $ getSubPictures thing
+  where
+    singleCount p = length $ filter (`contains` p) $ getSubPictures inside
 
 
 -- run a predicate on the input only if another succeeded already
