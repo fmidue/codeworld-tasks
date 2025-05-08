@@ -67,7 +67,7 @@ testCSE p = do
         "let" :
         map (\(name,value) -> "  " ++ name ++ " = " ++ value) shared ++
         [  "in"
-        ,  "  " ++ term
+        , unlines $ map ("  " ++) $ lines term
         ]
 
 
@@ -90,7 +90,19 @@ bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTe
     camelCase (c:s) = c : camelCase s
 
 printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
-printOriginal bindings termLookup term = sub
+printOriginal bindings termLookup term = case term of
+  Color c i       -> unwords ["colored", map toLower (show c), printNext i]
+  Translate x y i -> unwords ["translated", show x, show y, printNext i]
+  Scale x y i     -> unwords ["scaled", show x, show y, printNext i]
+  Dilate fac i    -> unwords ["dilated", show fac, printNext i]
+  Rotate a i      -> unwords ["rotated", show a, printNext i]
+  Reflect a i     -> unwords ["reflected", show a, printNext i]
+  Clip x y i      -> unwords ["clipped", show x, show y, printNext i]
+  Pictures is     -> unwords ["pictures [", intercalate ", " (map printNextAnd is) ++ " ]"]
+  And i1 i2       -> printNextAnd i1 ++ " &\n" ++ printNextAnd i2
+  _               -> case show term of
+    (x:xs) -> unwords [toLower x:xs]
+    _      -> error "not possible"
   where
     printNext :: Int -> String
     printNext i = case lookup i bindings of
@@ -104,20 +116,6 @@ printOriginal bindings termLookup term = sub
     printNextAnd i = case lookup i bindings of
       Nothing -> printOriginal bindings termLookup $ fromJust $ lookup i termLookup
       Just name -> name
-
-    sub = unwords $ case term of
-      Color c i       -> ["colored", map toLower (show c), printNext i]
-      Translate x y i -> ["translated", show x, show y, printNext i]
-      Scale x y i     -> ["scaled", show x, show y, printNext i]
-      Dilate fac i    -> ["dilated", show fac, printNext i]
-      Rotate a i      -> ["rotated", show a, printNext i]
-      Reflect a i     -> ["reflected", show a, printNext i]
-      Clip x y i      -> ["clipped", show x, show y, printNext i]
-      Pictures is     -> ["pictures [", intercalate ", " (map printNextAnd is) ++ " ]"]
-      And i1 i2       -> [printNextAnd i1, "&", printNextAnd i2]
-      _               -> case show term of
-        (x:xs) -> [toLower x:xs]
-        _      -> error "not possible"
 
 
 hasArguments :: ReifyPicture a -> Bool
