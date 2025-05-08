@@ -12,6 +12,8 @@ module CodeWorld.Test (
   ReifyPicture(..),
   N.NormalizedPicture,
   normalize,
+  hasInnerPicture,
+  innerPicture,
 ) where
 
 
@@ -25,7 +27,7 @@ import CodeWorld.Tasks.Compare as Compare
 import CodeWorld.Test.Solution as Solution
 import CodeWorld.Tasks.VectorSpace as VectorSpace
 
-import CodeWorld.Tasks.Reify (Picture(..), ReifyPicture(..), toInterface)
+import CodeWorld.Tasks.Reify (Picture(..), ReifyPicture(..), toInterface, hasInnerPicture, innerPicture)
 
 
 normalize :: Picture -> N.NormalizedPicture
