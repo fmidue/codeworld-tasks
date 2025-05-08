@@ -51,8 +51,8 @@ testCSE p = do
         , printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
         , ""
         , ""
-        , "If the highlighted terms are already defined globally, then consider locally defining them at their use-site instead."
-        , "You can define them with either a 'let' or 'where' binding."
+        , "The highlighted terms can be defined globally or locally at their use-site."
+        , "For a local definition, you can use either a 'let' or 'where' binding."
         , "Of course, you can also change the proposed names to your liking, e.g. make them more concise."
         , "Also consider that your actual code is most likely structured slightly differently than this suggested improvement."
         , "As such, the location of the binding as shown here might also have to be adjusted."
