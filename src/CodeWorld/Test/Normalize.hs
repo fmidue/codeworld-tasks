@@ -421,7 +421,7 @@ instance Drawable NormalizedPicture where
     a                -> Scale (toFactor fac1) (toFactor fac2) a
 
   rotated a p
-    | getExactAngle (toAngle a) == 0 = p
+    | modAngle == 0 = p
     | otherwise = case p of
       Rotate a2 q     -> rotated (a + getExactAngle a2) q
       Reflect a2 q    -> reflected (getExactAngle a2 + a/2) q
@@ -433,9 +433,15 @@ instance Drawable NormalizedPicture where
       Pictures ps     -> Pictures $ map (rotated a) ps
       Polyline s ps   -> Polyline s $ map (applyToAbsPoint (rotatedVector a)) ps
       Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotatedVector a)) ps
-      Rectangle s x y |  getExactAngle (toAngle a) == pi -> Rectangle s y x
+      Rectangle s x y
+        | getExactAngle absAngle == pi/2 -> Rectangle s y x
+        | getExactAngle absAngle >=  pi  -> rotated (modAngle - pi) $ Rectangle s x y
       Circle s r      -> Circle s r
-      q               -> Rotate (toAngle a) q
+      q               -> Rotate absAngle q
+    where
+      absAngle = toAngle a
+      modAngle = getExactAngle absAngle
+
 
   reflected a1 (Reflect a2 p)
     | a1 == getExactAngle a2 = p
