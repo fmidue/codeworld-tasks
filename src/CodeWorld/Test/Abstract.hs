@@ -53,8 +53,8 @@ largerY = scaled 1 2
 
 
 someCurve :: Drawable a => Int -> a
-someCurve points = curve $ take points $ iterate (both (+0.1)) (1,0)
+someCurve points = curve $ take (points+1) $ iterate (both (+0.1)) (1,0)
 
 
 someSolidCurve :: Drawable a => Int -> a
-someSolidCurve points = solidClosedCurve $ take points $ iterate (both (+0.1)) (1,0)
+someSolidCurve points = solidClosedCurve $ take (points+1) $ iterate (both (+0.1)) (1,0)
