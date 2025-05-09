@@ -451,8 +451,16 @@ instance Drawable NormalizedPicture where
   reflected a (Polyline s ps) = Polyline s $ map (applyToAbsPoint (reflectedPoint a)) ps
   reflected a (Curve s ps) = Curve s $ map (applyToAbsPoint (reflectedPoint a)) ps
   reflected a (Pictures ps) = Pictures $ map (reflected a) ps
-  reflected a p@(Translate _ y _) = let d = a*2 in
-    translated (2*getExactPos y*sin d) (-(2*getExactPos y*cos d)) $ rotated d p
+  reflected a (Translate x y p) =
+    let
+      exactX = getExactPos x
+      exactY = getExactPos y
+      twoTimesSquaredSubOne f = 2 * f a^(2 :: Int) -1
+      twoTimesCosSin = 2 * cos a * sin a
+    in translated
+      (twoTimesSquaredSubOne cos * exactX + twoTimesCosSin * exactY)
+      (twoTimesCosSin * exactX + twoTimesSquaredSubOne sin * exactY)
+      $ reflected a p
   reflected a (Rotate a2 p) = reflected (a - (getExactAngle a2/2)) p
   reflected a (Color c q)   = Color c $ reflected a q
   reflected a p = Reflect (toAngle a) p
