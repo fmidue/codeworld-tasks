@@ -341,16 +341,16 @@ instance Drawable NormalizedPicture where
 
   rectangle 0 _ = blank
   rectangle _ 0 = blank
-  rectangle l w  = Rectangle (Hollow Normal) (toSize l) $ toSize w
+  rectangle l w = upRightRectangle (Hollow Normal) l w
 
   solidRectangle 0 _ = blank
   solidRectangle _ 0 = blank
-  solidRectangle l w = Rectangle Solid (toSize l) $ toSize w
+  solidRectangle l w = upRightRectangle Solid l w
 
   thickRectangle _ 0 _ = blank
   thickRectangle _ _ 0 = blank
   thickRectangle (max 0 -> t) (abs -> l) (abs -> w) =
-      Rectangle shape (toSize $ l + t/2) $ toSize $ w + t/2
+      upRightRectangle shape (l + t/2) (w + t/2)
     where
       shape
         | t >= 2*l || t >= 2*w = Solid
@@ -406,7 +406,7 @@ instance Drawable NormalizedPicture where
   scaled fac1 fac2 (Circle sk s) | fac1 == fac2 =
     Circle sk (toSize $ fromSize s *fac1)
   scaled fac1 fac2 (Rectangle sk s1 s2) =
-    Rectangle sk (toSize $ fromSize s1 *fac1) (toSize $ fromSize s2 *fac2)
+    shapeKindToRectangle sk (fromSize s1 *fac1) (fromSize s2 *fac2)
   scaled fac1 fac2 p = case p of
     Scale f1 f2 q    -> scaled (fromFactor f1 * fac1) (fromFactor f2 * fac2) q
     Translate x y q  -> Translate
@@ -434,7 +434,6 @@ instance Drawable NormalizedPicture where
       Polyline s ps   -> Polyline s $ map (applyToAbsPoint (rotatedVector a)) ps
       Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotatedVector a)) ps
       Rectangle s x y
-        | getExactAngle absAngle == pi/2 -> Rectangle s y x
         | getExactAngle absAngle >=  pi  -> rotated (modAngle - pi) $ Rectangle s x y
       Circle s r      -> Circle s r
       q               -> Rotate absAngle q
@@ -573,6 +572,18 @@ pointsToRectangle shapeKind ps
       Hollow Normal -> rectangle
       Hollow Thick  -> thickRectangle 1
       Solid         -> solidRectangle
+
+
+upRightRectangle :: ShapeKind -> Double -> Double -> NormalizedPicture
+upRightRectangle shape l w
+    | l >= w = Rectangle shape (toSize l) $ toSize w
+    | otherwise = rotated (pi/2) $ Rectangle shape (toSize w) $ toSize l
+
+
+shapeKindToRectangle :: ShapeKind -> Double -> Double -> NormalizedPicture
+shapeKindToRectangle (Hollow Normal) = rectangle
+shapeKindToRectangle (Hollow Thick) = thickRectangle 1
+shapeKindToRectangle Solid = solidRectangle
 
 
 handleFreeShape
