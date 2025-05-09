@@ -22,16 +22,16 @@ someColor :: Drawable a => a -> a
 someColor = colored AnyColor
 
 rotatedQuarter :: Drawable a => a -> a
-rotatedQuarter = rotated (pi/2)
+rotatedQuarter = rotated $ pi/4
 
 rotatedHalf :: Drawable a => a -> a
-rotatedHalf = rotated pi
+rotatedHalf = rotated $ 3*pi/4
 
 rotatedThreeQuarters :: Drawable a => a -> a
-rotatedThreeQuarters = rotated (3*pi/2)
+rotatedThreeQuarters = rotated $ 5*pi/4
 
 rotatedUpToFull :: Drawable a => a -> a
-rotatedUpToFull = rotated 5
+rotatedUpToFull = rotated $ 7*pi/4
 
 smaller :: Drawable a => a -> a
 smaller = dilated 0.5
