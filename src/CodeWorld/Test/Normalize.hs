@@ -341,16 +341,16 @@ instance Drawable NormalizedPicture where
 
   rectangle 0 _ = blank
   rectangle _ 0 = blank
-  rectangle l w = upRightRectangle (Hollow Normal) l w
+  rectangle l w = toWideRectangle (Hollow Normal) l w
 
   solidRectangle 0 _ = blank
   solidRectangle _ 0 = blank
-  solidRectangle l w = upRightRectangle Solid l w
+  solidRectangle l w = toWideRectangle Solid l w
 
   thickRectangle _ 0 _ = blank
   thickRectangle _ _ 0 = blank
   thickRectangle (max 0 -> t) (abs -> l) (abs -> w) =
-      upRightRectangle shape (l + t/2) (w + t/2)
+      toWideRectangle shape (l + t/2) (w + t/2)
     where
       shape
         | t >= 2*l || t >= 2*w = Solid
@@ -574,8 +574,8 @@ pointsToRectangle shapeKind ps
       Solid         -> solidRectangle
 
 
-upRightRectangle :: ShapeKind -> Double -> Double -> NormalizedPicture
-upRightRectangle shape l w
+toWideRectangle :: ShapeKind -> Double -> Double -> NormalizedPicture
+toWideRectangle shape l w
     | l >= w = Rectangle shape (toSize l) $ toSize w
     | otherwise = rotated (pi/2) $ Rectangle shape (toSize w) $ toSize l
 
