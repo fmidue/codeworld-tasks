@@ -130,7 +130,11 @@ printOriginal bindings termLookup term = case term of
     reSubPi "0.785" = "(pi/4)"
     reSubPi "4.712" = "(3*pi/2)"
     reSubPi "2.356" = "(3*pi/4)"
-    reSubPi ('-':s) = '-':reSubPi s
+    reSubPi ('-':s)
+      | start == "(" = "(-" ++ end
+      | otherwise = "(-" ++ start ++ end
+      where
+        (start,end) = splitAt 1 $ reSubPi s
     reSubPi s       = s
 
 
