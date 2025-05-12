@@ -6,11 +6,31 @@ import Data.Tuple.Extra                 (both)
 import CodeWorld.Tasks.API              (Drawable(..))
 import CodeWorld.Tasks.Types (Color(..))
 
-someRectangle :: Drawable a => a
-someRectangle = rectangle 1 1
+someSquare :: Drawable a => a
+someSquare = rectangle 1 1
 
+someSolidSquare :: Drawable a => a
+someSolidSquare = solidRectangle 1 1
+
+-- temporary synonym to not break existing tasks
+someRectangle :: Drawable a => a
+someRectangle = someSquare
+
+-- temporary synonym to not break existing tasks
 someSolidRectangle :: Drawable a => a
-someSolidRectangle = solidRectangle 1 1
+someSolidRectangle = someSolidSquare
+
+someWideRectangle :: Drawable a => a
+someWideRectangle = rectangle 2 1
+
+someWideSolidRectangle :: Drawable a => a
+someWideSolidRectangle = solidRectangle 2 1
+
+someTallRectangle :: Drawable a => a
+someTallRectangle = rectangle 1 2
+
+someTallSolidRectangle :: Drawable a => a
+someTallSolidRectangle = solidRectangle 1 2
 
 someCircle :: Drawable a => a
 someCircle = circle 1
