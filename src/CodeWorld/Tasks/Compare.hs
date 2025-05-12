@@ -37,7 +37,7 @@ testCSE p = do
         completeCons = restoreTerm possibleBinds consTerms $ maximumOn fst consTerms
       pure $ Just $ unlines
         [ "There are opportunities for common subexpression elimination (CSE) in your submission!"
-        , "Consider this expression resembling your submission, condensed in the following ways:"
+        , "Consider this expression resembling your submission, possibly differing in the following ways:"
         , "  - Subexpressions distributed over multiple definitions have been combined into a single expression"
         , "  - Mathematical subexpressions have been fully evaluated"
         , "  - Some picture related subexpressions might also be fully or partially evaluated."
@@ -123,7 +123,16 @@ printOriginal bindings termLookup term = case term of
     roundTo places d = (fromIntegral @Int . round $ d * fac) / fac
       where fac = 10^places
 
-    truncatedShow = show . roundTo 3
+    truncatedShow = reSubPi . show . roundTo 3
+
+    reSubPi "3.141" = "pi"
+    reSubPi "1.570" = "(pi/2)"
+    reSubPi "0.785" = "(pi/4)"
+    reSubPi "4.712" = "(3*pi/2)"
+    reSubPi "2.356" = "(3*pi/4)"
+    reSubPi ('-':s) = '-':reSubPi s
+    reSubPi s       = s
+
 
 
 hasArguments :: ReifyPicture a -> Bool
