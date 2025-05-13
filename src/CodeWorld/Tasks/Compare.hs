@@ -110,11 +110,12 @@ printOriginal bindings termLookup term = case term of
     printNext i = case lookup i bindings of
       Nothing
           | hasArguments reifyPic -> result
-          | otherwise             -> printOriginal bindings termLookup reifyPic
+          | otherwise             -> originalTerm
         where reifyPic = fromJust $ lookup i termLookup
-              result = if "&" `isInfixOf` printOriginal bindings termLookup reifyPic
-                then "(\n" ++ addIndentLevel (printOriginal bindings termLookup reifyPic) ++ ")"
-                else "(" ++ printOriginal bindings termLookup reifyPic ++ ")"
+              originalTerm = printOriginal bindings termLookup reifyPic
+              result = if "&" `isInfixOf` originalTerm
+                then "(\n" ++ addIndentLevel originalTerm ++ ")"
+                else "(" ++ originalTerm ++ ")"
       Just name -> name
 
     printNextAnd :: Int -> String
