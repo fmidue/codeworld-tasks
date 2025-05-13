@@ -69,7 +69,7 @@ testCSE p = do
         "let" :
         map (\(name,value) -> "  " ++ name ++ " = " ++ value) shared ++
         [  "in"
-        , unlines $ map ("  " ++) $ lines term
+        , addIndentLevel term
         ]
 
 
@@ -93,13 +93,13 @@ bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTe
 
 printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
 printOriginal bindings termLookup term = case term of
-  Color c i       -> unwords ["colored", map toLower (show c), printNext i]
+  Color c i       -> unwords ["colored", map toLower (parensShow c), printNext i]
   Translate x y i -> unwords ["translated", truncatedShow x, truncatedShow y, printNext i]
-  Scale x y i     -> unwords ["scaled", show x, show y, printNext i]
-  Dilate fac i    -> unwords ["dilated", show fac, printNext i]
+  Scale x y i     -> unwords ["scaled", truncatedShow x, truncatedShow y, printNext i]
+  Dilate fac i    -> unwords ["dilated", truncatedShow fac, printNext i]
   Rotate a i      -> unwords ["rotated", truncatedShow a, printNext i]
   Reflect a i     -> unwords ["reflected", truncatedShow a, printNext i]
-  Clip x y i      -> unwords ["clipped", show x, show y, printNext i]
+  Clip x y i      -> unwords ["clipped", truncatedShow x, truncatedShow y, printNext i]
   Pictures is     -> unwords ["pictures [", intercalate ", " (map printNextAnd is) ++ " ]"]
   And i1 i2       -> printNextAnd i1 ++ " &\n" ++ printNextAnd i2
   _               -> case show term of
@@ -109,9 +109,12 @@ printOriginal bindings termLookup term = case term of
     printNext :: Int -> String
     printNext i = case lookup i bindings of
       Nothing
-          | hasArguments reifyPic -> "(" ++ printOriginal bindings termLookup reifyPic ++ ")"
+          | hasArguments reifyPic -> result
           | otherwise             -> printOriginal bindings termLookup reifyPic
         where reifyPic = fromJust $ lookup i termLookup
+              result = if "&" `isInfixOf` printOriginal bindings termLookup reifyPic
+                then "(\n" ++ addIndentLevel (printOriginal bindings termLookup reifyPic) ++ ")"
+                else "(" ++ printOriginal bindings termLookup reifyPic ++ ")"
       Just name -> name
 
     printNextAnd :: Int -> String
@@ -123,20 +126,25 @@ printOriginal bindings termLookup term = case term of
     roundTo places d = (fromIntegral @Int . round $ d * fac) / fac
       where fac = 10^places
 
-    truncatedShow = reSubPi . show . roundTo 3
+    parensShow = optParens . show
+
+    truncatedShow = optParens . reSubPi . show . roundTo 3
+
+    optParens s
+      | length (words s) > 1  || any (`elem` s) "-/*" = '(': s ++ ")"
+      | otherwise = s
 
     reSubPi "3.141" = "pi"
-    reSubPi "1.570" = "(pi/2)"
-    reSubPi "0.785" = "(pi/4)"
-    reSubPi "4.712" = "(3*pi/2)"
-    reSubPi "2.356" = "(3*pi/4)"
-    reSubPi ('-':s)
-      | start == "(" = "(-" ++ end
-      | otherwise = "(-" ++ start ++ end
-      where
-        (start,end) = splitAt 1 $ reSubPi s
+    reSubPi "1.570" = "pi/2"
+    reSubPi "0.785" = "pi/4"
+    reSubPi "4.712" = "3*pi/2"
+    reSubPi "2.356" = "3*pi/4"
+    reSubPi ('-':s) = '-': reSubPi s
     reSubPi s       = s
 
+
+addIndentLevel :: String -> String
+addIndentLevel = unlines . map ("  " ++) . lines
 
 
 hasArguments :: ReifyPicture a -> Bool
