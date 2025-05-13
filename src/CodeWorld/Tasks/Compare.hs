@@ -80,7 +80,7 @@ bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTe
 
     formatBinding = camelCase . filter keep . replace "&" "And"
 
-    keep c = c `notElem` ['(',')',',','[',']','-','.'] && not (isNumber c)
+    keep c = c `notElem` ['(',')',',','[',']','-','.','\n'] && not (isNumber c)
 
     capitalFirst [] = []
     capitalFirst (x:xs) = toUpper x : xs
@@ -113,7 +113,7 @@ printOriginal bindings termLookup term = case term of
           | otherwise             -> originalTerm
         where reifyPic = fromJust $ lookup i termLookup
               originalTerm = printOriginal bindings termLookup reifyPic
-              result = if "&" `isInfixOf` originalTerm
+              result = if '&' `elem` originalTerm || length originalTerm > maxLineWidth
                 then "(\n" ++ addIndentLevel originalTerm ++ ")"
                 else "(" ++ originalTerm ++ ")"
       Just name -> name
@@ -146,6 +146,10 @@ printOriginal bindings termLookup term = case term of
 
 addIndentLevel :: String -> String
 addIndentLevel = unlines . map ("  " ++) . lines
+
+
+maxLineWidth :: Int
+maxLineWidth = 80
 
 
 hasArguments :: ReifyPicture a -> Bool
