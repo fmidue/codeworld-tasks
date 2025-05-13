@@ -29,7 +29,7 @@ library
       CodeWorld.Tasks.API
       CodeWorld.Tasks.Compare
       CodeWorld.Tasks.HashCons
-      CodeWorld.Tasks.Reify
+      CodeWorld.Tasks.Picture
       CodeWorld.Tasks.Trie
       CodeWorld.Tasks.Types
       CodeWorld.Tasks.VectorSpace

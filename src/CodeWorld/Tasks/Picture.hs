@@ -3,7 +3,7 @@
 {-# language DeriveAnyClass #-}
 {-# language TypeFamilies #-}
 
-module CodeWorld.Tasks.Reify (
+module CodeWorld.Tasks.Picture (
   ReifyPicture(..),
   Picture(..),
   share,

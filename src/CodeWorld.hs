@@ -46,8 +46,8 @@ module CodeWorld (
 
 import Data.Text                        (Text)
 
-import CodeWorld.Tasks.Reify hiding (Picture)
-import qualified CodeWorld.Tasks.Reify as P
+import CodeWorld.Tasks.Picture hiding (Picture)
+import qualified CodeWorld.Tasks.Picture as P
 import CodeWorld.Tasks.Types hiding (Color(..))
 import qualified CodeWorld.Tasks.Types as T
 import CodeWorld.Tasks.VectorSpace hiding (

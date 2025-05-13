@@ -34,7 +34,7 @@ module CodeWorld.Test.Solution (
 
 import Data.Maybe (listToMaybe)
 
-import CodeWorld.Tasks.Reify (Picture, toInterface)
+import CodeWorld.Tasks.Picture (Picture, toInterface)
 import CodeWorld.Test.Normalize (NormalizedPicture(..), contains, getSubPictures)
 import CodeWorld.Test.Relative (
   Components(..),
