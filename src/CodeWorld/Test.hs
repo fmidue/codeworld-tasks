@@ -2,7 +2,7 @@
 module CodeWorld.Test (
   module Abstract,
   module API,
-  module Compare,
+  module Sharing,
   module Normalize,
   module Relative,
   module Solution,
@@ -23,11 +23,17 @@ import CodeWorld.Test.Abstract as Abstract
 import CodeWorld.Test.Normalize as Normalize hiding (NormalizedPicture(..))
 import CodeWorld.Test.Normalize as N
 import CodeWorld.Test.Relative as Relative
-import CodeWorld.Tasks.Compare as Compare
+import CodeWorld.Sharing.Feedback as Sharing
 import CodeWorld.Test.Solution as Solution
 import CodeWorld.Tasks.VectorSpace as VectorSpace
 
-import CodeWorld.Tasks.Reify (Picture(..), ReifyPicture(..), toInterface, hasInnerPicture, innerPicture)
+import CodeWorld.Tasks.Picture (
+  Picture(..),
+  ReifyPicture(..),
+  toInterface,
+  hasInnerPicture,
+  innerPicture
+  )
 
 
 normalize :: Picture -> N.NormalizedPicture

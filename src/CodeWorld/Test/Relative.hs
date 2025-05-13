@@ -34,10 +34,9 @@ module CodeWorld.Test.Relative (
 import Data.List                        (sort)
 
 import CodeWorld.Tasks.API              (Drawable(..))
+import CodeWorld.Test.AbsTypes          (Position(..), fromPosition)
 import CodeWorld.Test.Normalize (
   NormalizedPicture(..),
-  Moved(..),
-  getExactPos,
   getSubPictures,
   stripTranslation,
   getTranslation,
@@ -270,7 +269,7 @@ relativePosition (p:ps)
     (pX,pY) = getTranslation p
 
     asCenter pic = let (bX,bY) = getTranslation pic in
-      translated (getExactPos $ bX-pX) (getExactPos $ bY-pY) $ stripTranslation pic
+      translated (fromPosition $ bX-pX) (fromPosition $ bY-pY) $ stripTranslation pic
 
     othersTrans = map (\pic ->
         orientation (asCenter pic) (stripTranslation p) $ stripTranslation pic

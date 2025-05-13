@@ -1,7 +1,7 @@
 
 {-# language TypeApplications #-}
 
-module CodeWorld.Tasks.Compare (
+module CodeWorld.Sharing.Feedback (
   testCSE
 ) where
 
@@ -13,8 +13,8 @@ import Data.Tuple.Extra                 (second, both)
 import qualified Data.IntMap            as IM
 
 import CodeWorld                        (Picture)
-import CodeWorld.Tasks.HashCons         (BiMap, Node(..), hashconsShare)
-import CodeWorld.Tasks.Reify            (ReifyPicture(..), share, toInterface)
+import CodeWorld.Sharing.HashCons       (BiMap, Node(..), hashconsShare)
+import CodeWorld.Tasks.Picture          (ReifyPicture(..), share, toInterface)
 
 
 
