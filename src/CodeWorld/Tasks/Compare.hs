@@ -119,11 +119,7 @@ printOriginal bindings termLookup term = case term of
                              , truncatedShow y
                              , printNext i
                              ]
-  Pictures is           -> unwords
-                             [ "pictures\n  ["
-                             , intercalate "\n  , " (map printNextAnd is)
-                             , "\n  ]"
-                             ]
+  Pictures is           -> indentedList "pictures" $ map printNextAnd is
   And i1 i2             -> printNextAnd i1 ++ " &\n" ++ printNextAnd i2
   Rectangle x y         -> unwords ["rectangle", truncatedShow x, truncatedShow y]
   ThickRectangle t x y  -> unwords
@@ -144,11 +140,11 @@ printOriginal bindings termLookup term = case term of
                              , truncatedShow r
                              ]
   SolidCircle r         -> "solidCircle " ++ truncatedShow r
-  Polygon ps            -> "polygon " ++ show ps
-  ThickPolygon t ps     -> unwords ["thickPolygon", truncatedShow t, show ps]
-  SolidPolygon ps       -> "solidPolygon " ++ show ps
-  Polyline ps           -> "polyline " ++ show ps
-  ThickPolyline t ps    -> unwords ["thickPolyline", truncatedShow t, show ps]
+  Polygon ps            -> indentedList "polygon" $ map show ps
+  ThickPolygon t ps     -> indentedList ("thickPolygon " ++ truncatedShow t) $ map show ps
+  SolidPolygon ps       -> indentedList "solidPolygon" $ map show ps
+  Polyline ps           -> indentedList "polyline" $ map show ps
+  ThickPolyline t ps    -> indentedList ("thickPolyline " ++ truncatedShow t) $ map show ps
   Sector a1 a2 r        -> unwords
                              [ "sector"
                              , truncatedShow a1
@@ -168,11 +164,11 @@ printOriginal bindings termLookup term = case term of
                              , truncatedShow a2
                              , truncatedShow r
                              ]
-  Curve ps              -> "curve " ++ show ps
-  ThickCurve t ps       -> unwords ["thickCurve", truncatedShow t, show ps]
-  ClosedCurve ps        -> "closedCurve " ++ show ps
-  ThickClosedCurve t ps -> unwords ["thickClosedCurve", truncatedShow t, show ps]
-  SolidClosedCurve ps   -> "solidClosedCurve " ++ show ps
+  Curve ps              -> indentedList "curve" $ map show ps
+  ThickCurve t ps       -> indentedList ("thickCurve " ++ truncatedShow t) $ map show ps
+  ClosedCurve ps        -> indentedList "closedCurve" $ map show ps
+  ThickClosedCurve t ps -> indentedList ("thickClosedCurve " ++ truncatedShow t) $ map show ps
+  SolidClosedCurve ps   -> indentedList "solidClosedCurve" $ map show ps
   Lettering t           -> "lettering " ++ show t
   StyledLettering s f t -> unwords ["styledLettering", show s, show f, show t]
   CoordinatePlane       -> "coordinatePlane"
@@ -225,6 +221,14 @@ addIndentLevel = unlines . map ("  " ++) . lines
 
 maxLineWidth :: Int
 maxLineWidth = 80
+
+
+indentedList :: String -> [String] -> String
+indentedList name xs = unwords
+  [ name ++ "\n  ["
+  , intercalate "\n  , " xs
+  , "\n  ]"
+  ]
 
 
 hasArguments :: ReifyPicture a -> Bool
