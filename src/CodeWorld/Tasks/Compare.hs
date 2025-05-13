@@ -1,4 +1,6 @@
 
+{-# language TypeApplications #-}
+
 module CodeWorld.Tasks.Compare (
   testCSE
 ) where
@@ -35,7 +37,7 @@ testCSE p = do
         completeCons = restoreTerm possibleBinds consTerms $ maximumOn fst consTerms
       pure $ Just $ unlines
         [ "There are opportunities for common subexpression elimination (CSE) in your submission!"
-        , "Consider this expression resembling your submission, condensed in the following ways:"
+        , "Consider this expression resembling your submission, possibly differing in the following ways:"
         , "  - Subexpressions distributed over multiple definitions have been combined into a single expression"
         , "  - Mathematical subexpressions have been fully evaluated"
         , "  - Some picture related subexpressions might also be fully or partially evaluated."
@@ -51,8 +53,8 @@ testCSE p = do
         , printSharedTerm completeCons $ termsWithNames possibleBinds allShares sharable
         , ""
         , ""
-        , "If the highlighted terms are already defined globally, then consider locally defining them at their use-site instead."
-        , "You can define them with either a 'let' or 'where' binding."
+        , "The highlighted terms can be defined globally or locally at their use-site."
+        , "For a local definition, you can use either a 'let' or 'where' binding."
         , "Of course, you can also change the proposed names to your liking, e.g. make them more concise."
         , "Also consider that your actual code is most likely structured slightly differently than this suggested improvement."
         , "As such, the location of the binding as shown here might also have to be adjusted."
@@ -67,7 +69,7 @@ testCSE p = do
         "let" :
         map (\(name,value) -> "  " ++ name ++ " = " ++ value) shared ++
         [  "in"
-        ,  "  " ++ term
+        , addIndentLevel term
         ]
 
 
@@ -78,7 +80,7 @@ bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTe
 
     formatBinding = camelCase . filter keep . replace "&" "And"
 
-    keep c = c `notElem` ['(',')',',','[',']','-','.'] && not (isNumber c)
+    keep c = c `notElem` ['(',')',',','[',']','-','.','\n'] && not (isNumber c)
 
     capitalFirst [] = []
     capitalFirst (x:xs) = toUpper x : xs
@@ -90,14 +92,100 @@ bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTe
     camelCase (c:s) = c : camelCase s
 
 printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
-printOriginal bindings termLookup term = sub
+printOriginal bindings termLookup term = case term of
+  Color c i             -> unwords
+                             [ "colored"
+                             , map toLower (parensShow c)
+                             , printNext i
+                             ]
+  Translate x y i       -> unwords
+                             [ "translated"
+                             , truncatedShow x
+                             , truncatedShow y
+                             , printNext i
+                             ]
+  Scale x y i           -> unwords
+                             [ "scaled"
+                             , truncatedShow x
+                             , truncatedShow y
+                             , printNext i
+                             ]
+  Dilate fac i          -> unwords ["dilated", truncatedShow fac, printNext i]
+  Rotate a i            -> unwords ["rotated", truncatedShow a, printNext i]
+  Reflect a i           -> unwords ["reflected", truncatedShow a, printNext i]
+  Clip x y i            -> unwords
+                             [ "clipped"
+                             , truncatedShow x
+                             , truncatedShow y
+                             , printNext i
+                             ]
+  Pictures is           -> indentedList "pictures" $ map printNextAnd is
+  And i1 i2             -> printNextAnd i1 ++ " &\n" ++ printNextAnd i2
+  Rectangle x y         -> unwords ["rectangle", truncatedShow x, truncatedShow y]
+  ThickRectangle t x y  -> unwords
+                             [ "thickRectangle"
+                             , truncatedShow t
+                             , truncatedShow x
+                             , truncatedShow y
+                             ]
+  SolidRectangle x y    -> unwords
+                             [ "solidRectangle"
+                             , truncatedShow x
+                             , truncatedShow y
+                             ]
+  Circle r              -> "circle " ++ truncatedShow r
+  ThickCircle t r       -> unwords
+                             [ "thickCircle"
+                             , truncatedShow t
+                             , truncatedShow r
+                             ]
+  SolidCircle r         -> "solidCircle " ++ truncatedShow r
+  Polygon ps            -> indentedList "polygon" $ map show ps
+  ThickPolygon t ps     -> indentedList ("thickPolygon " ++ truncatedShow t) $ map show ps
+  SolidPolygon ps       -> indentedList "solidPolygon" $ map show ps
+  Polyline ps           -> indentedList "polyline" $ map show ps
+  ThickPolyline t ps    -> indentedList ("thickPolyline " ++ truncatedShow t) $ map show ps
+  Sector a1 a2 r        -> unwords
+                             [ "sector"
+                             , truncatedShow a1
+                             , truncatedShow a2
+                             , truncatedShow r
+                             ]
+  Arc a1 a2 r           -> unwords
+                             [ "arc"
+                             , truncatedShow a1
+                             , truncatedShow a2
+                             , truncatedShow r
+                             ]
+  ThickArc t a1 a2 r    -> unwords
+                             [ "thickArc"
+                             , truncatedShow t
+                             , truncatedShow a1
+                             , truncatedShow a2
+                             , truncatedShow r
+                             ]
+  Curve ps              -> indentedList "curve" $ map show ps
+  ThickCurve t ps       -> indentedList ("thickCurve " ++ truncatedShow t) $ map show ps
+  ClosedCurve ps        -> indentedList "closedCurve" $ map show ps
+  ThickClosedCurve t ps -> indentedList ("thickClosedCurve " ++ truncatedShow t) $ map show ps
+  SolidClosedCurve ps   -> indentedList "solidClosedCurve" $ map show ps
+  Lettering t           -> "lettering " ++ show t
+  StyledLettering s f t -> unwords ["styledLettering", show s, show f, show t]
+  CoordinatePlane       -> "coordinatePlane"
+  Logo                  -> "codeWorldLogo"
+  Blank                 -> "blank"
+
   where
     printNext :: Int -> String
     printNext i = case lookup i bindings of
       Nothing
-          | hasArguments reifyPic -> "(" ++ printOriginal bindings termLookup reifyPic ++ ")"
-          | otherwise             -> printOriginal bindings termLookup reifyPic
+          | hasArguments reifyPic -> result
+          | otherwise             -> originalTerm
         where reifyPic = fromJust $ lookup i termLookup
+              originalTerm = printOriginal bindings termLookup reifyPic
+              result = if '&' `elem` originalTerm || length originalTerm > maxLineWidth
+                then "(\n" ++ addIndentLevel originalTerm ++ ")"
+                else "(" ++ originalTerm ++ ")"
       Just name -> name
 
     printNextAnd :: Int -> String
@@ -105,19 +193,42 @@ printOriginal bindings termLookup term = sub
       Nothing -> printOriginal bindings termLookup $ fromJust $ lookup i termLookup
       Just name -> name
 
-    sub = unwords $ case term of
-      Color c i       -> ["colored", map toLower (show c), printNext i]
-      Translate x y i -> ["translated", show x, show y, printNext i]
-      Scale x y i     -> ["scaled", show x, show y, printNext i]
-      Dilate fac i    -> ["dilated", show fac, printNext i]
-      Rotate a i      -> ["rotated", show a, printNext i]
-      Reflect a i     -> ["reflected", show a, printNext i]
-      Clip x y i      -> ["clipped", show x, show y, printNext i]
-      Pictures is     -> ["pictures [", intercalate ", " (map printNextAnd is) ++ " ]"]
-      And i1 i2       -> [printNextAnd i1, "&", printNextAnd i2]
-      _               -> case show term of
-        (x:xs) -> [toLower x:xs]
-        _      -> error "not possible"
+    roundTo :: Integer -> Double -> Double
+    roundTo places d = (fromIntegral @Int . round $ d * fac) / fac
+      where fac = 10^places
+
+    parensShow :: Show a => a -> String
+    parensShow = optParens . show
+
+    truncatedShow = optParens . reSubPi . show . roundTo 3
+
+    optParens s
+      | length (words s) > 1  || any (`elem` s) "-/*" = '(': s ++ ")"
+      | otherwise = s
+
+    reSubPi "3.141" = "pi"
+    reSubPi "1.570" = "pi/2"
+    reSubPi "0.785" = "pi/4"
+    reSubPi "4.712" = "3*pi/2"
+    reSubPi "2.356" = "3*pi/4"
+    reSubPi ('-':s) = '-': reSubPi s
+    reSubPi s       = s
+
+
+addIndentLevel :: String -> String
+addIndentLevel = unlines . map ("  " ++) . lines
+
+
+maxLineWidth :: Int
+maxLineWidth = 80
+
+
+indentedList :: String -> [String] -> String
+indentedList name xs = unwords
+  [ name ++ "\n  ["
+  , intercalate "\n  , " xs
+  , "\n  ]"
+  ]
 
 
 hasArguments :: ReifyPicture a -> Bool
