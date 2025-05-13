@@ -8,8 +8,8 @@ module CodeWorld.Tasks.Types (
 
   Color(..),
   Colour,
-  TextStyle,
-  Font,
+  TextStyle(..),
+  Font(..),
 
   red,
   green,
