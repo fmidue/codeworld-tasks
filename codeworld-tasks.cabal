@@ -26,11 +26,11 @@ library
       CodeWorld
       CodeWorld.Test
   other-modules:
+      CodeWorld.Sharing.Feedback
+      CodeWorld.Sharing.HashCons
+      CodeWorld.Sharing.Trie
       CodeWorld.Tasks.API
-      CodeWorld.Tasks.Compare
-      CodeWorld.Tasks.HashCons
       CodeWorld.Tasks.Picture
-      CodeWorld.Tasks.Trie
       CodeWorld.Tasks.Types
       CodeWorld.Tasks.VectorSpace
       CodeWorld.Test.Abstract

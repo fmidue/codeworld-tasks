@@ -1,5 +1,5 @@
 
-module CodeWorld.Tasks.HashCons (
+module CodeWorld.Sharing.HashCons (
   Node(..),
   NodeId,
   BiMap,
