@@ -169,7 +169,7 @@ printOriginal bindings termLookup term = case term of
                              , truncatedShow r
                              ]
   Curve ps              -> "curve " ++ show ps
-  ThickCurve t ps       -> unwords ["curve", truncatedShow t, show ps]
+  ThickCurve t ps       -> unwords ["thickCurve", truncatedShow t, show ps]
   ClosedCurve ps        -> "closedCurve " ++ show ps
   ThickClosedCurve t ps -> unwords ["thickClosedCurve", truncatedShow t, show ps]
   SolidClosedCurve ps   -> "solidClosedCurve " ++ show ps
