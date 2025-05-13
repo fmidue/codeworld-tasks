@@ -93,35 +93,87 @@ bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTe
 
 printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
 printOriginal bindings termLookup term = case term of
-  Color c i             -> unwords ["colored", map toLower (parensShow c), printNext i]
-  Translate x y i       -> unwords ["translated", truncatedShow x, truncatedShow y, printNext i]
-  Scale x y i           -> unwords ["scaled", truncatedShow x, truncatedShow y, printNext i]
+  Color c i             -> unwords
+                             [ "colored"
+                             , map toLower (parensShow c)
+                             , printNext i
+                             ]
+  Translate x y i       -> unwords
+                             [ "translated"
+                             , truncatedShow x
+                             , truncatedShow y
+                             , printNext i
+                             ]
+  Scale x y i           -> unwords
+                             [ "scaled"
+                             , truncatedShow x
+                             , truncatedShow y
+                             , printNext i
+                             ]
   Dilate fac i          -> unwords ["dilated", truncatedShow fac, printNext i]
   Rotate a i            -> unwords ["rotated", truncatedShow a, printNext i]
   Reflect a i           -> unwords ["reflected", truncatedShow a, printNext i]
-  Clip x y i            -> unwords ["clipped", truncatedShow x, truncatedShow y, printNext i]
-  Pictures is           -> unwords ["pictures [", intercalate ", " (map printNextAnd is) ++ " ]"]
+  Clip x y i            -> unwords
+                             [ "clipped"
+                             , truncatedShow x
+                             , truncatedShow y
+                             , printNext i
+                             ]
+  Pictures is           -> unwords
+                             [ "pictures ["
+                             , intercalate ", " (map printNextAnd is)
+                             , "]"
+                             ]
   And i1 i2             -> printNextAnd i1 ++ " &\n" ++ printNextAnd i2
   Rectangle x y         -> unwords ["rectangle", truncatedShow x, truncatedShow y]
-  ThickRectangle t x y  -> unwords ["thickRectangle", truncatedShow t, truncatedShow x, truncatedShow y]
-  SolidRectangle x y    -> unwords ["solidRectangle", truncatedShow x, truncatedShow y]
-  Circle r              -> unwords ["circle", truncatedShow r]
-  ThickCircle t r       -> unwords ["thickCircle", truncatedShow t, truncatedShow r]
-  SolidCircle r         -> unwords ["solidCircle", truncatedShow r]
-  Polygon ps            -> unwords ["polygon", show ps]
+  ThickRectangle t x y  -> unwords
+                             [ "thickRectangle"
+                             , truncatedShow t
+                             , truncatedShow x
+                             , truncatedShow y
+                             ]
+  SolidRectangle x y    -> unwords
+                             [ "solidRectangle"
+                             , truncatedShow x
+                             , truncatedShow y
+                             ]
+  Circle r              -> "circle " ++ truncatedShow r
+  ThickCircle t r       -> unwords
+                             [ "thickCircle"
+                             , truncatedShow t
+                             , truncatedShow r
+                             ]
+  SolidCircle r         -> "solidCircle " ++ truncatedShow r
+  Polygon ps            -> "polygon " ++ show ps
   ThickPolygon t ps     -> unwords ["thickPolygon", truncatedShow t, show ps]
-  SolidPolygon ps       -> unwords ["solidPolygon", show ps]
-  Polyline ps           -> unwords ["polyline", show ps]
+  SolidPolygon ps       -> "solidPolygon " ++ show ps
+  Polyline ps           -> "polyline " ++ show ps
   ThickPolyline t ps    -> unwords ["thickPolyline", truncatedShow t, show ps]
-  Sector a1 a2 r        -> unwords ["sector", truncatedShow a1, truncatedShow a2, truncatedShow r]
-  Arc a1 a2 r           -> unwords ["arc", truncatedShow a1, truncatedShow a2, truncatedShow r]
-  ThickArc t a1 a2 r    -> unwords ["thickArc", truncatedShow t, truncatedShow a1, truncatedShow a2, truncatedShow r]
-  Curve ps              -> unwords ["curve", show ps]
+  Sector a1 a2 r        -> unwords
+                             [ "sector"
+                             , truncatedShow a1
+                             , truncatedShow a2
+                             , truncatedShow r
+                             ]
+  Arc a1 a2 r           -> unwords
+                             [ "arc"
+                             , truncatedShow a1
+                             , truncatedShow a2
+                             , truncatedShow r
+                             ]
+  ThickArc t a1 a2 r    -> unwords
+                             [ "thickArc"
+                             , truncatedShow t
+                             , truncatedShow a1
+                             , truncatedShow a2
+                             , truncatedShow r
+                             ]
+  Curve ps              -> "curve " ++ show ps
   ThickCurve t ps       -> unwords ["curve", truncatedShow t, show ps]
-  ClosedCurve ps        -> unwords ["closedCurve", show ps]
+  ClosedCurve ps        -> "closedCurve " ++ show ps
   ThickClosedCurve t ps -> unwords ["thickClosedCurve", truncatedShow t, show ps]
-  SolidClosedCurve ps   -> unwords ["solidClosedCurve", show ps]
-  Lettering t           -> unwords ["lettering", show t]
+  SolidClosedCurve ps   -> "solidClosedCurve " ++ show ps
+  Lettering t           -> "lettering " ++ show t
   StyledLettering s f t -> unwords ["styledLettering", show s, show f, show t]
   CoordinatePlane       -> "coordinatePlane"
   Logo                  -> "codeWorldLogo"
