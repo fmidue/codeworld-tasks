@@ -120,9 +120,9 @@ printOriginal bindings termLookup term = case term of
                              , printNext i
                              ]
   Pictures is           -> unwords
-                             [ "pictures ["
-                             , intercalate ", " (map printNextAnd is)
-                             , "]"
+                             [ "pictures\n  ["
+                             , intercalate "\n  , " (map printNextAnd is)
+                             , "\n  ]"
                              ]
   And i1 i2             -> printNextAnd i1 ++ " &\n" ++ printNextAnd i2
   Rectangle x y         -> unwords ["rectangle", truncatedShow x, truncatedShow y]
