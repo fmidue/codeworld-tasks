@@ -23,7 +23,7 @@ module CodeWorld.Test.Normalize (
   getSubPictures,
   stripToShape,
   stripTranslation,
-  toStrictTree,
+  toConcretePicture,
   ) where
 
 
@@ -488,8 +488,8 @@ getSubPictures (Pictures xs) = xs
 getSubPictures p = [p]
 
 
-toStrictTree :: NormalizedPicture -> P.Picture
-toStrictTree p = P.PRec $ case p of
+toConcretePicture :: NormalizedPicture -> P.Picture
+toConcretePicture p = P.PRec $ case p of
   Rectangle sk sx sy -> (case sk of
     Hollow Normal -> P.Rectangle
     Hollow Thick  -> P.ThickRectangle 1

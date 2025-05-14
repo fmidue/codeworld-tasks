@@ -13,6 +13,7 @@ module CodeWorld.Test (
   ReifyPicture(..),
   N.NormalizedPicture,
   normalize,
+  reduce,
   hasInnerPicture,
   innerPicture,
 ) where
@@ -38,5 +39,10 @@ import CodeWorld.Tasks.Picture (
   )
 
 
+-- Normalize the picture
 normalize :: Picture -> N.NormalizedPicture
 normalize = toInterface
+
+-- Normalize the picture then convert back into an un-normalized syntax tree
+reduce :: Picture -> Picture
+reduce = toConcretePicture . toInterface
