@@ -23,6 +23,7 @@ module CodeWorld.Test.Normalize (
   getSubPictures,
   stripToShape,
   stripTranslation,
+  toStrictTree,
   ) where
 
 
@@ -44,6 +45,7 @@ import CodeWorld.Tasks.VectorSpace (
   )
 import CodeWorld.Test.AbsTypes
 
+import qualified CodeWorld.Tasks.Picture as P
 
 
 data NormalizedPicture
@@ -484,3 +486,37 @@ getExactPointList _               = []
 getSubPictures :: NormalizedPicture -> [NormalizedPicture]
 getSubPictures (Pictures xs) = xs
 getSubPictures p = [p]
+
+
+toStrictTree :: NormalizedPicture -> P.Picture
+toStrictTree p = P.PRec $ case p of
+  Rectangle sk sx sy -> (case sk of
+    Hollow Normal -> P.Rectangle
+    Hollow Thick  -> P.ThickRectangle 1
+    _             -> P.SolidRectangle) (fromSize sx) (fromSize sy)
+  Circle sk s -> (case sk of
+    Hollow Normal -> P.Circle
+    Hollow Thick  -> P.ThickCircle 1
+    _             -> P.SolidCircle) (fromSize s)
+  Lettering t -> P.Lettering t
+  Color c q -> P.Color (fromAbsColor c) $ toStrictTree q
+  Translate x y q -> P.Translate (fromPosition x) (fromPosition y) $ toStrictTree q
+  Scale f1 f2 q -> P.Scale (fromFactor f1) (fromFactor f2) $ toStrictTree q
+  Rotate a q -> P.Rotate (fromAngle a) $ toStrictTree q
+  Pictures qs -> P.Pictures $ map toStrictTree qs
+  CoordinatePlane -> P.CoordinatePlane
+  Logo -> P.Logo
+  Blank -> P.Blank
+  Polyline sk ps -> (case sk of
+    Hollow Normal -> P.Polyline
+    _             -> P.ThickPolyline 1) $ map fromAbsPoint ps
+  Curve sk ps -> case sk of
+    Hollow Normal -> P.Curve $ map fromAbsPoint ps
+    Hollow Thick  -> P.ThickCurve 1 $ map fromAbsPoint ps
+    _             -> P.SolidClosedCurve $ init $ map fromAbsPoint ps
+  Arc sk a1 a2 s -> (case sk of
+    Hollow Normal -> P.Arc
+    Hollow Thick  -> P.ThickArc 1
+    _             -> P.Sector) (fromAngle a1) (fromAngle a2) (fromSize s)
+  Reflect a q -> P.Reflect (fromAngle a) $ toStrictTree q
+  Clip sx sy q -> P.Clip (fromSize sx) (fromSize sy) $ toStrictTree q

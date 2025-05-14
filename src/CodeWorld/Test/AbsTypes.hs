@@ -20,6 +20,7 @@ module CodeWorld.Test.AbsTypes (
   fromSize,
   toSize,
   toAbsColor,
+  fromAbsColor,
   isSameColor,
   equalColorCustom,
   applyToAbsPoint,
@@ -112,6 +113,12 @@ toAbsColor (T.RGB 0.5 0.5 0.5) = HSL 0 0 0.5
 toAbsColor c
   | T.alpha c == 1 = HSL (T.hue c) (T.saturation c) (T.luminosity c)
   | otherwise      = Translucent (T.alpha c) $ HSL (T.hue c) (T.saturation c) (T.luminosity c)
+
+
+fromAbsColor :: AbsColor -> Color
+fromAbsColor (HSL h s l) = T.HSL h s l
+fromAbsColor (Translucent _ c) = T.Translucent $ fromAbsColor c
+fromAbsColor AnyColor = T.AnyColor
 
 
 isSameColor :: AbsColor -> AbsColor -> Bool
