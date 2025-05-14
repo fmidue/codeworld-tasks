@@ -499,11 +499,11 @@ toConcretePicture p = P.PRec $ case p of
     Hollow Thick  -> P.ThickCircle 1
     _             -> P.SolidCircle) (fromSize s)
   Lettering t -> P.Lettering t
-  Color c q -> P.Color (fromAbsColor c) $ toStrictTree q
-  Translate x y q -> P.Translate (fromPosition x) (fromPosition y) $ toStrictTree q
-  Scale f1 f2 q -> P.Scale (fromFactor f1) (fromFactor f2) $ toStrictTree q
-  Rotate a q -> P.Rotate (fromAngle a) $ toStrictTree q
-  Pictures qs -> P.Pictures $ map toStrictTree qs
+  Color c q -> P.Color (fromAbsColor c) $ toConcretePicture q
+  Translate x y q -> P.Translate (fromPosition x) (fromPosition y) $ toConcretePicture q
+  Scale f1 f2 q -> P.Scale (fromFactor f1) (fromFactor f2) $ toConcretePicture q
+  Rotate a q -> P.Rotate (fromAngle a) $ toConcretePicture q
+  Pictures qs -> P.Pictures $ map toConcretePicture qs
   CoordinatePlane -> P.CoordinatePlane
   Logo -> P.Logo
   Blank -> P.Blank
@@ -518,5 +518,5 @@ toConcretePicture p = P.PRec $ case p of
     Hollow Normal -> P.Arc
     Hollow Thick  -> P.ThickArc 1
     _             -> P.Sector) (fromAngle a1) (fromAngle a2) (fromSize s)
-  Reflect a q -> P.Reflect (fromAngle a) $ toStrictTree q
-  Clip sx sy q -> P.Clip (fromSize sx) (fromSize sy) $ toStrictTree q
+  Reflect a q -> P.Reflect (fromAngle a) $ toConcretePicture q
+  Clip sx sy q -> P.Clip (fromSize sx) (fromSize sy) $ toConcretePicture q
