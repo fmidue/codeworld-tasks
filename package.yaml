@@ -14,8 +14,6 @@ description: Please see the README on GitHub at <https://github.com/fmidue/codew
 
 dependencies:
   - base >= 4.11 && < 5
-  - bytestring
-  - bytestring-trie
   - containers
   - data-reify
   - deepseq

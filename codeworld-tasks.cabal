@@ -28,7 +28,6 @@ library
   other-modules:
       CodeWorld.Sharing.Feedback
       CodeWorld.Sharing.HashCons
-      CodeWorld.Sharing.Trie
       CodeWorld.Tasks.API
       CodeWorld.Tasks.Picture
       CodeWorld.Tasks.Types
@@ -47,8 +46,6 @@ library
   ghc-options: -Wall -Werror -Wcompat -Widentities -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.11 && <5
-    , bytestring
-    , bytestring-trie
     , containers
     , data-reify
     , deepseq
@@ -69,8 +66,6 @@ test-suite codeworld-tasks-test
   ghc-options: -Wall -Werror -Wcompat -Widentities -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.11 && <5
-    , bytestring
-    , bytestring-trie
     , codeworld-tasks
     , containers
     , data-reify
