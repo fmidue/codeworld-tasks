@@ -2,6 +2,7 @@
 module CodeWorld.Test (
   module Abstract,
   module AbsTypes,
+  module Animation,
   module API,
   module Sharing,
   module Normalize,
@@ -23,6 +24,7 @@ import CodeWorld.Tasks.API as API
 import CodeWorld.Tasks.Types as Types hiding (Color(..))
 import CodeWorld.Test.Abstract as Abstract
 import CodeWorld.Test.AbsTypes as AbsTypes
+import CodeWorld.Test.Animation as Animation
 import CodeWorld.Test.Normalize as Normalize hiding (NormalizedPicture(..))
 import CodeWorld.Test.Normalize as N
 import CodeWorld.Test.Relative as Relative

@@ -34,6 +34,7 @@ library
       CodeWorld.Tasks.VectorSpace
       CodeWorld.Test.Abstract
       CodeWorld.Test.AbsTypes
+      CodeWorld.Test.Animation
       CodeWorld.Test.Examples
       CodeWorld.Test.Normalize
       CodeWorld.Test.Relative
