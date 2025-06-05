@@ -295,8 +295,12 @@ fromAngle (ToFull a) = a
 
 fromPosition :: Position -> Double
 fromPosition Zero    = 0
-fromPosition (Neg d) = -d
-fromPosition (Pos d) =  d
+fromPosition (Neg d) = fuzz $ -d
+fromPosition (Pos d) = fuzz d
+
+
+fuzz :: Double -> Double
+fuzz a = if abs a < 0.005 then 0 else a
 
 
 toPosition :: Double -> Position

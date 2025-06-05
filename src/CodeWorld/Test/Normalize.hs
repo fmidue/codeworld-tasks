@@ -388,7 +388,7 @@ getTranslation (Translate x y _)   = (x,y)
 getTranslation (Color _ p)         = getTranslation p
 getTranslation p                   = case p of
   (Polyline _ points) -> absPointsToAbsTranslation points
-  (Curve _ points) -> absPointsToAbsTranslation points
+  (Curve _ points) -> absPointsToAbsTranslation $ drop 1 points
   _ -> (0,0)
   where
     absPointsToAbsTranslation =
