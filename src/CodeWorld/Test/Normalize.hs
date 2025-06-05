@@ -204,6 +204,9 @@ instance Drawable NormalizedPicture where
   rotated a p
     | modAngle == 0 = p
     | otherwise = case p of
+      Scale fac1 fac2 c@(Circle {})
+        | modAngle == pi/2 || modAngle == 3*pi/2
+                      -> scaled (fromFactor fac2) (fromFactor fac1) c
       Rotate a2 q     -> rotated (a + fromAngle a2) q
       Reflect a2 q    -> reflected (fromAngle a2 + a/2) q
       Translate x y q -> Translate
