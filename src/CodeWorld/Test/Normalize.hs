@@ -323,12 +323,18 @@ handleFreeShape
   -> [AbsPoint]
   -> NormalizedPicture
 handleFreeShape isPolyline s1 s2 ps1 ps2
-  | toPoint (takeEnd 1 ps1) == toPoint (take 1 ps2)
+  | endPs1 == toPoints startPs2
     && s1 == s2
-  = func s1 (toPoint $ ps1 ++ drop 1 ps2)
-  | otherwise = pictures [func s1 (toPoint ps1), func s2 (toPoint ps2)]
+  = func s1 (toPoints $ ps1 ++ restPs2)
+  | endPs1 == toPoints startRevPs2
+    && s1 == s2
+  = func s1 (toPoints $ ps1 ++ endRevPs2)
+  | otherwise = pictures [func s1 (toPoints ps1), func s2 (toPoints ps2)]
     where
-      toPoint = map fromAbsPoint
+      toPoints = map fromAbsPoint
+      (startPs2,restPs2) = splitAt 1 ps2
+      (startRevPs2, endRevPs2) = splitAt 1 $ reverse ps2
+      endPs1 = toPoints $ takeEnd 1 ps1
       solidCurveHelper = handlePointList $ Curve Solid
       solidPolylineHelper = checkForRectangle Solid
 
