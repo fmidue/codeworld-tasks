@@ -296,7 +296,7 @@ pointsToRectangle shapeKind ps
   where
     (xLen,yLen) = sideLengths ps
     angle = rotationAngle originPs
-    (originPs,(x,y)) = atOriginWithOffset ps
+    (originPs,(x,y)) = atOriginWithOffset (drop 1 ps)
     shapeToUse = case shapeKind of
       Hollow Normal -> rectangle
       Hollow Thick  -> thickRectangle 1

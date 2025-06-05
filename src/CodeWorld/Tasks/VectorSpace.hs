@@ -24,7 +24,7 @@ module CodeWorld.Tasks.VectorSpace (
 
 
 import Data.Containers.ListUtils        (nubOrd)
-import Data.List.Extra                  (takeEnd)
+import Data.List.Extra                  (headDef, takeEnd)
 import Data.Maybe                       (fromMaybe)
 import Data.Tuple.Extra                 (both)
 import CodeWorld.Tasks.Types            (Point, Vector)
@@ -94,7 +94,11 @@ allOrthogonal _ = True
 
 
 sideLengths :: [Point] -> (Double,Double)
-sideLengths (p1:p2:p3:_) = (vectorLength (getVector p1 p2), vectorLength (getVector p2 p3))
+sideLengths (p@(xp,yp):ps) = (calc forX, calc forY)
+  where
+    forX = filter ((== yp) . snd) ps
+    forY = filter ((== xp) . fst) ps
+    calc val = vectorLength $ getVector (headDef p val) p
 sideLengths _ = (0,0)
 
 
