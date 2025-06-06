@@ -13,6 +13,7 @@ module CodeWorld.Tasks.VectorSpace (
   rotatedVector,
   dotProduct,
   -- other stuff
+  crossProduct,
   sideLengths,
   rotationAngle,
   isRectangle,
@@ -57,6 +58,10 @@ isOrthogonal p = (==0) . dotProduct p
 
 dotProduct :: Vector -> Vector -> Double
 dotProduct (x1,y1) (x2,y2) = x1*x2 + y1*y2
+
+
+crossProduct :: Vector -> Vector -> Double
+crossProduct (a,b) (c,d) = a*d - c*b
 
 
 vectorLength :: Vector -> Double

@@ -18,6 +18,7 @@ module CodeWorld.Test (
   reduceNoOrder,
   hasInnerPicture,
   innerPicture,
+  isIn,
 ) where
 
 
@@ -38,7 +39,8 @@ import CodeWorld.Tasks.Picture (
   ReifyPicture(..),
   toInterface,
   hasInnerPicture,
-  innerPicture
+  innerPicture,
+  isIn,
   )
 import Data.List (sort)
 
