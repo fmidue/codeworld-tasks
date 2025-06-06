@@ -44,6 +44,7 @@ module CodeWorld.Tasks.Picture (
   coordinatePlane,
   codeWorldLogo,
   blank,
+  isIn,
   ) where
 
 
@@ -52,12 +53,23 @@ import Data.Foldable                    (toList)
 import Data.IntMap                      (IntMap, Key)
 import Data.Reify                       (Graph(..), MuRef(..), reifyGraph)
 import Data.Text                        (Text)
+import Data.Tuple.Extra                 (both)
 import GHC.Generics                     (Generic)
 import qualified Data.IntMap            as IM
+import qualified Data.Text              as T
 
 import qualified CodeWorld.Tasks.API    as API
 import CodeWorld.Tasks.Types            (Font, TextStyle, Point, Color)
-
+import CodeWorld.Tasks.VectorSpace (
+  dilatedPoint,
+  vectorDifference,
+  rotatedPoint,
+  crossProduct,
+  dotProduct,
+  scaledPoint,
+  reflectedPoint,
+  vectorLength
+  )
 
 
 data ReifyPicture a
@@ -313,3 +325,66 @@ hasInnerPicture Dilate {} = True
 hasInnerPicture Reflect {} = True
 hasInnerPicture Clip {} = True
 hasInnerPicture _ = False
+
+
+isIn :: Picture -> (Point,Point) -> Bool
+isIn pic ((lowerX, upperX), (lowerY, upperY)) = handle pic ((lowerX,lowerY),(lowerX,upperY),(upperX,upperY),(upperX,lowerY))
+
+handle :: Picture -> (Point,Point,Point,Point) -> Bool
+handle (PRec p) corners@(a,b,c,d) = case p of
+  Rectangle x y -> rectangleCheck x y
+  ThickRectangle t x y -> rectangleCheck (x+t/2) (y+t/2)
+  SolidRectangle x y -> rectangleCheck x y
+  Circle r -> circleCheck r
+  ThickCircle t r -> circleCheck (r+t/2)
+  SolidCircle r -> circleCheck r
+  Polygon ps -> pointCheck ps
+  SolidPolygon ps -> pointCheck ps
+  ThickPolygon t ps -> pointCheck $ thickenLine t ps
+  ClosedCurve ps -> pointCheck ps
+  SolidClosedCurve ps -> pointCheck ps
+  ThickClosedCurve t ps -> pointCheck $ thickenLine t ps
+  Polyline ps -> pointCheck ps
+  ThickPolyline t ps -> pointCheck $ thickenLine t ps
+  Curve ps -> pointCheck ps
+  ThickCurve t ps -> pointCheck $ thickenLine t ps
+  Sector _ _ r -> circleCheck r
+  Arc _ _ r -> circleCheck r
+  ThickArc t _ _ r -> circleCheck (r+t/2)
+  Lettering t -> textCheck t
+  StyledLettering _ _ t ->  textCheck t
+  Color _ q -> q `handle` corners
+  Translate x y q -> q `handle` mapAll4 (vectorDifference (x,y)) corners
+  Scale x y q -> q `handle` mapAll4 (scaledPoint (1/x) (1/y)) corners
+  Dilate fac q -> q `handle` mapAll4 (dilatedPoint (1/fac)) corners
+  Rotate angle q -> q `handle` mapAll4 (rotatedPoint (-angle)) corners
+  Reflect angle q -> q `handle` mapAll4 (reflectedPoint angle) corners
+  Clip x y _ -> rectangleCheck x y
+  Pictures ps -> all (`handle` corners) ps
+  And p1 p2 -> p1 `handle` corners && p2 `handle` corners
+  CoordinatePlane -> rectangleCheck 20 20
+  Logo -> rectangleCheck 18 7
+  Blank -> True
+  where
+    epsilon = 0.005
+    pointCheck = all inRect
+    thickenLine t = map (both (+t/2))
+    distance v1 v2 =
+      let diff = vectorDifference v2 v1
+      in  crossProduct diff v1 / vectorLength diff
+
+    circleCheck r = inRect (0,0) && all (\(v1,v2) -> distance v1 v2 + epsilon >= r) [(a,b),(b,c),(c,d),(d,a)]
+
+    rectangleCheck x y = pointCheck [(-(x/2),-(y/2)), (-(x/2),y/2), (x/2,y/2), (x/2,-(y/2))]
+    textCheck t = rectangleCheck (fromIntegral $ T.length t) 1
+
+    inRect point =
+      let
+        ab = vectorDifference b a
+        ad = vectorDifference d a
+        ap = vectorDifference point a
+      in
+        -epsilon <= dotProduct ap ab && dotProduct ap ab <= dotProduct ab ab + epsilon &&
+        -epsilon <= dotProduct ap ad && dotProduct ap ad <= dotProduct ad ad + epsilon
+
+    mapAll4 f (w,x,y,z) = (f w, f x, f y, f z)
