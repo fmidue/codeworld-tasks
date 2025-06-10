@@ -15,6 +15,7 @@ module CodeWorld.Test (
   N.NormalizedPicture,
   normalize,
   reduce,
+  reduceNoOrder,
   hasInnerPicture,
   innerPicture,
 ) where
@@ -26,7 +27,7 @@ import CodeWorld.Test.Abstract as Abstract
 import CodeWorld.Test.AbsTypes as AbsTypes
 import CodeWorld.Test.Animation as Animation
 import CodeWorld.Test.Normalize as Normalize hiding (NormalizedPicture(..))
-import CodeWorld.Test.Normalize as N
+import qualified CodeWorld.Test.Normalize as N
 import CodeWorld.Test.Relative as Relative
 import CodeWorld.Sharing.Feedback as Sharing
 import CodeWorld.Test.Solution as Solution
@@ -39,6 +40,7 @@ import CodeWorld.Tasks.Picture (
   hasInnerPicture,
   innerPicture
   )
+import Data.List (sort)
 
 
 -- Normalize the picture
@@ -48,3 +50,9 @@ normalize = toInterface
 -- Normalize the picture then convert back into an un-normalized syntax tree
 reduce :: Picture -> Picture
 reduce = toConcretePicture . toInterface
+
+-- reduce and also ignore canvas order
+reduceNoOrder :: Picture -> Picture
+reduceNoOrder p = case reduce p of
+  PRec (Pictures ps) -> PRec $ Pictures $ sort ps
+  rp                 -> rp
