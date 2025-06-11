@@ -2,6 +2,7 @@
 {-# language DeriveGeneric #-}
 {-# language DeriveAnyClass #-}
 {-# language TypeFamilies #-}
+{-# language ViewPatterns #-}
 
 module CodeWorld.Tasks.Picture (
   ReifyPicture(..),
@@ -116,7 +117,7 @@ rectangle :: Double -> Double -> Picture
 rectangle x = PRec . Rectangle x
 
 thickRectangle :: Double -> Double -> Double -> Picture
-thickRectangle t x = PRec . ThickRectangle t x
+thickRectangle (validThickness -> t) x = PRec . ThickRectangle t x
 
 solidRectangle :: Double -> Double -> Picture
 solidRectangle x = PRec . SolidRectangle x
@@ -125,9 +126,9 @@ circle :: Double -> Picture
 circle = PRec . Circle
 
 thickCircle :: Double -> Double -> Picture
-thickCircle t r
+thickCircle (validThickness -> t) r
   | t <= 2 * r = PRec $ ThickCircle t r
-  | otherwise = error "The line width of a thickCircle must not be greater than the diameter."
+  | otherwise  = error "The line width of a thickCircle must not be greater than the diameter."
 
 solidCircle :: Double -> Picture
 solidCircle = PRec . SolidCircle
@@ -139,19 +140,19 @@ sector :: Double -> Double -> Double -> Picture
 sector a1 a2 = PRec . Sector a1 a2
 
 thickArc :: Double -> Double -> Double -> Double -> Picture
-thickArc t a1 a2 = PRec . ThickArc t a1 a2
+thickArc (validThickness -> t) a1 a2 = PRec . ThickArc t a1 a2
 
 curve :: [Point] -> Picture
 curve = PRec . Curve
 
 thickCurve :: Double -> [Point] -> Picture
-thickCurve t = PRec . ThickCurve t
+thickCurve (validThickness -> t) = PRec . ThickCurve t
 
 closedCurve :: [Point] -> Picture
 closedCurve = PRec . ClosedCurve
 
 thickClosedCurve :: Double -> [Point] -> Picture
-thickClosedCurve t = PRec . ThickClosedCurve t
+thickClosedCurve (validThickness -> t) = PRec . ThickClosedCurve t
 
 solidClosedCurve :: [Point] -> Picture
 solidClosedCurve = PRec . SolidClosedCurve
@@ -160,13 +161,13 @@ polyline :: [Point] -> Picture
 polyline = PRec . Polyline
 
 thickPolyline :: Double -> [Point] -> Picture
-thickPolyline t = PRec . ThickPolyline t
+thickPolyline (validThickness -> t) = PRec . ThickPolyline t
 
 polygon :: [Point] -> Picture
 polygon = PRec . Polygon
 
 thickPolygon :: Double -> [Point] -> Picture
-thickPolygon t = PRec . ThickPolygon t
+thickPolygon (validThickness -> t) = PRec . ThickPolygon t
 
 solidPolygon :: [Point] -> Picture
 solidPolygon = PRec . SolidPolygon
@@ -390,3 +391,9 @@ handle (PRec p) corners@(a,b,c,d) = case p of
         -epsilon <= dotProduct ap ad && dotProduct ap ad <= dotProduct ad ad + epsilon
 
     mapAll4 f (w,x,y,z) = (f w, f x, f y, f z)
+
+
+validThickness :: Double -> Double
+validThickness t
+  | t < 0     = error "The line width must be non-negative."
+  | otherwise = t
