@@ -108,7 +108,7 @@ instance Drawable NormalizedPicture where
   solidCircle r = Circle Solid $ toSize r
 
   thickCircle 0 _ = blank
-  thickCircle t (abs -> r)
+  thickCircle (validThickness -> t) (abs -> r)
     | t <= 2 * r = Circle shape $ toSize (r + t/2)
     | otherwise = error $
         "The line width of a thickCircle must not be greater than the diameter. " ++
@@ -128,7 +128,7 @@ instance Drawable NormalizedPicture where
 
   thickRectangle _ 0 _ = blank
   thickRectangle _ _ 0 = blank
-  thickRectangle (max 0 -> t) (abs -> l) (abs -> w) =
+  thickRectangle (validThickness -> t) (abs -> l) (abs -> w) =
       toWideRectangle shape (l + t/2) (w + t/2)
     where
       shape
@@ -137,21 +137,21 @@ instance Drawable NormalizedPicture where
 
   arc      = checkForCircle $ Hollow Normal
   sector   = checkForCircle Solid
-  thickArc = checkForCircle . Hollow . thickness
+  thickArc (validThickness -> t) = checkForCircle $ Hollow $ thickness t
 
   curve            = handlePointList $ Curve $ Hollow Normal
-  thickCurve t     = handlePointList $ Curve $ Hollow $ thickness t
+  thickCurve (validThickness -> t) = handlePointList $ Curve $ Hollow $ thickness t
   solidClosedCurve = handlePointList (Curve Solid) . toOpenShape
 
   closedCurve        = curve . toOpenShape
-  thickClosedCurve t = thickCurve t . toOpenShape
+  thickClosedCurve (validThickness -> t) = thickCurve t . toOpenShape
 
   polyline        = checkForRectangle $ Hollow Normal
-  thickPolyline t = checkForRectangle $ Hollow $ thickness t
+  thickPolyline (validThickness -> t) = checkForRectangle $ Hollow $ thickness t
   solidPolygon    = checkForRectangle Solid . toOpenShape
 
   polygon        = polyline . toOpenShape
-  thickPolygon t = thickPolyline t . toOpenShape
+  thickPolygon (validThickness -> t) = thickPolyline t . toOpenShape
 
   lettering "" = blank
   lettering t  = Lettering t
@@ -528,3 +528,11 @@ toConcretePicture p = P.PRec $ case p of
     _             -> P.Sector) (fromAngle a1) (fromAngle a2) (fromSize s)
   Reflect a q -> P.Reflect (fromAngle a) $ toConcretePicture q
   Clip sx sy q -> P.Clip (fromSize sx) (fromSize sy) $ toConcretePicture q
+
+
+validThickness :: Double -> Double
+validThickness t
+  | t < 0     = error $
+      "The line width must be non-negative. " ++
+      "(This error was thrown inside the test suite)"
+  | otherwise = t
