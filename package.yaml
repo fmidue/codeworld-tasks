@@ -20,6 +20,7 @@ dependencies:
   - extra
   - mtl
   - text
+  - uniplate
 
 ghc-options:
   - -Wall

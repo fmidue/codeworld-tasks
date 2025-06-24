@@ -1,4 +1,5 @@
 {-# language DeriveTraversable #-}
+{-# language DeriveDataTypeable #-}
 {-# language DeriveGeneric #-}
 {-# language DeriveAnyClass #-}
 {-# language TypeFamilies #-}
@@ -50,6 +51,7 @@ module CodeWorld.Tasks.Picture (
 
 
 import Control.DeepSeq                  (NFData)
+import Data.Data                        (Data, Typeable)
 import Data.Foldable                    (toList)
 import Data.IntMap                      (IntMap, Key)
 import Data.Reify                       (Graph(..), MuRef(..), reifyGraph)
@@ -107,10 +109,10 @@ data ReifyPicture a
   | CoordinatePlane
   | Logo
   | Blank
-  deriving (Show, Foldable, Eq, Ord, Generic, NFData)
+  deriving (Show, Foldable, Eq, Ord, Generic, NFData, Data, Typeable)
 
 
-newtype Picture = PRec (ReifyPicture Picture) deriving (Show,Eq,Ord,Generic,NFData)
+newtype Picture = PRec (ReifyPicture Picture) deriving (Show,Eq,Ord,Generic,NFData,Data,Typeable)
 
 
 rectangle :: Double -> Double -> Picture
