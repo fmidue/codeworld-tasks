@@ -1,6 +1,8 @@
+{-# language DeriveDataTypeable #-}
 {-# language FlexibleInstances #-}
 {-# language OverloadedStrings #-}
 {-# language ViewPatterns #-}
+{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module CodeWorld.Test.Normalize (
   NormalizedPicture(..),
@@ -27,9 +29,12 @@ module CodeWorld.Test.Normalize (
   ) where
 
 
+import Data.Data                        (Data,Typeable)
 import Data.Text                        (Text)
-import Data.List.Extra                  (takeEnd)
+import Data.List.Extra                  (headDef, takeEnd)
+import Data.Maybe                       (listToMaybe)
 import Data.Tuple.Extra                 (both)
+import Data.Generics.Uniplate.Data      (transform, universe)
 
 import CodeWorld.Tasks.API              (Drawable(..))
 import CodeWorld.Tasks.Types            (Point)
@@ -65,7 +70,7 @@ data NormalizedPicture
   | Arc !ShapeKind !Angle !Angle !Size
   | Reflect !Angle !NormalizedPicture
   | Clip !Size !Size !NormalizedPicture
-  deriving (Show,Eq,Ord)
+  deriving (Show,Eq,Ord,Data,Typeable)
 
 
 instance Drawable NormalizedPicture where
@@ -416,12 +421,7 @@ getColor _           = Just $ HSL 0 0 0
 
 
 getScalingFactors :: NormalizedPicture -> (Factor,Factor)
-getScalingFactors (Scale f1 f2 _)   = (f1,f2)
-getScalingFactors (Translate _ _ p) = getScalingFactors p
-getScalingFactors (Reflect _ p)     = getScalingFactors p
-getScalingFactors (Rotate _ p)      = getScalingFactors p
-getScalingFactors (Color _ p)       = getScalingFactors p
-getScalingFactors _                 = (Same, Same)
+getScalingFactors p = headDef (Same,Same) [(f1,f2) | Scale f1 f2 _ <- universe p]
 
 
 getExactScalingFactors :: NormalizedPicture -> (Double,Double)
@@ -429,12 +429,7 @@ getExactScalingFactors = both fromFactor . getScalingFactors
 
 
 getRotation :: NormalizedPicture -> Maybe Angle
-getRotation (Scale _ _ p)   = getRotation p
-getRotation (Translate _ _ p) = getRotation p
-getRotation (Reflect _ p)     = getRotation p
-getRotation (Color _ p)       = getRotation p
-getRotation (Rotate a _)      = Just a
-getRotation _                 = Nothing
+getRotation p = listToMaybe [a | Rotate a _ <- universe p]
 
 
 getExactRotation :: NormalizedPicture -> Double
@@ -442,12 +437,7 @@ getExactRotation = maybe 0 fromAngle . getRotation
 
 
 getReflectionAngle :: NormalizedPicture -> Maybe Angle
-getReflectionAngle (Scale _ _ p)     = getReflectionAngle p
-getReflectionAngle (Translate _ _ p) = getReflectionAngle p
-getReflectionAngle (Color _ p)       = getReflectionAngle p
-getReflectionAngle (Rotate _ p)      = getReflectionAngle p
-getReflectionAngle (Reflect a _)     = Just a
-getReflectionAngle _                 = Nothing
+getReflectionAngle p = listToMaybe [a | Reflect a _ <- universe p]
 
 
 getExactReflectionAngle :: NormalizedPicture -> Double
@@ -455,14 +445,8 @@ getExactReflectionAngle = maybe 0 fromAngle . getReflectionAngle
 
 
 getCircleRadius :: NormalizedPicture -> Maybe Size
-getCircleRadius (Scale _ _ p)     = getCircleRadius p
-getCircleRadius (Translate _ _ p) = getCircleRadius p
-getCircleRadius (Color _ p)       = getCircleRadius p
-getCircleRadius (Rotate _ p)      = getCircleRadius p
-getCircleRadius (Reflect _ p)     = getCircleRadius p
-getCircleRadius (Circle _ s)      = Just s
-getCircleRadius (Arc _ _ _ s)     = Just s
-getCircleRadius _                 = Nothing
+getCircleRadius p = let elements = universe p in
+  listToMaybe $ [s | Circle _ s <- elements] ++ [s | Arc _ _ _ s <- elements]
 
 
 getExactCircleRadius :: NormalizedPicture -> Maybe Double
@@ -470,13 +454,7 @@ getExactCircleRadius = fmap fromSize . getCircleRadius
 
 
 getRectangleLengths :: NormalizedPicture -> Maybe (Size,Size)
-getRectangleLengths (Scale _ _ p)       = getRectangleLengths p
-getRectangleLengths (Translate _ _ p)   = getRectangleLengths p
-getRectangleLengths (Color _ p)         = getRectangleLengths p
-getRectangleLengths (Rotate _ p)        = getRectangleLengths p
-getRectangleLengths (Reflect _ p)       = getRectangleLengths p
-getRectangleLengths (Rectangle _ sx sy) = Just (sx,sy)
-getRectangleLengths _                   = Nothing
+getRectangleLengths p = listToMaybe [(sx,sy) | Rectangle _ sx sy <- universe p]
 
 
 getExactRectangleLengths :: NormalizedPicture -> Maybe (Double,Double)

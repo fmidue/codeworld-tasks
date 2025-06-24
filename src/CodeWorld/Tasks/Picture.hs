@@ -54,9 +54,11 @@ import Control.DeepSeq                  (NFData)
 import Data.Data                        (Data, Typeable)
 import Data.Foldable                    (toList)
 import Data.IntMap                      (IntMap, Key)
+import Data.List.Extra                  (headDef)
 import Data.Reify                       (Graph(..), MuRef(..), reifyGraph)
 import Data.Text                        (Text)
 import Data.Tuple.Extra                 (both)
+import Data.Generics.Uniplate.Data      (children)
 import GHC.Generics                     (Generic)
 import qualified Data.IntMap            as IM
 import qualified Data.Text              as T
@@ -310,26 +312,12 @@ toInterface (PRec p) = case p of
   Blank -> API.blank
 
 
-innerPicture :: ReifyPicture Picture -> ReifyPicture Picture
-innerPicture (Color _ (PRec p)) = p
-innerPicture (Translate _ _ (PRec p)) = p
-innerPicture (Rotate _ (PRec p)) = p
-innerPicture (Scale _ _ (PRec p)) = p
-innerPicture (Dilate _ (PRec p)) = p
-innerPicture (Reflect _ (PRec p)) = p
-innerPicture (Clip _ _ (PRec p)) = p
-innerPicture p = p
+innerPicture :: Picture -> Picture
+innerPicture p = headDef p $ children p
 
 
-hasInnerPicture :: ReifyPicture a -> Bool
-hasInnerPicture Color {} = True
-hasInnerPicture Translate {} = True
-hasInnerPicture Rotate {} = True
-hasInnerPicture Scale {} = True
-hasInnerPicture Dilate {} = True
-hasInnerPicture Reflect {} = True
-hasInnerPicture Clip {} = True
-hasInnerPicture _ = False
+hasInnerPicture :: Picture -> Bool
+hasInnerPicture = not . null . children
 
 
 isIn :: Picture -> (Point,Point) -> Bool
