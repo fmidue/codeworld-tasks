@@ -1,4 +1,5 @@
 {-# language DeriveAnyClass #-}
+{-# language DeriveDataTypeable #-}
 {-# language DeriveGeneric #-}
 {-# language ViewPatterns #-}
 
@@ -42,6 +43,7 @@ module CodeWorld.Tasks.Types (
 
 
 import Control.DeepSeq                  (NFData)
+import Data.Data                        (Data)
 import Data.Text                        (Text)
 import GHC.Generics                     (Generic)
 
@@ -54,7 +56,7 @@ data TextStyle
   = Plain
   | Bold
   | Italic
-  deriving (Eq,Ord,Show,Generic,NFData)
+  deriving (Eq,Ord,Show,Generic,NFData,Data)
 
 
 data Font
@@ -64,7 +66,7 @@ data Font
   | Handwriting
   | Fancy
   | NamedFont Text
-  deriving (Eq,Ord,Show,Generic,NFData)
+  deriving (Eq,Ord,Show,Generic,NFData,Data)
 
 
 data Color
@@ -93,7 +95,7 @@ data Color
   | HSL Double Double Double
   | RGBA Double Double Double Double
   | AnyColor
-  deriving (Eq,Ord,Show,Generic,NFData)
+  deriving (Eq,Ord,Show,Generic,NFData,Data)
 
 type Colour = Color
 

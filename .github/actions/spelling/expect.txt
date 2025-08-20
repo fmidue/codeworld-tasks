@@ -3,3 +3,4 @@ hashcons
 NTypes
 Preds
 triecons
+Uniplate

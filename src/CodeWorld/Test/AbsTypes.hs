@@ -1,3 +1,4 @@
+{-# language DeriveDataTypeable #-}
 {-# language ViewPatterns #-}
 
 module CodeWorld.Test.AbsTypes (
@@ -28,6 +29,7 @@ module CodeWorld.Test.AbsTypes (
 ) where
 
 
+import Data.Data                        (Data)
 import Data.Tuple.Extra                 (both)
 
 import CodeWorld.Tasks.Types            (Color, Point)
@@ -35,20 +37,20 @@ import qualified CodeWorld.Tasks.Types  as T
 
 
 
-newtype Size = Size Double deriving (Ord)
-newtype AbsPoint = AbsPoint {unAbsPoint :: (Position,Position)} deriving (Ord,Show)
+newtype Size = Size Double deriving (Ord,Data)
+newtype AbsPoint = AbsPoint {unAbsPoint :: (Position,Position)} deriving (Ord,Show,Data)
 
 
 data Thickness
   = Normal
   | Thick
-  deriving (Show,Eq,Ord)
+  deriving (Show,Eq,Ord,Data)
 
 
 data ShapeKind
   = Hollow Thickness
   | Solid
-  deriving (Ord,Show)
+  deriving (Ord,Show,Data)
 
 
 data Angle
@@ -56,28 +58,28 @@ data Angle
   | ToHalf Double
   | ToThreeQuarter Double
   | ToFull Double
-  deriving (Ord)
+  deriving (Ord,Data)
 
 
 data Position
   = Neg Double
   | Zero
   | Pos Double
-  deriving (Ord)
+  deriving (Ord,Data)
 
 
 data Factor
   = Smaller Double
   | Same
   | Larger Double
-  deriving (Ord)
+  deriving (Ord,Data)
 
 
 data AbsColor
   = HSL Double Double Double
   | Translucent Double AbsColor
   | AnyColor -- used as a wildcard in tests
-  deriving (Ord,Show)
+  deriving (Ord,Show,Data)
 
 
 instance Eq AbsColor where
