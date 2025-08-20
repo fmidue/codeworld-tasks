@@ -1,6 +1,4 @@
 codeworld
 hashcons
-NTypes
 Preds
-triecons
 Uniplate
