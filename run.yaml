@@ -1,0 +1,20 @@
+---
+resolver: nightly-2024-03-20
+
+packages:
+  - .
+  - run-codeworld-tasks
+
+extra-deps:
+  - git: https://github.com/fmidue/IOTasks
+    commit: 659385853299b4fcb27bd26e7ab185af27a9d00a
+  - git: https://github.com/IagoAbal/haskell-z3
+    commit: 6368e451e45359563106da7e917f6594453c5161
+  - git: https://github.com/owestphal/type-match
+    commit: e1afab43d2e8bfa5e2006492ed34060036e7be51
+  - git: https://github.com/fmidue/haskell-template-task
+    commit: 81278a30d63449879c39f403a2cad108ab0785ec
+    subdirs:
+      - .
+      - raw 
+  - hint-0.9.0.8
