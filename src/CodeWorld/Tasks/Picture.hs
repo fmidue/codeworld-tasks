@@ -312,12 +312,22 @@ toInterface (PRec p) = case p of
   Blank -> API.blank
 
 
+{-
+The next two functions should never be used on `And` or `Pictures` for this to make any sense.
+This is currently the case, but could be problematic if this is used on non-reduced trees
+where those constructors could appear somewhere inside the structure.
+TODO: Change return type to [Picture] and adjust the tests.
+-}
 innerPicture :: Picture -> Picture
-innerPicture p = headDef p $ children p
+innerPicture p@(PRec (Pictures {})) = p
+innerPicture p@(PRec (And {}))      = p
+innerPicture p                      = headDef p $ children p
 
 
 hasInnerPicture :: Picture -> Bool
-hasInnerPicture = not . null . children
+hasInnerPicture (PRec (Pictures {})) = False
+hasInnerPicture (PRec (And {}))      = False
+hasInnerPicture p                    = not $ null $ children p
 
 
 isIn :: Picture -> (Point,Point) -> Bool

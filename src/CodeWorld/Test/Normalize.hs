@@ -421,7 +421,7 @@ getColor _           = Just $ HSL 0 0 0
 
 
 getScalingFactors :: NormalizedPicture -> (Factor,Factor)
-getScalingFactors p = headDef (Same,Same) [(f1,f2) | Scale f1 f2 _ <- universe p]
+getScalingFactors p = headDef (Same,Same) [(f1,f2) | isBasic p, Scale f1 f2 _ <- universe p]
 
 
 getExactScalingFactors :: NormalizedPicture -> (Double,Double)
@@ -429,7 +429,7 @@ getExactScalingFactors = both fromFactor . getScalingFactors
 
 
 getRotation :: NormalizedPicture -> Maybe Angle
-getRotation p = listToMaybe [a | Rotate a _ <- universe p]
+getRotation p = listToMaybe [a | isBasic p, Rotate a _ <- universe p]
 
 
 getExactRotation :: NormalizedPicture -> Double
@@ -437,7 +437,7 @@ getExactRotation = maybe 0 fromAngle . getRotation
 
 
 getReflectionAngle :: NormalizedPicture -> Maybe Angle
-getReflectionAngle p = listToMaybe [a | Reflect a _ <- universe p]
+getReflectionAngle p = listToMaybe [a | isBasic p, Reflect a _ <- universe p]
 
 
 getExactReflectionAngle :: NormalizedPicture -> Double
@@ -445,8 +445,12 @@ getExactReflectionAngle = maybe 0 fromAngle . getReflectionAngle
 
 
 getCircleRadius :: NormalizedPicture -> Maybe Size
-getCircleRadius p = let elements = universe p in
-  listToMaybe $ [s | Circle _ s <- elements] ++ [s | Arc _ _ _ s <- elements]
+getCircleRadius p
+  | isBasic p = let elements = universe p
+    in listToMaybe $
+      [s | Circle _ s  <- elements] ++
+      [s | Arc _ _ _ s <- elements]
+  | otherwise = Nothing
 
 
 getExactCircleRadius :: NormalizedPicture -> Maybe Double
@@ -454,7 +458,7 @@ getExactCircleRadius = fmap fromSize . getCircleRadius
 
 
 getRectangleLengths :: NormalizedPicture -> Maybe (Size,Size)
-getRectangleLengths p = listToMaybe [(sx,sy) | Rectangle _ sx sy <- universe p]
+getRectangleLengths p = listToMaybe [(sx,sy) | isBasic p, Rectangle _ sx sy <- universe p]
 
 
 getExactRectangleLengths :: NormalizedPicture -> Maybe (Double,Double)
@@ -471,6 +475,13 @@ getExactPointList _               = []
 getSubPictures :: NormalizedPicture -> [NormalizedPicture]
 getSubPictures (Pictures xs) = xs
 getSubPictures p = [p]
+
+
+
+isBasic :: NormalizedPicture -> Bool
+isBasic (Pictures {}) = False
+isBasic (Clip {}) = False
+isBasic _ = True
 
 
 toConcretePicture :: NormalizedPicture -> P.Picture
