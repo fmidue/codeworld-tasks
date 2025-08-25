@@ -2,6 +2,7 @@ codeworld
 hashcons
 Leijen
 lhs
+libz3
 OSX
 Preds
 rhs
