@@ -1,4 +1,11 @@
 codeworld
 hashcons
+Leijen
+lhs
+OSX
 Preds
+rhs
+SChar
+SEmpty
+SText
 Uniplate
