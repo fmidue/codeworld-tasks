@@ -1,0 +1,27 @@
+module Task03 where
+
+import CodeWorld
+import Prelude hiding (($)) -- just preventing some syntax that might confuse beginners
+
+-- Draw the longitudinal section (the vertical version of a cross
+-- section) of an egg. You may use the following picture as guidance:
+--
+--   https://code.world/run.html?mode=haskell&dhash=DantMBam23_YjOgmx241lZw
+--
+-- Your picture should consist of an oval gray shell surrounding the
+-- egg white which has a round, yellow yolk inside.
+--
+-- (Mathematically, the egg form can simply be an ellipse/stretched circle.)
+--
+-- You can look up how to produce and transform relevant shapes in the
+-- CodeWorld documentation and in the example(s) from the lecture.
+
+main :: IO ()
+main = drawingOf scene
+
+scene :: Picture
+scene = dilated 2 (
+  translated 0 (-0.15) (colored yellow (solidCircle 0.575)) &
+  colored (light gray) (scaled 1 1.25 (thickCircle 0.1 1))
+  )
+
