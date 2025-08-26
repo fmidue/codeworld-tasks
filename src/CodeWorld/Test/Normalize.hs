@@ -23,7 +23,6 @@ module CodeWorld.Test.Normalize (
   getExactRectangleLengths,
   getExactPointList,
   getSubPictures,
-  stripToShape,
   stripTranslation,
   toConcretePicture,
   ) where
@@ -364,11 +363,10 @@ handleFreeShape isPolyline s1 s2 ps1 ps2
           | otherwise  -> solidCurveHelper
 
 
-stripToShape :: NormalizedPicture -> NormalizedPicture
-stripToShape (Color _ p) = p
-stripToShape p = p
-
-
+{-|
+True if the first image contains the second image.
+This uses fuzzy comparison.
+-}
 contains :: NormalizedPicture -> NormalizedPicture -> Bool
 p `contains` (Pictures ps) = all (contains p) ps
 (Pictures ps) `contains` p = any (`contains` p) ps
@@ -397,6 +395,10 @@ stripTranslation (Color c p) = Color c $ stripTranslation p
 stripTranslation p                 = p
 
 
+{-|
+Returns the abstract translation of the image.
+Neutral translation if none.
+-}
 getTranslation :: NormalizedPicture -> (Position, Position)
 getTranslation (Translate x y _)   = (x,y)
 getTranslation (Color _ p)         = getTranslation p
@@ -409,6 +411,10 @@ getTranslation p                   = case p of
       both toPosition . snd . atOriginWithOffset . map fromAbsPoint
 
 
+{-|
+Returns the actual translation of the image.
+(0,0) if none.
+-}
 getExactTranslation :: NormalizedPicture -> (Double, Double)
 getExactTranslation = both fromPosition . getTranslation
 
@@ -421,6 +427,11 @@ couldHaveTranslation (Color _ (Translate {})) = True
 couldHaveTranslation _            = False
 
 
+{-|
+Returns the `AbsColor` of the image.
+Nothing if it is one of logo or coordinate plane.
+Black if none.
+-}
 getColor :: NormalizedPicture -> Maybe AbsColor
 getColor (Color c _) = Just c
 getColor Blank       = Nothing
@@ -428,30 +439,53 @@ getColor Logo        = Nothing
 getColor _           = Just $ HSL 0 0 0
 
 
+{-|
+Returns the abstract scaling factors of the image.
+Neutral factors if none.
+-}
 getScalingFactors :: NormalizedPicture -> (Factor,Factor)
 getScalingFactors p = headDef (Same,Same) [(f1,f2) | isBasic p, Scale f1 f2 _ <- universe p]
 
 
+{-|
+Returns actual scaling factors of the image.
+(1,1) if none.
+-}
 getExactScalingFactors :: NormalizedPicture -> (Double,Double)
 getExactScalingFactors = both fromFactor . getScalingFactors
 
 
+{-|
+Returns abstract rotation of the image if it has any.
+-}
 getRotation :: NormalizedPicture -> Maybe Angle
 getRotation p = listToMaybe [a | isBasic p, Rotate a _ <- universe p]
 
 
+{-|
+Returns actual rotation of the image if it has any.
+-}
 getExactRotation :: NormalizedPicture -> Double
 getExactRotation = maybe 0 fromAngle . getRotation
 
 
+{-|
+Returns abstract reflection of the image if it has any.
+-}
 getReflectionAngle :: NormalizedPicture -> Maybe Angle
 getReflectionAngle p = listToMaybe [a | isBasic p, Reflect a _ <- universe p]
 
 
+{-|
+Returns actual reflection of the image if it has any.
+-}
 getExactReflectionAngle :: NormalizedPicture -> Double
 getExactReflectionAngle = maybe 0 fromAngle . getReflectionAngle
 
 
+{-|
+Returns abstract radius of the image if it actually a circle or circle segment.
+-}
 getCircleRadius :: NormalizedPicture -> Maybe Size
 getCircleRadius p
   | isBasic p = let elements = universe p
@@ -461,18 +495,31 @@ getCircleRadius p
   | otherwise = Nothing
 
 
+{-|
+Returns actual radius of the image if it actually a circle or circle segment.
+-}
 getExactCircleRadius :: NormalizedPicture -> Maybe Double
 getExactCircleRadius = fmap fromSize . getCircleRadius
 
 
+{-|
+Returns abstract side lengths of the image if it actually a rectangle.
+-}
 getRectangleLengths :: NormalizedPicture -> Maybe (Size,Size)
 getRectangleLengths p = listToMaybe [(sx,sy) | isBasic p, Rectangle _ sx sy <- universe p]
 
 
+{-|
+Returns actual side lengths of the image if it actually a rectangle.
+-}
 getExactRectangleLengths :: NormalizedPicture -> Maybe (Double,Double)
 getExactRectangleLengths = fmap (both fromSize) . getRectangleLengths
 
 
+{-|
+Returns actual list of points in the image if it is a /free shape/,
+[] otherwise.
+-}
 getExactPointList :: NormalizedPicture -> [Point]
 getExactPointList (Curve _ ps) = map fromAbsPoint ps
 getExactPointList (Polyline _ ps) = map fromAbsPoint ps
@@ -492,6 +539,11 @@ isBasic (Clip {}) = False
 isBasic _ = True
 
 
+{- |
+Transform a `NormalizedPicture` into a `Picture`.
+Used to compare normalized sample solution to student submission in plain form.
+This only makes sense if there's exactly one way to solve the given task.
+-}
 toConcretePicture :: NormalizedPicture -> P.Picture
 toConcretePicture p = P.PRec $ case p of
   Rectangle sk sx sy -> (case sk of
