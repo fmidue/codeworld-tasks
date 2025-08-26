@@ -10,7 +10,7 @@ This currently only works on Unix systems (OSX untested, but likely works), **Mi
 
 First, follow the usual Student workflow:
 
-1. Copy a task from `examples/tasks` into the [CodeWorld](https://code.world/haskell) editor.
+1. Copy a task from `examples/tasks` into the [CodeWorld editor](https://code.world/haskell).
 1. Work on the task until you think you've solved it.
 1. Paste your solution back into the template.
 
@@ -18,8 +18,8 @@ Now to simulate the grading process:
 
 1. Install the z3 theorem prover (`sudo apt-get install libz3-dev` or similar)
 1. Install [Haskell Stack](https://docs.haskellstack.org/en/stable/#__tabbed_2_1)
-1. Optionally set an alias for `stack run test-task --stack-yaml run.yaml`
-1. Execute `stack run test-task --stack-yaml run.yaml examples/configs/<Task> <examples/tasks/<Task>`
+1. Optionally set an alias for `stack run --stack-yaml run.yaml`
+1. Execute `stack run --stack-yaml run.yaml examples/configs/<Task> <examples/tasks/<Task>`
 
 The submission will either be rejected or accepted and feedback be printed directly into the console.
 Running the stack command may take a while the first time, since a lot of dependencies will have to be installed.
