@@ -1,4 +1,5 @@
 codeworld
+ghci
 hashcons
 Leijen
 lhs
