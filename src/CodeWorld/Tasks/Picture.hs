@@ -204,6 +204,7 @@ curve = PRec . Curve
 
 {-|
 Draw a curve with this line width passing through the provided points via a number of bézier splices.
+Specifying a negative line width causes a runtime error (mirrors behaviour in CodeWorld editor).
 -}
 thickCurve :: Double -> [Point] -> Picture
 thickCurve (validThickness -> t) = PRec . ThickCurve t
@@ -235,6 +236,7 @@ polyline = PRec . Polyline
 
 {-|
 Draw a sequence of line segments with this line width passing through the provided points.
+Specifying a negative line width causes a runtime error (mirrors behaviour in CodeWorld editor).
 -}
 thickPolyline :: Double -> [Point] -> Picture
 thickPolyline (validThickness -> t) = PRec . ThickPolyline t
