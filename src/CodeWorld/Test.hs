@@ -45,15 +45,26 @@ import CodeWorld.Tasks.Picture (
 import Data.List (sort)
 
 
--- Normalize the picture
+{- |
+Convert a `Picture` into a t`CodeWorld.Test.NormalizedPicture`.
+This applies a number of simplifications, abstractions and rearrangements on the syntax tree of the image.
+The result is a new tree in /canonical/ form.
+-}
 normalize :: Picture -> N.NormalizedPicture
 normalize = toInterface
 
--- Normalize the picture then convert back into an un-normalized syntax tree
+{- |
+Apply `normalize`, then re-concretize the abstracted syntax tree.
+The result is a new syntax tree, which draws the same image,
+but was simplified and rearranged via `normalize`'s rules.
+-}
 reduce :: Picture -> Picture
 reduce = toConcretePicture . toInterface
 
--- reduce and also ignore canvas order
+{- |
+Same as `reduce`,
+but also erases information on which subpictures are drawn in front or behind others.
+-}
 reduceNoOrder :: Picture -> Picture
 reduceNoOrder p = case reduce p of
   PRec (Pictures ps) -> PRec $ Pictures $ sort ps

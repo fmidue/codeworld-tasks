@@ -22,8 +22,8 @@ module CodeWorld.Tasks.Types (
   brown,
   pink,
   purple,
-  gray,
   grey,
+  gray,
   mixed,
   lighter,
   light,
@@ -49,9 +49,22 @@ import GHC.Generics                     (Generic)
 
 
 
+{-|
+A point in 2D space.
+Synonym for a pair of `Double` values.
+-}
 type Point = (Double,Double)
+
+{-|
+A vector in 2D space.
+Synonym for a pair of `Double` values.
+-}
 type Vector = (Double,Double)
 
+
+{-|
+Font modifier type used for stylized message rendering.
+-}
 data TextStyle
   = Plain
   | Bold
@@ -59,6 +72,9 @@ data TextStyle
   deriving (Eq,Ord,Show,Generic,NFData,Data)
 
 
+{-|
+Text font type used for stylized message rendering.
+-}
 data Font
   = SansSerif
   | Serif
@@ -69,6 +85,10 @@ data Font
   deriving (Eq,Ord,Show,Generic,NFData,Data)
 
 
+{-|
+Color type mirroring CodeWorld's equivalent type.
+The exposed constructors allow for setting colors directly via numerical values.
+-}
 data Color
   = Yellow
   | Green
@@ -92,15 +112,24 @@ data Color
   | Translucent Color
   | Mixed [Color]
   | RGB Double Double Double
+  -- ^ Values for red, green, blue __given as a percentage from 0 to 1__
   | HSL Double Double Double
+  -- ^ Values for hue, saturation and luminosity
   | RGBA Double Double Double Double
+  -- ^ RGB with an additional transparency percentage
   | AnyColor
   deriving (Eq,Ord,Show,Generic,NFData,Data)
 
+
+{-|
+Alias for `Color`.
+-}
 type Colour = Color
 
-
-green, red, yellow, black, white, blue, orange, brown, pink, purple, gray, grey :: Color
+{-|
+Constant basic colour.
+-}
+green, red, yellow, black, white, blue, orange, brown, pink, purple, grey :: Color
 yellow = Yellow
 green  = Green
 red    = Red
@@ -112,40 +141,77 @@ brown = Brown
 pink = Pink
 purple = Purple
 grey = Grey
+
+{-|
+Alias for `grey`.
+-}
+gray :: Color
 gray = grey
 
-
+{-|
+Blend a new color from the arguments.
+-}
 mixed :: [Color] -> Color
 mixed = Mixed
 
+{-|
+Increase argument's luminosity by a user defined amount.
+-}
 lighter :: Double -> Color -> Color
 lighter = Lighter
 
+{-|
+Slightly increase argument's luminosity.
+-}
 light :: Color -> Color
 light = Light
 
+{-|
+Decrease argument's luminosity by a user defined amount.
+-}
 darker :: Double -> Color -> Color
 darker = Darker
 
+{-|
+Slightly decrease argument's luminosity.
+-}
 dark :: Color -> Color
 dark = Dark
 
+{-|
+Increase argument's saturation by a user defined amount.
+-}
 brighter :: Double -> Color -> Color
 brighter = Brighter
 
+{-|
+Slightly increase argument's saturation.
+-}
 bright :: Color -> Color
 bright = Bright
 
+{-|
+Decrease argument's saturation by a user defined amount.
+-}
 duller :: Double -> Color -> Color
 duller = Duller
 
+{-|
+Slightly decrease argument's saturation.
+-}
 dull :: Color -> Color
 dull = Dull
 
+{-|
+Slightly increase argument's transparency.
+-}
 translucent :: Color -> Color
 translucent = Translucent
 
 
+{-|
+An infinite list of different colours.
+-}
 assortedColors :: [Color]
 assortedColors = [HSL (adjusted h) 0.75 0.5 | h <- [0, 2 * pi / phi ..]]
   where
@@ -200,6 +266,9 @@ moduloTwoPi :: Double -> Double
 moduloTwoPi x = x - fromInteger (floor (x / (2*pi))) * 2*pi
 
 
+{-|
+Returns the hue of the argument according to the HSL model.
+-}
 hue :: Color -> Double
 hue (HSL (moduloTwoPi -> h) _ _) = h
 hue (RGBA r g b _) = hue (RGB r g b)
@@ -226,6 +295,9 @@ hue c
   | otherwise = hue $ innerColor c
 
 
+{-|
+Returns the saturation of the argument according to the HSL model.
+-}
 saturation :: Color -> Double
 saturation (HSL _ (clamp -> s) _) = s
 saturation (RGBA r g b _) = saturation (RGB r g b)
@@ -248,6 +320,9 @@ saturation c
   | otherwise = saturation $ innerColor c
 
 
+{-|
+Returns the luminosity of the argument according to the HSL model.
+-}
 luminosity :: Color -> Double
 luminosity (HSL _ _ (clamp -> l)) = l
 luminosity (RGBA r g b _) = luminosity (RGB r g b)
@@ -269,6 +344,9 @@ luminosity c
   | otherwise = luminosity $ innerColor c
 
 
+{-|
+Returns the transparency of the argument.
+-}
 alpha :: Color -> Double
 alpha (RGBA _ _ _ (clamp -> a))  = a
 alpha (Translucent c) = alpha c / 2

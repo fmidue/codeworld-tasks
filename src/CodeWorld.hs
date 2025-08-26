@@ -1,7 +1,10 @@
 
 module CodeWorld (
+  -- * Types
   P.Picture,
   T.Color(HSL,RGB,RGBA),
+
+  -- * CodeWorld API
   rectangle,
   solidRectangle,
   thickRectangle,
@@ -36,8 +39,14 @@ module CodeWorld (
   coordinatePlane,
   codeWorldLogo,
   blank,
+
+  -- * Supplemental Types
   module CodeWorld.Tasks.Types,
+
+  -- * CodeWorld Math Functions
   module CodeWorld.Tasks.VectorSpace,
+
+  -- * CodeWorld IO Interface
   drawingOf,
   animationOf,
   trace,
@@ -61,13 +70,20 @@ import CodeWorld.Tasks.VectorSpace hiding (
   )
 
 
+{-|
+Render a t`CodeWorld.Picture` onto the canvas.
+-}
 drawingOf :: P.Picture -> IO ()
 drawingOf = const $ pure ()
 
-
+{-|
+Render an animation onto the canvas.
+-}
 animationOf :: (Double -> P.Picture) -> IO ()
 animationOf = const $ pure ()
 
-
+{-|
+Prints a debug message in the console when argument is evaluated.
+-}
 trace :: Text -> a -> a
 trace = const id

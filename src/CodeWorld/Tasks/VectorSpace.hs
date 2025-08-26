@@ -32,18 +32,30 @@ import CodeWorld.Tasks.Types            (Point, Vector)
 
 
 
+{-|
+Moves a point in X and Y-directions.
+-}
 translatedPoint :: Double -> Double -> Point -> Point
 translatedPoint x y (xp,yp) = (x+xp,y+yp)
 
-
+{- |
+Scales a point by given X and Y scaling factor.
+Scaling by a negative factor also reflects across that axis.
+-}
 scaledPoint :: Double -> Double -> Point -> Point
 scaledPoint = scaledVector
 
 
+{-|
+Dilates a point by given uniform scaling factor.
+Dilating by a negative factor also reflects across the origin.
+-}
 dilatedPoint :: Double -> Point -> Point
 dilatedPoint f = scaledPoint f f
 
-
+{- |
+Rotates a point around the origin by the given angle in radians.
+-}
 rotatedPoint :: Double -> Point -> Point
 rotatedPoint = rotatedVector
 
@@ -64,30 +76,50 @@ crossProduct :: Vector -> Vector -> Double
 crossProduct (a,b) (c,d) = a*d - c*b
 
 
+{- |
+The length of a vector.
+-}
 vectorLength :: Vector -> Double
 vectorLength (x,y) = sqrt $ x*x + y*y
 
 
+{- |
+Scales a vector by the given scalar multiplier.
+-}
 scaledVector :: Double -> Double -> Vector -> Vector
 scaledVector xFac yFac (x,y) = (x*xFac,y*yFac)
 
-
+{- |
+Rotates a vector by the given angle in radians.
+-}
 rotatedVector :: Double -> Vector -> Vector
 rotatedVector angle (x,y) = (x * cos angle - y * sin angle, x * sin angle + y * cos angle)
 
 
+{- |
+The difference of two vectors.
+-}
 vectorDifference :: Vector -> Vector -> Vector
 vectorDifference (x1,y1) (x2,y2) = (x1-x2,y1-y2)
 
 
+{- |
+The sum of two vectors.
+-}
 vectorSum :: Vector -> Vector -> Vector
 vectorSum (x1,y1) (x2,y2) = (x1+x2,y1+y2)
 
 
+{- |
+The counter-clockwise angle of a vector from the X-axis.
+-}
 vectorDirection :: Vector -> Double
 vectorDirection (x,y) = atan2 y x
 
 
+{- |
+Reflects a point across a line through the origin at this angle from the X-axis.
+-}
 reflectedPoint :: Double -> Point -> Point
 reflectedPoint th (x, y) = (x * cos a + y * sin a, x * sin a - y * cos a)
   where a = 2 * th
