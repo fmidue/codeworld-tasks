@@ -1,4 +1,13 @@
 codeworld
+ghci
 hashcons
+Leijen
+lhs
+libz
+OSX
 Preds
+rhs
+SChar
+SEmpty
+SText
 Uniplate
