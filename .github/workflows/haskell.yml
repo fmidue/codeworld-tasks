@@ -47,7 +47,7 @@ jobs:
       - name: Install dependencies
         run: |
           set -ex
-          stack --no-terminal --install-ghc build --test --bench --only-dependencies
+          stack --no-terminal --install-ghc build --test --bench --only-dependencies --stack-yaml run.yaml
           set +ex
         env:
           BUILD: ${{ matrix.plan.build }}
@@ -55,7 +55,7 @@ jobs:
       - name: Build and test
         run: |
           set -ex
-          stack --no-terminal test --coverage --bench --no-run-benchmarks --haddock --no-haddock-deps
+          stack --no-terminal test --coverage --bench --no-run-benchmarks --haddock --no-haddock-deps --stack-yaml run.yaml
           set +ex
         env:
           BUILD: ${{ matrix.plan.build }}

@@ -1,6 +1,7 @@
 Autotool
 Bifunctor
 DSL
+Ghc
 GHC
 Graphviz
 HUnit
@@ -13,6 +14,7 @@ foldl
 foldr
 fst
 Github
+Hlint
 hspec
 https
 mconcat

@@ -1,0 +1,48 @@
+---
+name: run-codeworld-tasks
+version: 0.1.0.0
+github: "fmidue/codeworld-tasks"
+license: BSD-3-Clause
+author: "Patrick Ritzenfeld"
+maintainer: "patrick.ritzenfeld@uni-due.de"
+copyright: "2024 Patrick Ritzenfeld"
+
+description: Please see the README on GitHub at <https://github.com/fmidue/codeworld-tasks#readme>
+
+dependencies:
+  - base >= 4.11 && < 5
+  - directory
+  - filepath
+  - haskell-template-task
+  - haskell-template-task-raw
+  - hint
+  - rainbow
+  - text
+  - wl-pprint-text
+
+ghc-options:
+  - -Wall
+  - -Werror
+  - -Wcompat
+  - -Widentities
+  - -Wincomplete-uni-patterns
+  - -Wpartial-fields
+  - -Wredundant-constraints
+
+executables:
+  test-task:
+    main: Main.hs
+    source-dirs: app
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+    dependencies:
+      - QuickCheck
+      - random
+      - syb
+      - haskell-src-exts
+      # used for run-time compilation dependencies
+      - haskell-template-task-raw
+      - codeworld-tasks
+      - IOTasks
