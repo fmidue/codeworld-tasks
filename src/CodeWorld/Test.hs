@@ -37,7 +37,14 @@ import qualified CodeWorld.Test.Normalize as N
 import CodeWorld.Test.Relative as Relative
 import CodeWorld.Sharing.Feedback as Sharing
 import CodeWorld.Test.Solution as Solution
-import CodeWorld.Tasks.VectorSpace as VectorSpace
+import CodeWorld.Tasks.VectorSpace as VectorSpace hiding (
+  atOriginWithOffset,
+  crossProduct,
+  dotProduct,
+  isRectangle,
+  rotationAngle,
+  sideLengths,
+  )
 
 import CodeWorld.Tasks.Picture (
   Picture(..),

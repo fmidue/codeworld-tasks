@@ -162,6 +162,12 @@ tupleAbs :: (Ord a, Num a) => a -> (a, a) -> Bool
 tupleAbs threshold (d1,d2) = abs d1 < threshold && abs d2 < threshold
 
 
+{- |
+Returns which translation needs to be applied to argument 1 to get argument 2.
+Nothing if the polygons are different.
+
+This can be used to detect translation in point list based shapes.
+-}
 wasTranslatedBy :: [Point] -> [Point] -> Maybe Point
 wasTranslatedBy (p11:p12:ps1) (p21:p22:ps2)
   | tupleAbs eta (vectorDifference firstDiff (vectorDifference p22 p12)) &&
@@ -172,6 +178,18 @@ wasTranslatedBy (p11:p12:ps1) (p21:p22:ps2)
 wasTranslatedBy _ _ = Nothing
 
 
+{- |
+Returns which scaling factors need to be applied to argument 1 to get argument 2.
+
+* Nothing if the polygons are not similar.
+* Factors themselves can also be Nothing if the factor is undeterminable.
+
+E.g. a possible result could be @Just (Just 3, Nothing)@.
+This means the second shape is a scaled version of the first and the factor in X-direction is 3,
+but the factor in Y-direction cannot be determined.
+
+This can be used to detect size scaling in point list based shapes.
+-}
 wasScaledBy :: [Point] -> [Point] -> Maybe (Maybe Double,Maybe Double)
 wasScaledBy ps1 ps2 | length ps1 == length ps2 =
   case both factor (matchX, matchY) of
@@ -195,6 +213,12 @@ wasScaledBy ps1 ps2 | length ps1 == length ps2 =
 wasScaledBy _ _ = Nothing
 
 
+{- |
+Returns which rotation needs to be applied to argument 1 to get argument 2.
+Nothing if it does not exist.
+
+This can be used to detect translation in point list based shapes.
+-}
 wasRotatedBy :: [Point] -> [Point] -> Maybe Double
 wasRotatedBy ((x,y):(x2,y2):ps1) ((rx,ry):(rx2,ry2):ps2)
   | abs (firstRotation - atan2 (x2*ry2-y2*rx2) (x2*rx2+y2*ry2)) < eta &&
