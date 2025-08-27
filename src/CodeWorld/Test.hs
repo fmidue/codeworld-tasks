@@ -1,4 +1,8 @@
 
+{- |
+Module exporting all functionality needed for runnin tests on student submissions.
+-}
+
 module CodeWorld.Test (
   module Abstract,
   module AbsTypes,

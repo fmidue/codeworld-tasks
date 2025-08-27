@@ -1,4 +1,8 @@
 
+{- |
+Module exporting the same interface as provided in the CodeWorld editor.
+-}
+
 module CodeWorld (
   -- * Types
   P.Picture,
