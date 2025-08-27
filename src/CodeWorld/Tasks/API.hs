@@ -85,7 +85,7 @@ class Drawable a where
   -}
   closedCurve :: [Point] -> a
 
- {-|
+  {-|
   Same as `thickCurve` but adds another splice between the start and end points to close the shape.
   -}
   thickClosedCurve :: Double -> [Point] -> a
