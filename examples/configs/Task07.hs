@@ -233,10 +233,10 @@ test =
     lengthUniques (map getExactCircleRadius sceneEggs) >= 2 ||
     onScene (oneOf containsElem $ drop 2 eggChoices)
     ~? "There are eggs of different sizes?"
-  , onScene (oneOf (\p -> hasBroadly (p `isLeftOf` p)) eggChoices <||>
-             oneOf (\p -> hasBroadly (p `isRightOf` p)) eggChoices
+  , onScene (oneOf (\p -> hasRelation (p `isLeftOf` p)) eggChoices <||>
+             oneOf (\p -> hasRelation (p `isRightOf` p)) eggChoices
             ) ~? "Eggs are spread out? Maybe you have drawn too many rectangles if they are."
-  , onScene (oneOf (\p -> hasBroadly (p `isAbove` grass)) eggChoices)
+  , onScene (oneOf (\p -> hasRelation (p `isAbove` grass)) eggChoices)
     ~? "Eggs are above the grass?"
   , TestCase $ TH.syntaxCheckWithExts ["LambdaCase","NoTemplateHaskell","TupleSections"] $ \m -> assertBool
       "You are manually placing the eggs. Consider a different approach!"

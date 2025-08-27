@@ -1,4 +1,8 @@
 
+{- |
+Module exporting all functionality needed for running tests on student submissions.
+-}
+
 module CodeWorld.Test (
   module Abstract,
   module AbsTypes,
@@ -6,6 +10,7 @@ module CodeWorld.Test (
   module API,
   module Sharing,
   module Normalize,
+  R.Components,
   module Relative,
   module Solution,
   module Types,
@@ -27,12 +32,31 @@ import CodeWorld.Tasks.Types as Types hiding (Color(..))
 import CodeWorld.Test.Abstract as Abstract
 import CodeWorld.Test.AbsTypes as AbsTypes
 import CodeWorld.Test.Animation as Animation
-import CodeWorld.Test.Normalize as Normalize hiding (NormalizedPicture(..))
+import CodeWorld.Test.Normalize as Normalize hiding (
+  NormalizedPicture(..),
+  couldHaveTranslation,
+  getSubPictures,
+  stripTranslation,
+  )
 import qualified CodeWorld.Test.Normalize as N
-import CodeWorld.Test.Relative as Relative
+import CodeWorld.Test.Relative as Relative hiding (
+  Alone,
+  Components,
+  Is,
+  (===),
+  toRelative,
+  )
+import qualified CodeWorld.Test.Relative as R
 import CodeWorld.Sharing.Feedback as Sharing
 import CodeWorld.Test.Solution as Solution
-import CodeWorld.Tasks.VectorSpace as VectorSpace
+import CodeWorld.Tasks.VectorSpace as VectorSpace hiding (
+  atOriginWithOffset,
+  crossProduct,
+  dotProduct,
+  isRectangle,
+  rotationAngle,
+  sideLengths,
+  )
 
 import CodeWorld.Tasks.Picture (
   Picture(..),
@@ -45,15 +69,26 @@ import CodeWorld.Tasks.Picture (
 import Data.List (sort)
 
 
--- Normalize the picture
+{- |
+Convert a `Picture` into a t`CodeWorld.Test.NormalizedPicture`.
+This applies a number of simplifications, abstractions and rearrangements on the syntax tree of the image.
+The result is a new tree in /canonical/ form.
+-}
 normalize :: Picture -> N.NormalizedPicture
 normalize = toInterface
 
--- Normalize the picture then convert back into an un-normalized syntax tree
+{- |
+Apply `normalize`, then re-concretize the abstracted syntax tree.
+The result is a new syntax tree, which draws the same image,
+but was simplified and rearranged via `normalize`'s rules.
+-}
 reduce :: Picture -> Picture
 reduce = toConcretePicture . toInterface
 
--- reduce and also ignore canvas order
+{- |
+Same as `reduce`,
+but also erases information on which subpictures are drawn in front or behind others.
+-}
 reduceNoOrder :: Picture -> Picture
 reduceNoOrder p = case reduce p of
   PRec (Pictures ps) -> PRec $ Pictures $ sort ps

@@ -32,18 +32,30 @@ import CodeWorld.Tasks.Types            (Point, Vector)
 
 
 
+{-|
+Moves a point in X and Y-directions.
+-}
 translatedPoint :: Double -> Double -> Point -> Point
 translatedPoint x y (xp,yp) = (x+xp,y+yp)
 
-
+{- |
+Scales a point by given X and Y scaling factor.
+Scaling by a negative factor also reflects across that axis.
+-}
 scaledPoint :: Double -> Double -> Point -> Point
 scaledPoint = scaledVector
 
 
+{-|
+Dilates a point by given uniform scaling factor.
+Dilating by a negative factor also reflects across the origin.
+-}
 dilatedPoint :: Double -> Point -> Point
 dilatedPoint f = scaledPoint f f
 
-
+{- |
+Rotates a point around the origin by the given angle in radians.
+-}
 rotatedPoint :: Double -> Point -> Point
 rotatedPoint = rotatedVector
 
@@ -64,30 +76,50 @@ crossProduct :: Vector -> Vector -> Double
 crossProduct (a,b) (c,d) = a*d - c*b
 
 
+{- |
+The length of a vector.
+-}
 vectorLength :: Vector -> Double
 vectorLength (x,y) = sqrt $ x*x + y*y
 
 
+{- |
+Scales a vector by the given scalar multiplier.
+-}
 scaledVector :: Double -> Double -> Vector -> Vector
 scaledVector xFac yFac (x,y) = (x*xFac,y*yFac)
 
-
+{- |
+Rotates a vector by the given angle in radians.
+-}
 rotatedVector :: Double -> Vector -> Vector
 rotatedVector angle (x,y) = (x * cos angle - y * sin angle, x * sin angle + y * cos angle)
 
 
+{- |
+The difference of two vectors.
+-}
 vectorDifference :: Vector -> Vector -> Vector
 vectorDifference (x1,y1) (x2,y2) = (x1-x2,y1-y2)
 
 
+{- |
+The sum of two vectors.
+-}
 vectorSum :: Vector -> Vector -> Vector
 vectorSum (x1,y1) (x2,y2) = (x1+x2,y1+y2)
 
 
+{- |
+The counter-clockwise angle of a vector from the X-axis.
+-}
 vectorDirection :: Vector -> Double
 vectorDirection (x,y) = atan2 y x
 
 
+{- |
+Reflects a point across a line through the origin at this angle from the X-axis.
+-}
 reflectedPoint :: Double -> Point -> Point
 reflectedPoint th (x, y) = (x * cos a + y * sin a, x * sin a - y * cos a)
   where a = 2 * th
@@ -130,6 +162,12 @@ tupleAbs :: (Ord a, Num a) => a -> (a, a) -> Bool
 tupleAbs threshold (d1,d2) = abs d1 < threshold && abs d2 < threshold
 
 
+{- |
+Returns which translation needs to be applied to argument 1 to get argument 2.
+Nothing if the polygons are different.
+
+This can be used to detect translation in point list based shapes.
+-}
 wasTranslatedBy :: [Point] -> [Point] -> Maybe Point
 wasTranslatedBy (p11:p12:ps1) (p21:p22:ps2)
   | tupleAbs eta (vectorDifference firstDiff (vectorDifference p22 p12)) &&
@@ -140,6 +178,18 @@ wasTranslatedBy (p11:p12:ps1) (p21:p22:ps2)
 wasTranslatedBy _ _ = Nothing
 
 
+{- |
+Returns which scaling factors need to be applied to argument 1 to get argument 2.
+
+* Nothing if the polygons are not similar.
+* Factors themselves can also be Nothing if the factor is undeterminable.
+
+E.g. a possible result could be @Just (Just 3, Nothing)@.
+This means the second shape is a scaled version of the first and the factor in X-direction is 3,
+but the factor in Y-direction cannot be determined.
+
+This can be used to detect size scaling in point list based shapes.
+-}
 wasScaledBy :: [Point] -> [Point] -> Maybe (Maybe Double,Maybe Double)
 wasScaledBy ps1 ps2 | length ps1 == length ps2 =
   case both factor (matchX, matchY) of
@@ -163,6 +213,12 @@ wasScaledBy ps1 ps2 | length ps1 == length ps2 =
 wasScaledBy _ _ = Nothing
 
 
+{- |
+Returns which rotation needs to be applied to argument 1 to get argument 2.
+Nothing if it does not exist.
+
+This can be used to detect translation in point list based shapes.
+-}
 wasRotatedBy :: [Point] -> [Point] -> Maybe Double
 wasRotatedBy ((x,y):(x2,y2):ps1) ((rx,ry):(rx2,ry2):ps2)
   | abs (firstRotation - atan2 (x2*ry2-y2*rx2) (x2*rx2+y2*ry2)) < eta &&

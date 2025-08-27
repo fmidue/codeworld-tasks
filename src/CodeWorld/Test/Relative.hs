@@ -3,17 +3,8 @@
 module CodeWorld.Test.Relative (
   Components(..),
   RelativePicSpec(..),
+  SpatialQuery,
   (===),
-  northOf,
-  southOf,
-  eastOf,
-  westOf,
-  southeastOf,
-  southwestOf,
-  northeastOf,
-  northwestOf,
-  onTopOf,
-  alone,
   toRelative,
   isSouthOf,
   isNorthOf,
@@ -45,6 +36,10 @@ import CodeWorld.Test.Normalize (
   )
 
 
+{- |
+Alias for queries on spatial relationships.
+-}
+type SpatialQuery = [RelativePicSpec] -> Bool
 
 data DirectionV = South deriving (Eq,Ord,Show)
 data DirectionH = West | East deriving (Eq,Ord,Show)
@@ -55,12 +50,18 @@ data Direction = Direction {
 } deriving (Eq,Ord)
 
 
+{- |
+Abstract representation of spatial positioning between picture components.
+-}
 data RelativePicSpec
   = Is NormalizedPicture Direction NormalizedPicture
   | Alone NormalizedPicture
   deriving(Eq,Ord)
 
 
+{- |
+Abstract representation of a picture in terms of components and spatial positioning.
+-}
 newtype Components = Components (NormalizedPicture,[RelativePicSpec]) deriving (Eq,Ord,Show)
 
 
@@ -75,6 +76,7 @@ instance Show Direction where
 instance Show RelativePicSpec where
   show (Is p1 dir p2) = show p1 ++ " is " ++ show dir ++ " of " ++ show p2
   show (Alone p) = show p
+
 
 
 (===) :: NormalizedPicture -> NormalizedPicture -> Bool
@@ -190,55 +192,94 @@ containedSameSpot p q (Is p1 (Direction Nothing Nothing) p2) = p1 `contains` p &
 containedSameSpot _ _ _ = False
 
 
-isSouthOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is below the second and aligned on the X-axis.
+-}
+isSouthOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isSouthOf = compositeRelation containedSouthOf
 
 
-isNorthOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is above the second and aligned on the X-axis.
+-}
+isNorthOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isNorthOf = compositeRelation containedNorthOf
 
 
-isWestOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is left of the second and aligned on the Y-axis.
+-}
+isWestOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isWestOf = compositeRelation containedWestOf
 
 
-isEastOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is right of the second and aligned on the Y-axis.
+-}
+isEastOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isEastOf = compositeRelation containedEastOf
 
 
-isSouthWestOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is below and to the left of the second.
+-}
+isSouthWestOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isSouthWestOf = compositeRelation containedSouthWestOf
 
 
-isSouthEastOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is below and to the right of the second.
+-}
+isSouthEastOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isSouthEastOf = compositeRelation containedSouthEastOf
 
 
-isNorthWestOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is above and to the left of the second.
+-}
+isNorthWestOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isNorthWestOf = compositeRelation containedNorthWestOf
 
 
-isNorthEastOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is above and to the right of the second.
+-}
+isNorthEastOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isNorthEastOf = compositeRelation containedNorthEastOf
 
 
-isAbove :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is above the second, ignoring horizontal positioning.
+-}
+isAbove :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isAbove = compositeRelation containedAbove
 
 
-isBelow :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is below the second, ignoring horizontal positioning.
+-}
+isBelow :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isBelow = compositeRelation containedBelow
 
 
-isLeftOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is left of the second, ignoring vertical positioning.
+-}
+isLeftOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isLeftOf = compositeRelation containedLeftOf
 
 
-isRightOf :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is right of the second, ignoring vertical positioning.
+-}
+isRightOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 isRightOf = compositeRelation containedRightOf
 
 
-atSamePosition :: NormalizedPicture -> NormalizedPicture -> [RelativePicSpec] -> Bool
+{- |
+True if the first argument is at the same position as the second.
+-}
+atSamePosition :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
 atSamePosition = compositeRelation containedSameSpot
 
 
@@ -246,8 +287,7 @@ compositeRelation
   :: (NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool)
   -> NormalizedPicture
   -> NormalizedPicture
-  -> [RelativePicSpec]
-  -> Bool
+  -> SpatialQuery
 compositeRelation g p q rs = all (`any` rs) allRelations
    where
       allRelations = [g x y | x <- getSubPictures p, y <- getSubPictures q]

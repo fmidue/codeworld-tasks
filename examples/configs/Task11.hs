@@ -236,12 +236,12 @@ test =
   , lengthUniques (map getExactScalingFactors sceneEggs) >= 2 ||
     lengthUniques (map getExactCircleRadius sceneEggs) >= 2 ||
     atStart (oneOf containsElem curveEggs)  ~? "There are eggs of different sizes?"
-  , atStart (oneOf (\p -> hasBroadly (p `isLeftOf` p)) eggChoices <||>
-             oneOf (\p -> hasBroadly (p `isRightOf` p)) eggChoices
+  , atStart (oneOf (\p -> hasRelation (p `isLeftOf` p)) eggChoices <||>
+             oneOf (\p -> hasRelation (p `isRightOf` p)) eggChoices
             ) ~? "Eggs are spread out? Maybe you have drawn too many rectangles if they are."
 
-  , atStart (oneOf (\p -> hasBroadly (p `isAbove` grass)) (take 3 eggChoices) <||>
-             hasBroadly (polyEggThick `atSamePosition` grass)
+  , atStart (oneOf (\p -> hasRelation (p `isAbove` grass)) (take 3 eggChoices) <||>
+             hasRelation (polyEggThick `atSamePosition` grass)
             ) ~? "Eggs are above the grass?"
 
   , lengthUniques (map Task11.scene movementCheck) > 1 ~?

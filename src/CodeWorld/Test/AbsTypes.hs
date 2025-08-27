@@ -37,22 +37,38 @@ import qualified CodeWorld.Tasks.Types  as T
 
 
 
+{- |
+Abstract representation of radii and side lengths.
+-}
 newtype Size = Size Double deriving (Ord,Data)
+
+{- |
+Abstract representation of points in 2D space.
+-}
 newtype AbsPoint = AbsPoint {unAbsPoint :: (Position,Position)} deriving (Ord,Show,Data)
 
 
+{- |
+Abstract representation of line width.
+-}
 data Thickness
   = Normal
   | Thick
   deriving (Show,Eq,Ord,Data)
 
 
+{- |
+Abstract representation of line drawing and filling mode.
+-}
 data ShapeKind
   = Hollow Thickness
   | Solid
   deriving (Ord,Show,Data)
 
 
+{- |
+Abstract representation of angles.
+-}
 data Angle
   = ToQuarter Double
   | ToHalf Double
@@ -61,6 +77,9 @@ data Angle
   deriving (Ord,Data)
 
 
+{- |
+Abstract representation of translations.
+-}
 data Position
   = Neg Double
   | Zero
@@ -68,6 +87,9 @@ data Position
   deriving (Ord,Data)
 
 
+{- |
+Abstract representation of scaling factors.
+-}
 data Factor
   = Smaller Double
   | Same
@@ -75,13 +97,20 @@ data Factor
   deriving (Ord,Data)
 
 
+{- |
+Abstract representation of `Color`.
+-}
 data AbsColor
   = HSL Double Double Double
   | Translucent Double AbsColor
-  | AnyColor -- used as a wildcard in tests
+  | AnyColor
+  -- ^ Is equal to any color when compared.
   deriving (Ord,Show,Data)
 
 
+{- |
+Equal if each HSLA parameter has an acceptable distance from those of the other color.
+-}
 instance Eq AbsColor where
   HSL h1 s1 l1      == HSL h2 s2 l2
     -- Luminosity at extremes => almost pure white/black
@@ -107,6 +136,9 @@ instance Eq AbsColor where
   _                 == AnyColor          = True
 
 
+{- |
+Abstract a concrete color.
+-}
 toAbsColor :: Color -> AbsColor
 toAbsColor T.AnyColor          = AnyColor
 toAbsColor (T.RGB 1   1   1  ) = HSL 0 0 1
@@ -117,12 +149,20 @@ toAbsColor c
   | otherwise      = Translucent (T.alpha c) $ HSL (T.hue c) (T.saturation c) (T.luminosity c)
 
 
+{- |
+Concretize an abstract color.
+-}
 fromAbsColor :: AbsColor -> Color
 fromAbsColor (HSL h s l) = T.HSL h s l
 fromAbsColor (Translucent _ c) = T.Translucent $ fromAbsColor c
 fromAbsColor AnyColor = T.AnyColor
 
 
+{- |
+A more strict equality test for `AbsColor`.
+Contrary to the `Eq` instance,
+this only succeeds if both colors are completely identical in their HSLA values.
+-}
 isSameColor :: AbsColor -> AbsColor -> Bool
 isSameColor (HSL h1 s1 l1)      (HSL h2 s2 l2)      =
   h1 == h2 && s1 == s2 && l1 == l2
@@ -133,8 +173,10 @@ isSameColor _                   AnyColor            = True
 isSameColor _                   _                   = False
 
 
--- Allows for custom thresholds on color similarity detection.
--- Export to be able to correct test failures.
+{- |
+Allows for custom thresholds on color similarity detection.
+This is exported to be able to correct unexpected complications in live tests.
+-}
 equalColorCustom :: Double -> Double -> Double -> Double -> AbsColor -> AbsColor -> Bool
 equalColorCustom hRange sRange lRange _ (HSL h1 s1 l1) (HSL h2 s2 l2)
     | (l2 >= 0.98 && l1 >= 0.98) ||
@@ -251,20 +293,32 @@ instance Show Angle where
 
 
 
+{- |
+Abstract a concrete line width.
+-}
 thickness :: (Eq a, Fractional a) => a -> Thickness
 thickness d
   | d /= 0 = Thick
   | otherwise = Normal
 
 
+{- |
+Abstract a concrete size.
+-}
 toSize :: Double -> Size
 toSize = Size . abs
 
 
+{- |
+Concretize an abstract size.
+-}
 fromSize :: Size -> Double
 fromSize (Size d) = d
 
 
+{- |
+Abstract a concrete factor.
+-}
 toFactor :: Double -> Factor
 toFactor (abs -> 1) = Same
 toFactor (abs -> x)
@@ -272,12 +326,18 @@ toFactor (abs -> x)
   | otherwise = Smaller x
 
 
+{- |
+Concretize an abstract factor.
+-}
 fromFactor :: Factor -> Double
 fromFactor Same = 1
 fromFactor (Smaller x) = x
 fromFactor (Larger x) = x
 
 
+{- |
+Abstract a concrete angle.
+-}
 toAngle :: Double -> Angle
 toAngle a
   | a < 0 = toAngle (a+2*pi)
@@ -288,6 +348,9 @@ toAngle a
   | otherwise = toAngle (a-2*pi)
 
 
+{- |
+Concretize an abstract angle.
+-}
 fromAngle :: Angle -> Double
 fromAngle (ToQuarter a) = a
 fromAngle (ToHalf a) = a
@@ -295,6 +358,9 @@ fromAngle (ToThreeQuarter a) = a
 fromAngle (ToFull a) = a
 
 
+{- |
+Concretize an abstract translation.
+-}
 fromPosition :: Position -> Double
 fromPosition Zero    = 0
 fromPosition (Neg d) = fuzz $ -d
@@ -305,6 +371,9 @@ fuzz :: Double -> Double
 fuzz a = if abs a < 0.005 then 0 else a
 
 
+{- |
+Abstract a concrete translation.
+-}
 toPosition :: Double -> Position
 toPosition d
   | d == 0 = Zero
@@ -312,13 +381,22 @@ toPosition d
   | otherwise = Pos d
 
 
+{- |
+Concretize an abstract point.
+-}
 fromAbsPoint :: AbsPoint -> Point
 fromAbsPoint = both fromPosition . unAbsPoint
 
 
+{- |
+Abstract a concrete point.
+-}
 toAbsPoint :: Point -> AbsPoint
 toAbsPoint (x,y) = AbsPoint (toPosition x, toPosition y)
 
 
+{- |
+Apply a function on concrete points to the contents of an abstract point.
+-}
 applyToAbsPoint :: (Point -> Point) -> AbsPoint -> AbsPoint
 applyToAbsPoint f ap = toAbsPoint $ f (fromAbsPoint ap)

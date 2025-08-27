@@ -207,8 +207,8 @@ test =
     onScene (containsElem polyEgg) ~?
     "The egg shell does not seem to have an oval shape."
   , onScene ( oneOf (\p ->
-      hasBroadly (yolk `atSamePosition` p) <||>
-      hasBroadly (yolk `isBelow` p)) [egg, multiEgg, polyEgg]
+      hasRelation (yolk `atSamePosition` p) <||>
+      hasRelation (yolk `isBelow` p)) [egg, multiEgg, polyEgg]
       ) ~?  "The yolk is not inside the egg or has not been positioned correctly inside it."
   ]
   where
