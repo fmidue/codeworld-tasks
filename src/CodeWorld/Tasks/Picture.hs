@@ -454,7 +454,7 @@ TODO: Change return type to [Picture] and adjust the tests.
 {- |
 Returns the contained `Picture` if the argument is not a basic shape and the argument itself if it is.
 
-__Warning: This is intended to be used on non composite pictures only.__
+__Warning: This is intended to be used on non-composite pictures only.__
 `Pictures` and `And` will be treated as a basic picture (i.e. the function will behave like `id`) if used as an argument.
 -}
 innerPicture :: Picture -> Picture
@@ -465,7 +465,7 @@ innerPicture p                      = headDef p $ children p
 {- |
 Returns `True` if the argument is not a basic shape.
 
-__Warning: This is intended to be used on non composite pictures only.__
+__Warning: This is intended to be used on non-composite pictures only.__
 `Pictures` and `And` will be treated as a basic picture (i.e. returning `False`) if used as an argument.
 -}
 hasInnerPicture :: Picture -> Bool
