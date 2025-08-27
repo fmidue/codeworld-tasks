@@ -219,7 +219,45 @@ import qualified Task11
 import Data.Generics.Uniplate.Data (para, universe, universeBi)
 import Data.List.Extra (notNull, nubBy, nub)
 import Data.Maybe (fromMaybe, mapMaybe)
-import CodeWorld.Test
+import CodeWorld.Test (
+  Picture(PRec),
+  ReifyPicture(Rotate, Translate),
+  normalize,
+
+  (&),
+  colored,
+  green,
+  someCircle,
+  someCurve,
+  someSolidCircle,
+  someSolidCurve,
+  someSolidRectangle,
+
+  contains,
+  findAll,
+  findAllActual,
+  findMaybeActual,
+  getColor,
+  getComponents,
+  getExactCircleRadius,
+  getExactRotation,
+  getExactScalingFactors,
+  getExactTranslation,
+  isSameColor,
+
+  (<||>),
+  atSamePosition,
+  atLeast,
+  containsElem,
+  evaluatePred,
+  hasRelation,
+  isAbove,
+  isLeftOf,
+  isRightOf,
+  oneOf,
+
+  samplesUntil,
+  )
 import Language.Haskell.Exts (Exp(..), SrcSpanInfo)
 import Test.HUnit ((~:), (~?), Test(..), assertBool)
 

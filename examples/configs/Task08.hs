@@ -234,7 +234,31 @@ main = animationOf scene
 module Test (test) where
 import qualified Task08
 
-import CodeWorld.Test
+import CodeWorld.Test (
+  Picture(PRec),
+  ReifyPicture(Rotate),
+  hasInnerPicture,
+  normalize,
+
+  colored,
+  green,
+  someSolidRectangle,
+  white,
+
+  contains,
+  findMaybeActual,
+  getComponents,
+  getExactRotation,
+  getExactTranslation,
+
+  containsElem,
+  evaluatePred,
+  hasRelation,
+  isBelow,
+  oneOf,
+
+  samplesUntil,
+  )
 import Data.Fixed (mod')
 import Data.Generics.Uniplate.Data (para)
 import Data.List (nub)

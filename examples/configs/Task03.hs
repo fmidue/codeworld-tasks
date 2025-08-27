@@ -189,7 +189,29 @@ scene = undefined
 module Test (test) where
 import qualified Task03
 import Test.HUnit ((~:), (~?), Test)
-import CodeWorld.Test
+import CodeWorld.Test (
+  (&),
+  colored,
+  gray,
+  someCircle,
+  someCurve,
+  someSolidCircle,
+  white,
+  yellow,
+
+  findMaybe,
+  getComponents,
+  getExactScalingFactors,
+  contains,
+
+  (<||>),
+  atSamePosition,
+  containsElem,
+  evaluatePred,
+  hasRelation,
+  isBelow,
+  oneOf,
+  )
 
 import TestHelper (isDeeplyDefined)
 

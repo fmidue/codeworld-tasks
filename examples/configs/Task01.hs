@@ -186,7 +186,18 @@ main = drawingOf scene
 module Test (test) where
 import qualified Task01
 import Test.HUnit ((~:), (~?), Test)
-import CodeWorld.Test
+import CodeWorld.Test (
+  colored,
+  green,
+  someSolidCircle,
+  someSolidRectangle,
+  yellow,
+
+  containsElem,
+  evaluatePred,
+  hasRelation,
+  isAbove,
+  )
 
 import TestHelper (isDeeplyDefined)
 

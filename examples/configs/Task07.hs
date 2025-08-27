@@ -217,7 +217,36 @@ import qualified Task07
 import Data.Maybe (fromJust, isNothing, mapMaybe)
 import Data.List.Extra (nubBy, nubOrd)
 import Test.HUnit ((~:), (~?), Test(..), assertBool)
-import CodeWorld.Test
+import CodeWorld.Test (
+  (&),
+  colored,
+  contains,
+  green,
+  someCircle,
+  someCurve,
+  someSolidCircle,
+  someSolidCurve,
+  someSolidRectangle,
+
+  findAll,
+  getColor,
+  getComponents,
+  getExactCircleRadius,
+  getExactScalingFactors,
+  isSameColor,
+
+  (<||>),
+  atLeast,
+  containsElem,
+  evaluatePred,
+  hasRelation,
+  isAbove,
+  isLeftOf,
+  isRightOf,
+  oneOf,
+
+  testCSE,
+  )
 
 import qualified TestHarness as TH
 import TestHelper (isDeeplyDefined)

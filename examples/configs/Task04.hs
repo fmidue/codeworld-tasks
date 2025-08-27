@@ -242,7 +242,27 @@ import qualified Task04
 import Data.List.Extra (nubOrd)
 import Data.Tuple.Extra (both)
 import Test.HUnit ((~:), (~?), Test(..), assertBool)
-import CodeWorld.Test
+import CodeWorld.Test (
+  colored,
+  green,
+  someSolidCircle,
+  someSolidRectangle,
+  white,
+  yellow,
+
+  contains,
+  findMaybeActual,
+  getComponents,
+  getExactTranslation,
+  getRotation,
+
+  containsElem,
+  evaluatePred,
+  hasRelation,
+  isBelow,
+
+  samplesUntil,
+  )
 
 import qualified TestHarness as TH
 import TestHelper (isDeeplyDefined)
