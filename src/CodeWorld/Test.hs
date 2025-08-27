@@ -6,6 +6,7 @@ module CodeWorld.Test (
   module API,
   module Sharing,
   module Normalize,
+  R.Components,
   module Relative,
   module Solution,
   module Types,
@@ -34,7 +35,12 @@ import CodeWorld.Test.Normalize as Normalize hiding (
   stripTranslation,
   )
 import qualified CodeWorld.Test.Normalize as N
-import CodeWorld.Test.Relative as Relative
+import CodeWorld.Test.Relative as Relative hiding (
+  Alone,
+  Components,
+  Is,
+  )
+import qualified CodeWorld.Test.Relative as R
 import CodeWorld.Sharing.Feedback as Sharing
 import CodeWorld.Test.Solution as Solution
 import CodeWorld.Tasks.VectorSpace as VectorSpace hiding (

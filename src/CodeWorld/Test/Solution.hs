@@ -1,5 +1,6 @@
 
 module CodeWorld.Test.Solution (
+  PicPredicate,
   specElems,
   containsElem,
   containsElems,
