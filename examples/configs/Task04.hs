@@ -271,7 +271,7 @@ test =
   , differentFrames frames > 1 ~?
     "Cannot detect (reasonable) movement in this animation. Make sure parameter 't' is not ignored. " ++
     "Your sun might be moving in a strange way if 't' is actually used for movement."
-  , all (\t -> not $ onSceneAt t (hasBroadly (sun `isBelow` grass))) (samplesUntil 0.5 30) ~?
+  , all (\t -> not $ onSceneAt t (hasRelation (sun `isBelow` grass))) (samplesUntil 0.5 30) ~?
     "Your sun is moving under the grass!"
   , TestCase $ TH.syntaxCheckWithExts ["LambdaCase","NoTemplateHaskell","TupleSections"] $ \m -> assertBool
       ( "The sun is not exhibiting circular movement. " ++

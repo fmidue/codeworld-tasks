@@ -201,7 +201,7 @@ test =
     "The circle is not yellow."
   , onScene (containsElem $ colored green someSolidRectangle) ~?
     "The rectangle is not green."
-  , onScene (hasBroadly $ colored yellow someSolidCircle `isAbove` colored green someSolidRectangle) ~?
+  , onScene (hasRelation $ colored yellow someSolidCircle `isAbove` colored green someSolidRectangle) ~?
     "the sun should be positioned above the grass."
   ]
   where

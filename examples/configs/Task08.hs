@@ -278,7 +278,7 @@ test =
 
   -- sun and moon don't pass under grass
   , all (\t -> not $ onSceneAt t (
-           oneOf (\p -> hasBroadly (normalize p `isBelow` grass)) [Task08.sun, Task08.moon])
+           oneOf (\p -> hasRelation (normalize p `isBelow` grass)) [Task08.sun, Task08.moon])
         ) sunMoonCheck ~?
     "Your sun and/or moon is moving under the grass!"
 

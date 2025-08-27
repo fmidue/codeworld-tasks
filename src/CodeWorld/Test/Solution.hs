@@ -8,8 +8,7 @@ module CodeWorld.Test.Solution (
   evaluatePred,
   evaluatePreds,
   isExactly,
-  hasExactly,
-  hasBroadly,
+  hasRelation,
   (<||>),
   option,
   options,
@@ -181,15 +180,6 @@ isExactly :: RelativePicSpec -> PicPredicate
 isExactly a = specPosition (==[a])
 
 
--- Input contains elements satisfying exact spatial predicate
-hasExactly :: RelativePicSpec -> PicPredicate
-hasExactly (Is p1 d p2) = specPosition (\rs -> all (`elem` rs) allOfThem)
-  where
-    allOfThem = [Is x d y | x <- getSubPictures p1, y <- getSubPictures p2]
-
-hasExactly p = specPosition (p `elem`)
-
-
 -- Input contains elements satisfying the given spatial predicate
-hasBroadly :: ([RelativePicSpec] -> Bool) -> PicPredicate
-hasBroadly = specPosition
+hasRelation :: ([RelativePicSpec] -> Bool) -> PicPredicate
+hasRelation = specPosition
