@@ -39,6 +39,8 @@ import CodeWorld.Test.Relative as Relative hiding (
   Alone,
   Components,
   Is,
+  (===),
+  toRelative,
   )
 import qualified CodeWorld.Test.Relative as R
 import CodeWorld.Sharing.Feedback as Sharing
