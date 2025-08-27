@@ -197,13 +197,13 @@ thickArc :: Double -> Double -> Double -> Double -> Picture
 thickArc (validThickness -> t) a1 a2 = PRec . ThickArc t a1 a2
 
 {-|
-Draw a thin curve passing through the provided points via a number of bézier splices.
+Draw a thin curve passing through the provided points via a number of Bézier splices.
 -}
 curve :: [Point] -> Picture
 curve = PRec . Curve
 
 {-|
-Draw a curve with this line width passing through the provided points via a number of bézier splices.
+Draw a curve with this line width passing through the provided points via a number of Bézier splices.
 Specifying a negative line width causes a runtime error (mirrors behaviour in CodeWorld editor).
 -}
 thickCurve :: Double -> [Point] -> Picture

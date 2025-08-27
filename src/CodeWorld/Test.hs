@@ -1,6 +1,6 @@
 
 {- |
-Module exporting all functionality needed for runnin tests on student submissions.
+Module exporting all functionality needed for running tests on student submissions.
 -}
 
 module CodeWorld.Test (

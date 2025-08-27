@@ -70,12 +70,12 @@ class Drawable a where
   thickArc :: Double -> Double -> Double -> Double -> a
 
   {-|
-  Draw a thin curve passing through the provided points via a number of bézier splices.
+  Draw a thin curve passing through the provided points via a number of Bézier splices.
   -}
   curve :: [Point] -> a
 
   {-|
-  Draw a curve with this line width passing through the provided points via a number of bézier splices.
+  Draw a curve with this line width passing through the provided points via a number of Bézier splices.
   Specifying a negative line width causes a runtime error (mirrors behaviour in CodeWorld editor).
   -}
   thickCurve :: Double -> [Point] -> a
@@ -91,7 +91,7 @@ class Drawable a where
   thickClosedCurve :: Double -> [Point] -> a
 
   {-|
-  Draw a curve passing through the provided points via a number of bézier splices.
+  Draw a curve passing through the provided points via a number of Bézier splices.
   Adds another splice between the start and end points to close the shape and completely fills the enclosed area.
   -}
   solidClosedCurve :: [Point] -> a

@@ -20,7 +20,7 @@ import CodeWorld.Tasks.Picture          (ReifyPicture(..), share, toInterface)
 
 {- |
 Produce student feedback on common subexpression elimination for a `Picture` value.
-This compares the results of the Hascons and Reify methods to determine unused sharing potential.
+This compares the results of the Hashcons and Reify methods to determine unused sharing potential.
 Returns `Nothing` if all possible terms are shared.
 
 This runs in an `IO` context, since Reify uses `System.Mem.StableName.StableName` to track sharing.
