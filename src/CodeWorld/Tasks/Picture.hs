@@ -222,7 +222,7 @@ thickClosedCurve :: Double -> [Point] -> Picture
 thickClosedCurve (validThickness -> t) = PRec . ThickClosedCurve t
 
 {-|
-Draw a curve passing through the provided points via a number of bézier splices.
+Draw a curve passing through the provided points via a number of Bézier splices.
 Adds another splice between the start and end points to close the shape and completely fills the enclosed area.
 -}
 solidClosedCurve :: [Point] -> Picture
