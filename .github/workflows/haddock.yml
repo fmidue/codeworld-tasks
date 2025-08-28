@@ -36,7 +36,7 @@ jobs:
         id: haddock
         run: |
           stack haddock --no-haddock-deps \
-            --haddock-arguments "--hyperlinked-source --quickjump --title=CodeWorld-Tasks"
+            --haddock-arguments "--hyperlinked-source --quickjump --title=codeworld-tasks"
           echo "doc_path=$(stack path --no-haddock-deps --local-doc-root)" >> $GITHUB_OUTPUT
 
       - name: Upload artifact

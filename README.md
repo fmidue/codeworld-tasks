@@ -3,6 +3,8 @@
 This library provides abstractions and functions for evaluating images created in the vector graphics domain CodeWorld.
 The interface is mostly used as part of a Haskell programming task type on our e-learning platform Autotool.
 
+Documentation is available on [github-pages](https://fmidue.github.io/codeworld-tasks/).
+
 ## Running Tasks Offline
 
 The package provides an executable `test-task` to replicate the grading process of Autotool in a terminal.
