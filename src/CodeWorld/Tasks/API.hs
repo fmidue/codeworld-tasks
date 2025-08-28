@@ -175,7 +175,7 @@ class Drawable a where
 
   {-|
   Compose two `Pictures`.
-  The left argument will drawn on top of the right argument if they overlap.
+  The left argument will be drawn on top of the right argument if they overlap.
   -}
   (&) :: a -> a -> a
 
