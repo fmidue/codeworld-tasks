@@ -1,0 +1,66 @@
+---
+name: Haddock to GitHub pages
+
+on:
+  workflow_run:
+    workflows: ["Haskell CI"]
+    branches: [main]
+    types: completed
+
+permissions: read-all
+
+jobs:
+  build:
+    permissions:
+      contents: read
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Cache Stack
+        id: cache-stack-unix
+        uses: actions/cache@v4
+        with:
+          path: ~/.stack
+          key: ubuntu-latest-stack-stack-home-${{ hashFiles('stack.yaml') }}-${{ hashFiles('package.yaml') }}
+
+      - name: Setup stack
+        uses: haskell-actions/setup@v2
+        with:
+          enable-stack: true
+          stack-no-global: true
+
+      - name: Build Haddock
+        id: haddock
+        run: |
+          stack haddock --no-haddock-deps \
+            --haddock-arguments "--hyperlinked-source --quickjump --title=CodeWorld-Tasks"
+          echo "doc_path=$(stack path --no-haddock-deps --local-doc-root)" >> $GITHUB_OUTPUT
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          name: github-pages
+          path: ${{steps.haddock.outputs.doc_path}}
+          retention-days: 1
+
+  deploy:
+    needs: build
+
+    permissions:
+      pages: write
+      id-token: write
+
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
