@@ -5,6 +5,7 @@ Module exporting the same interface as provided in the CodeWorld editor.
 
 module CodeWorld (
   -- * CodeWorld API
+  -- $API
   P.Picture,
   module Picture,
 
@@ -12,13 +13,14 @@ module CodeWorld (
   C.Color(RGB, HSL, RGBA),
   module Color,
 
-  -- * CodeWorld Math Functions
+  -- * Math Utility
   module VectorSpace,
 
   -- * Text Rendering Modifiers
   module Types,
 
   -- * CodeWorld IO Interface
+  -- $interface
   drawingOf,
   animationOf,
   trace,
@@ -85,6 +87,20 @@ import CodeWorld.Tasks.VectorSpace as VectorSpace (
   )
 
 
+
+{- $API
+The CodeWorld t`CodeWorld.Picture` type and corresponding API for composing images.
+-}
+
+{- $interface
+Entry points for rendering.
+Defining the @main@ function in terms of one of these
+would draw the provided image to screen.
+
+All of these are dummy functions (no-op IO actions)
+as this library does not implement the actual rendering process.
+-}
+
 {-|
 Render a t`CodeWorld.Picture` onto the canvas.
 -}
@@ -98,7 +114,7 @@ animationOf :: (Double -> P.Picture) -> IO ()
 animationOf = const $ pure ()
 
 {-|
-Prints a debug message in the console when argument is evaluated.
+Prints a debug message in the console when second argument is evaluated.
 -}
 trace :: Text -> a -> a
 trace = const id
