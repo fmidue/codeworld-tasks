@@ -4,11 +4,8 @@ Module exporting the same interface as provided in the CodeWorld editor.
 -}
 
 module CodeWorld (
-  -- * Types
-  P.Picture,
-  T.Color(HSL,RGB,RGBA),
-
   -- * CodeWorld API
+  P.Picture,
   rectangle,
   solidRectangle,
   thickRectangle,
@@ -44,8 +41,11 @@ module CodeWorld (
   codeWorldLogo,
   blank,
 
-  -- * Supplemental Types
-  module CodeWorld.Tasks.Types,
+  -- * Colours
+  module Color,
+
+  -- * Other Types
+  module Types,
 
   -- * CodeWorld Math Functions
   module CodeWorld.Tasks.VectorSpace,
@@ -61,16 +61,21 @@ import Data.Text                        (Text)
 
 import CodeWorld.Tasks.Picture hiding (Picture)
 import qualified CodeWorld.Tasks.Picture as P
-import CodeWorld.Tasks.Types hiding (Color(..))
-import qualified CodeWorld.Tasks.Types as T
-import CodeWorld.Tasks.VectorSpace hiding (
-  sideLengths,
-  rotationAngle,
-  isRectangle,
-  atOriginWithOffset,
-  wasRotatedBy,
-  wasTranslatedBy,
-  wasScaledBy,
+import CodeWorld.Tasks.Color as Color
+import CodeWorld.Tasks.Types as Types
+import CodeWorld.Tasks.VectorSpace (
+  translatedPoint,
+  rotatedPoint,
+  reflectedPoint,
+  scaledPoint,
+  dilatedPoint,
+  vectorLength,
+  vectorDirection,
+  vectorSum,
+  vectorDifference,
+  scaledVector,
+  rotatedVector,
+  dotProduct,
   )
 
 

@@ -4,7 +4,7 @@ module CodeWorld.Test.Abstract where
 
 import Data.Tuple.Extra                 (both)
 import CodeWorld.Tasks.API              (Drawable(..))
-import CodeWorld.Tasks.Types (Color(..))
+import CodeWorld.Tasks.Color            (Color(..))
 
 
 

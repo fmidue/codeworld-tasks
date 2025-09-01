@@ -1,5 +1,7 @@
 module CodeWorld.Tasks.VectorSpace (
-  -- CodeWorld interface
+  -- * CodeWorld interface
+  Point,
+  Vector,
   translatedPoint,
   rotatedPoint,
   reflectedPoint,
@@ -12,7 +14,7 @@ module CodeWorld.Tasks.VectorSpace (
   scaledVector,
   rotatedVector,
   dotProduct,
-  -- other stuff
+  -- * other stuff
   crossProduct,
   sideLengths,
   rotationAngle,
@@ -28,8 +30,20 @@ import Data.Containers.ListUtils        (nubOrd)
 import Data.List.Extra                  (headDef, takeEnd)
 import Data.Maybe                       (fromMaybe)
 import Data.Tuple.Extra                 (both)
-import CodeWorld.Tasks.Types            (Point, Vector)
 
+
+
+{-|
+A point in 2D space.
+Synonym for a pair of `Double` values.
+-}
+type Point = (Double,Double)
+
+{-|
+A vector in 2D space.
+Synonym for a pair of `Double` values.
+-}
+type Vector = (Double,Double)
 
 
 {-|

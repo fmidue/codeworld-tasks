@@ -28,7 +28,7 @@ module CodeWorld.Test (
 
 
 import CodeWorld.Tasks.API as API
-import CodeWorld.Tasks.Types as Types hiding (Color(..))
+import CodeWorld.Tasks.Types as Types
 import CodeWorld.Test.Abstract as Abstract
 import CodeWorld.Test.AbsTypes as AbsTypes
 import CodeWorld.Test.Animation as Animation

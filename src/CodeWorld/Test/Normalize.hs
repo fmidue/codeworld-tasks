@@ -36,8 +36,8 @@ import Data.Tuple.Extra                 (both)
 import Data.Generics.Uniplate.Data      (transform, universe)
 
 import CodeWorld.Tasks.API              (Drawable(..))
-import CodeWorld.Tasks.Types            (Point)
 import CodeWorld.Tasks.VectorSpace (
+  Point,
   vectorSum,
   atOriginWithOffset,
   isRectangle,
@@ -517,7 +517,7 @@ getExactRectangleLengths = fmap (both fromSize) . getRectangleLengths
 
 
 {-|
-Returns actual list of points in the image if it is a /free shape/,
+Returns actual list of points in the image if it is a \"free shape\",
 [] otherwise.
 -}
 getExactPointList :: NormalizedPicture -> [Point]

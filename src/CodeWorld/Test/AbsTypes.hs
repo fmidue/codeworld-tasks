@@ -32,8 +32,9 @@ module CodeWorld.Test.AbsTypes (
 import Data.Data                        (Data)
 import Data.Tuple.Extra                 (both)
 
-import CodeWorld.Tasks.Types            (Color, Point)
-import qualified CodeWorld.Tasks.Types  as T
+import CodeWorld.Tasks.Color            (Color)
+import CodeWorld.Tasks.VectorSpace      (Point)
+import qualified CodeWorld.Tasks.Color  as T
 
 
 

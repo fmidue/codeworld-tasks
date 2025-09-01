@@ -4,8 +4,10 @@ module CodeWorld.Tasks.API (
   ) where
 
 
-import Data.Text (Text)
-import CodeWorld.Tasks.Types (Color, Font, Point, TextStyle)
+import Data.Text                        (Text)
+import CodeWorld.Tasks.Color            (Color)
+import CodeWorld.Tasks.Types            (Font, TextStyle)
+import CodeWorld.Tasks.VectorSpace      (Point)
 
 
 
