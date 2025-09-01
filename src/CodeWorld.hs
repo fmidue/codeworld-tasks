@@ -64,6 +64,8 @@ import qualified CodeWorld.Tasks.Picture as P
 import CodeWorld.Tasks.Color as Color
 import CodeWorld.Tasks.Types as Types
 import CodeWorld.Tasks.VectorSpace (
+  Point,
+  Vector,
   translatedPoint,
   rotatedPoint,
   reflectedPoint,
