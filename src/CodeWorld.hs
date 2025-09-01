@@ -6,6 +6,28 @@ Module exporting the same interface as provided in the CodeWorld editor.
 module CodeWorld (
   -- * CodeWorld API
   P.Picture,
+  module Picture,
+
+  -- * Colours
+  C.Color(RGB, HSL, RGBA),
+  module Color,
+
+  -- * CodeWorld Math Functions
+  module VectorSpace,
+
+  -- * Text Rendering Modifiers
+  module Types,
+
+  -- * CodeWorld IO Interface
+  drawingOf,
+  animationOf,
+  trace,
+  ) where
+
+
+import Data.Text                        (Text)
+
+import CodeWorld.Tasks.Picture as Picture (
   rectangle,
   solidRectangle,
   thickRectangle,
@@ -40,30 +62,12 @@ module CodeWorld (
   coordinatePlane,
   codeWorldLogo,
   blank,
-
-  -- * Colours
-  module Color,
-
-  -- * Other Types
-  module Types,
-
-  -- * CodeWorld Math Functions
-  module CodeWorld.Tasks.VectorSpace,
-
-  -- * CodeWorld IO Interface
-  drawingOf,
-  animationOf,
-  trace,
-  ) where
-
-
-import Data.Text                        (Text)
-
-import CodeWorld.Tasks.Picture hiding (Picture)
+  )
 import qualified CodeWorld.Tasks.Picture as P
-import CodeWorld.Tasks.Color as Color
+import CodeWorld.Tasks.Color as Color hiding (Color(..))
+import qualified CodeWorld.Tasks.Color as C
 import CodeWorld.Tasks.Types as Types
-import CodeWorld.Tasks.VectorSpace (
+import CodeWorld.Tasks.VectorSpace as VectorSpace (
   Point,
   Vector,
   translatedPoint,
