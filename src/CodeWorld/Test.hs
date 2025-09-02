@@ -4,26 +4,30 @@ Module exporting all functionality needed for running tests on student submissio
 -}
 
 module CodeWorld.Test (
-  -- * Abstract Representations of CodeWorld Types
-  module AbsTypes,
-
-  -- * Animation Test Frame Generators
-  module Animation,
-
-  -- * Normalized Picture Type
+  -- * Normalized Pictures
+  -- ** Data Type
   N.NormalizedPicture,
   module API,
-  module Normalize,
 
-  -- * Helpers for defining NormalizedPictures
+  -- ** Helpers for defining NormalizedPictures
   -- $Helpers
   module Abstract,
 
-  -- * Spatial Relations
+  -- ** Queries on NormalizedPictures
+  module Normalize,
+
+  -- *** Abstract Representations of CodeWorld Types
+  module AbsTypes,
+
+  -- * Spatial View
+  -- ** Spatial Relations
   module Relative,
 
-  -- * Test Interface
-  module Solution,
+  -- ** Predicates
+  module SolutionPred,
+
+  -- ** Queries
+  module SolutionQuery,
 
   -- * Functions for Point-based Shapes
   -- $PointLists
@@ -31,30 +35,35 @@ module CodeWorld.Test (
   V.wasScaledBy,
   V.wasRotatedBy,
 
-  -- * Concrete CodeWorld Types
-  module Types,
-
   -- * Math
   module VectorSpace,
 
-  -- * Strict Picture Type Internals
+  -- * Strict Pictures
+  -- **Type Internals
   -- $Picture
   Picture(..),
   ReifyPicture(..),
 
-  -- * Type Conversions
+  -- ** Misc. Functions for Pictures
+  hasInnerPicture,
+  innerPicture,
+  isIn,
+
+  -- * Test Utility
+  -- ** Type Conversions
   normalize,
   N.toConcretePicture,
   reduce,
   reduceNoOrder,
 
-  -- * CSE detection
+  -- ** Animation Test Frame Generators
+  module Animation,
+
+  -- ** CSE detection
   module Sharing,
 
-  -- * Misc. Functions for Pictures
-  hasInnerPicture,
-  innerPicture,
-  isIn,
+  -- ** Re-export of Concrete CodeWorld Types
+  module Types,
 ) where
 
 
@@ -100,7 +109,36 @@ import CodeWorld.Test.Relative as Relative (
   atSamePosition,
   )
 import CodeWorld.Sharing.Feedback as Sharing
-import CodeWorld.Test.Solution as Solution
+import CodeWorld.Test.Solution as SolutionPred (
+  PicPredicate,
+  containsElem,
+  containsElems,
+  containsExactElems,
+  evaluatePred,
+  evaluatePreds,
+  hasRelation,
+  (<||>),
+  option,
+  options,
+  ifThen,
+  thisOften,
+  atLeast,
+  atMost,
+  inRangeOf,
+  oneOf,
+  )
+import CodeWorld.Test.Solution as SolutionQuery (
+  findMaybe,
+  findAll,
+  findAllAnd,
+  findMaybeAnd,
+  findAllActual,
+  findMaybeActual,
+  findAllActualAnd,
+  findMaybeActualAnd,
+  getComponents,
+  count,
+  )
 import qualified CodeWorld.Tasks.VectorSpace as V
 import CodeWorld.Tasks.VectorSpace as VectorSpace (
   Point,
