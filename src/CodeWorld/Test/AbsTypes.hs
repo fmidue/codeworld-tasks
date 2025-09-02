@@ -101,7 +101,7 @@ data Factor
 Abstract representation of `Color`.
 -}
 data AbsColor
-  = HSL Double Double Double
+  = Tone Double Double Double
   | Translucent Double AbsColor
   | AnyColor
   -- ^ Is equal to any color when compared.
@@ -112,7 +112,7 @@ data AbsColor
 Equal if each HSLA parameter has an acceptable distance from those of the other color.
 -}
 instance Eq AbsColor where
-  HSL h1 s1 l1      == HSL h2 s2 l2
+  Tone h1 s1 l1      == Tone h2 s2 l2
     -- Luminosity at extremes => almost pure white/black
     | (l2 >= 0.981 && l1 >= 0.981) ||
       (l2 <= 0.051 && l1 <= 0.051) = True
@@ -141,19 +141,19 @@ Abstract a concrete color.
 -}
 toAbsColor :: Color -> AbsColor
 toAbsColor T.AnyColor          = AnyColor
-toAbsColor (T.RGB 1   1   1  ) = HSL 0 0 1
-toAbsColor (T.RGB 0   0   0  ) = HSL 0 0 0
-toAbsColor (T.RGB 0.5 0.5 0.5) = HSL 0 0 0.5
+toAbsColor (T.RGB 1   1   1  ) = Tone 0 0 1
+toAbsColor (T.RGB 0   0   0  ) = Tone 0 0 0
+toAbsColor (T.RGB 0.5 0.5 0.5) = Tone 0 0 0.5
 toAbsColor c
-  | T.alpha c == 1 = HSL (T.hue c) (T.saturation c) (T.luminosity c)
-  | otherwise      = Translucent (T.alpha c) $ HSL (T.hue c) (T.saturation c) (T.luminosity c)
+  | T.alpha c == 1 = Tone (T.hue c) (T.saturation c) (T.luminosity c)
+  | otherwise      = Translucent (T.alpha c) $ Tone (T.hue c) (T.saturation c) (T.luminosity c)
 
 
 {- |
 Concretize an abstract color.
 -}
 fromAbsColor :: AbsColor -> Color
-fromAbsColor (HSL h s l) = T.HSL h s l
+fromAbsColor (Tone h s l) = T.HSL h s l
 fromAbsColor (Translucent _ c) = T.Translucent $ fromAbsColor c
 fromAbsColor AnyColor = T.AnyColor
 
@@ -164,7 +164,7 @@ Contrary to the `Eq` instance,
 this only succeeds if both colors are completely identical in their HSLA values.
 -}
 isSameColor :: AbsColor -> AbsColor -> Bool
-isSameColor (HSL h1 s1 l1)      (HSL h2 s2 l2)      =
+isSameColor (Tone h1 s1 l1)      (Tone h2 s2 l2)      =
   h1 == h2 && s1 == s2 && l1 == l2
 isSameColor (Translucent a1 c1) (Translucent a2 c2) =
   a1 == a2 && c1 `isSameColor` c2
@@ -178,7 +178,7 @@ Allows for custom thresholds on color similarity detection.
 This is exported to be able to correct unexpected complications in live tests.
 -}
 equalColorCustom :: Double -> Double -> Double -> Double -> AbsColor -> AbsColor -> Bool
-equalColorCustom hRange sRange lRange _ (HSL h1 s1 l1) (HSL h2 s2 l2)
+equalColorCustom hRange sRange lRange _ (Tone h1 s1 l1) (Tone h2 s2 l2)
     | (l2 >= 0.98 && l1 >= 0.98) ||
       (l2 <= 0.05 && l1 <= 0.05) = True
     | s1 <= 0.05 && s2 <= 0.05    = lDiff <= lRange
