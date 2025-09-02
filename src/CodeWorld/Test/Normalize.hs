@@ -56,6 +56,7 @@ import qualified CodeWorld.Tasks.Picture as P
 A more abstract syntax tree representing images.
 Comparisons between values of this type are intentionally fuzzy:
 Concrete number or point values are abstracted into coarser categories.
+Notably, those values are not lost and can be retrieved if desired.
 
 The constructors of this type are not exposed.
 Values are built using the CodeWorld API.

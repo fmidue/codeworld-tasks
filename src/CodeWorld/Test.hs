@@ -4,24 +4,19 @@ Module exporting all functionality needed for running tests on student submissio
 -}
 
 module CodeWorld.Test (
-  -- * Helpers for Tests
-  module Abstract,
-
   -- * Abstract Representations of CodeWorld Types
   module AbsTypes,
 
   -- * Animation Test Frame Generators
   module Animation,
 
-  -- * Drawable API
-  module API,
-
-  -- * CSE detection
-  module Sharing,
-
   -- * Normalized Picture Type
   N.NormalizedPicture,
+  module API,
   module Normalize,
+
+  -- * Helpers for defining NormalizedPictures
+  module Abstract,
 
   -- * Spatial Relations
   module Relative,
@@ -41,6 +36,7 @@ module CodeWorld.Test (
   module VectorSpace,
 
   -- * Strict Picture Type Internals
+  -- $Picture
   Picture(..),
   ReifyPicture(..),
 
@@ -49,6 +45,9 @@ module CodeWorld.Test (
   N.toConcretePicture,
   reduce,
   reduceNoOrder,
+
+  -- * CSE detection
+  module Sharing,
 
   -- * Misc. Functions for Pictures
   hasInnerPicture,
@@ -127,6 +126,13 @@ import CodeWorld.Tasks.Picture (
   )
 import Data.List (sort)
 
+
+{- $Picture
+Exposed constructors of the student facing Picture type.
+This is used if specific attributes can be determined directly from the un-normalized syntax tree.
+Primitives from [Uniplate](https://hackage.haskell.org/package/uniplate-1.6.13) can then be used
+to generically traverse the structure.
+-}
 
 {- |
 Convert a `Picture` into a t`CodeWorld.Test.NormalizedPicture`.
