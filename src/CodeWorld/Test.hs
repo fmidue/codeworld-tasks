@@ -29,15 +29,6 @@ module CodeWorld.Test (
   -- ** Queries
   module SolutionQuery,
 
-  -- * Functions for Point-based Shapes
-  -- $PointLists
-  V.wasTranslatedBy,
-  V.wasScaledBy,
-  V.wasRotatedBy,
-
-  -- * Math
-  module VectorSpace,
-
   -- * Strict Pictures
   -- **Type Internals
   -- $Picture
@@ -56,13 +47,23 @@ module CodeWorld.Test (
   reduce,
   reduceNoOrder,
 
+  -- ** Functions for Point-based Shapes
+  -- $PointLists
+  V.wasTranslatedBy,
+  V.wasScaledBy,
+  V.wasRotatedBy,
+
   -- ** Animation Test Frame Generators
   module Animation,
 
   -- ** CSE detection
   module Sharing,
 
-  -- ** Re-export of Concrete CodeWorld Types
+  -- * Re-exports of CodeWorld Interface
+  -- ** Math
+  module VectorSpace,
+
+  -- ** Text Rendering Modifiers
   module Types,
 ) where
 
