@@ -186,8 +186,8 @@ instance Drawable NormalizedPicture where
     Pictures ps    -> Pictures $ map (colored c) ps
     Blank          -> Blank
     q              -> case toAbsColor c of
-      HSL 0 0 0 -> q
-      absC      -> Color absC q
+      Tone 0 0 0 -> q
+      absC       -> Color absC q
 
   dilated fac = scaled fac fac
 
@@ -436,7 +436,7 @@ getColor :: NormalizedPicture -> Maybe AbsColor
 getColor (Color c _) = Just c
 getColor Blank       = Nothing
 getColor Logo        = Nothing
-getColor _           = Just $ HSL 0 0 0
+getColor _           = Just $ Tone 0 0 0
 
 
 {-|
