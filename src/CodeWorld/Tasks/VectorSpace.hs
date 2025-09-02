@@ -231,7 +231,7 @@ wasScaledBy _ _ = Nothing
 Returns which rotation needs to be applied to argument 1 to get argument 2.
 Nothing if it does not exist.
 
-This can be used to detect translation in point list based shapes.
+This can be used to detect rotation in point list based shapes.
 -}
 wasRotatedBy :: [Point] -> [Point] -> Maybe Double
 wasRotatedBy ((x,y):(x2,y2):ps1) ((rx,ry):(rx2,ry2):ps2)

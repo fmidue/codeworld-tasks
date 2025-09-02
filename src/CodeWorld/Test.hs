@@ -16,6 +16,7 @@ module CodeWorld.Test (
   module Normalize,
 
   -- * Helpers for defining NormalizedPictures
+  -- $Helpers
   module Abstract,
 
   -- * Spatial Relations
@@ -25,6 +26,7 @@ module CodeWorld.Test (
   module Solution,
 
   -- * Functions for Point-based Shapes
+  -- $PointLists
   V.wasTranslatedBy,
   V.wasScaledBy,
   V.wasRotatedBy,
@@ -126,6 +128,21 @@ import CodeWorld.Tasks.Picture (
   )
 import Data.List (sort)
 
+
+
+{- $Helpers
+Using the `Drawable` API directly does not make much sense with t`CodeWorld.Test.NormalizedPicture`s,
+since concrete parameters are abstracted.
+The following functions can be used instead to build an image more generally.
+-}
+
+{- $PointLists
+Point list based shapes like `curve`, `polyline` or `polygon` differ from other basic shapes
+in that they can be drawn anywhere instead of only in a fixed position in the origin.
+Conventional detection of translation, rotation or scaling is thus not possible.
+These functions help remedy this problem by comparing two point lists
+to see if a transformation was applied to one to get the other.
+-}
 
 {- $Picture
 Exposed constructors of the student facing Picture type.
