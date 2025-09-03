@@ -6,34 +6,115 @@ Module exporting all functionality needed for running tests on student submissio
 module CodeWorld.Test (
   -- * Normalized Pictures
   -- ** Data Type
-  N.NormalizedPicture,
-  module API,
+  NormalizedPicture,
+  Drawable(..),
 
   -- ** Helpers for defining NormalizedPictures
   -- $Helpers
-  module Abstract,
+  someCircle,
+  someSolidCircle,
+  someSquare,
+  someRectangle,
+  someTallRectangle,
+  someWideRectangle,
+  someSolidSquare,
+  someSolidRectangle,
+  someTallSolidRectangle,
+  someWideSolidRectangle,
+  someCurve,
+  someSolidCurve,
+  someColor,
+  rotatedHalf,
+  rotatedQuarter,
+  rotatedThreeQuarters,
+  rotatedUpToFull,
+  larger,
+  largerX,
+  largerY,
+  smaller,
+  smallerX,
+  smallerY,
 
   -- ** Queries on NormalizedPictures
   -- $NormalizedQueries
-  module Normalize,
+  contains,
+  count,
+  getColor,
+  getRotation,
+  getExactRotation,
+  getScalingFactors,
+  getExactScalingFactors,
+  getTranslation,
+  getExactTranslation,
+  getReflectionAngle,
+  getExactReflectionAngle,
+  getCircleRadius,
+  getExactCircleRadius,
+  getRectangleLengths,
+  getExactRectangleLengths,
+  getExactPointList,
 
   -- *** Abstract Representations of CodeWorld Types
   -- $AbsTypes
-  module AbsTypes,
+  Size,
+  ShapeKind,
+  Angle,
+  Factor,
+  Position,
+  AbsPoint,
+  AbsColor,
+  isSameColor,
+  equalColorCustom,
 
   -- * Spatial View
   -- $SpatialView
   -- ** Spatial Relations
-  module Relative,
+  RelativePicSpec,
+  SpatialQuery,
+  isSouthOf,
+  isNorthOf,
+  isWestOf,
+  isEastOf,
+  isSouthEastOf,
+  isSouthWestOf,
+  isNorthEastOf,
+  isNorthWestOf,
+  isBelow,
+  isAbove,
+  isLeftOf,
+  isRightOf,
+  atSamePosition,
 
   -- ** Predicates on Components
-  R.Components,
-  module SolutionPred,
-
+  Components,
+  PicPredicate,
+  containsElem,
+  containsElems,
+  containsExactElems,
+  thisOften,
+  atLeast,
+  atMost,
+  inRangeOf,
+  hasRelation,
+  (<||>),
+  option,
+  options,
+  ifThen,
+  oneOf,
+  evaluatePred,
+  evaluatePreds,
   -- | #queries#
 
   -- ** Queries on Components
-  module SolutionQuery,
+  getComponents,
+  findMaybe,
+  findMaybeAnd,
+  findMaybeActual,
+  findMaybeActualAnd,
+  findAll,
+  findAllAnd,
+  findAllActual,
+  findAllActualAnd,
 
   -- * Strict Pictures
   -- $StrictPictures
@@ -52,37 +133,75 @@ module CodeWorld.Test (
 
   -- ** Type Conversions
   normalize,
-  N.toConcretePicture,
+  toConcretePicture,
   reduce,
   reduceNoOrder,
 
   -- ** Functions for Point-based Shapes
   -- $PointLists
-  V.wasTranslatedBy,
-  V.wasScaledBy,
-  V.wasRotatedBy,
+  wasTranslatedBy,
+  wasScaledBy,
+  wasRotatedBy,
 
   -- ** Animation Test Frame Generators
-  module Animation,
+  irregularSamples,
+  samplesUntil,
 
   -- ** CSE detection
-  module Sharing,
+  testCSE,
 
   -- * Re-exports of CodeWorld Interface
   -- ** Math
-  module VectorSpace,
+  Point,
+  Vector,
+  translatedPoint,
+  rotatedPoint,
+  reflectedPoint,
+  scaledPoint,
+  dilatedPoint,
+  vectorLength,
+  vectorDirection,
+  vectorSum,
+  vectorDifference,
+  scaledVector,
+  rotatedVector,
 
   -- ** Text Rendering Modifiers
-  module Types,
-) where
+  Font(..),
+  TextStyle(..),
+  ) where
 
 
-import CodeWorld.Tasks.API as API
-import CodeWorld.Tasks.Types as Types
-import CodeWorld.Test.Abstract as Abstract
-import CodeWorld.Test.AbsTypes as AbsTypes (
-  Size,
+import CodeWorld.Tasks.API              (Drawable(..))
+import CodeWorld.Tasks.Types            (Font(..), TextStyle(..))
+import CodeWorld.Test.Abstract (
+  larger,
+  largerX,
+  largerY,
+  rotatedHalf,
+  rotatedQuarter,
+  rotatedThreeQuarters,
+  rotatedUpToFull,
+  smaller,
+  smallerX,
+  smallerY,
+  someCircle,
+  someColor,
+  someCurve,
+  someRectangle,
+  someSolidCircle,
+  someSolidCurve,
+  someSolidRectangle,
+  someSolidSquare,
+  someSquare,
+  someTallRectangle,
+  someTallSolidRectangle,
+  someWideRectangle,
+  someWideSolidRectangle,
+  )
+import CodeWorld.Test.AbsTypes (
   Position,
+  Size,
   Angle,
   Factor,
   AbsColor,
@@ -91,8 +210,13 @@ import CodeWorld.Test.AbsTypes as AbsTypes (
   isSameColor,
   equalColorCustom,
   )
-import CodeWorld.Test.Animation as Animation
-import CodeWorld.Test.Normalize as Normalize (
+import CodeWorld.Test.Animation (
+  samplesUntil,
+  irregularSamples,
+  )
+import CodeWorld.Test.Normalize (
+  NormalizedPicture,
+
   contains,
   count,
   getColor,
@@ -109,10 +233,11 @@ import CodeWorld.Test.Normalize as Normalize (
   getRectangleLengths,
   getExactRectangleLengths,
   getExactPointList,
+
+  toConcretePicture,
   )
-import qualified CodeWorld.Test.Normalize as N
-import qualified CodeWorld.Test.Relative as R
 import CodeWorld.Test.Relative as Relative (
+  Components,
   RelativePicSpec,
   SpatialQuery,
   isSouthOf,
@@ -129,8 +254,8 @@ import CodeWorld.Test.Relative as Relative (
   isRightOf,
   atSamePosition,
   )
-import CodeWorld.Sharing.Feedback as Sharing
-import CodeWorld.Test.Solution as SolutionPred (
+import CodeWorld.Sharing.Feedback       (testCSE)
+import CodeWorld.Test.Solution (
   PicPredicate,
   containsElem,
   containsElems,
@@ -147,8 +272,7 @@ import CodeWorld.Test.Solution as SolutionPred (
   atMost,
   inRangeOf,
   oneOf,
-  )
-import CodeWorld.Test.Solution as SolutionQuery (
+
   findMaybe,
   findAll,
   findAllAnd,
@@ -159,8 +283,7 @@ import CodeWorld.Test.Solution as SolutionQuery (
   findMaybeActualAnd,
   getComponents,
   )
-import qualified CodeWorld.Tasks.VectorSpace as V
-import CodeWorld.Tasks.VectorSpace as VectorSpace (
+import CodeWorld.Tasks.VectorSpace (
   Point,
   Vector,
   translatedPoint,
@@ -174,8 +297,11 @@ import CodeWorld.Tasks.VectorSpace as VectorSpace (
   vectorDifference,
   scaledVector,
   rotatedVector,
-  )
 
+  wasTranslatedBy,
+  wasScaledBy,
+  wasRotatedBy,
+  )
 import CodeWorld.Tasks.Picture (
   Picture(..),
   ReifyPicture(..),
@@ -236,7 +362,7 @@ Convert a `Picture` into a t`CodeWorld.Test.NormalizedPicture`.
 This applies a number of simplifications, abstractions and rearrangements on the syntax tree of the image.
 The result is a new tree in /canonical/ form.
 -}
-normalize :: Picture -> N.NormalizedPicture
+normalize :: Picture -> NormalizedPicture
 normalize = toInterface
 
 {- |
@@ -245,7 +371,7 @@ The result is a new syntax tree, which draws the same image,
 but was simplified and rearranged via `normalize`'s rules.
 -}
 reduce :: Picture -> Picture
-reduce = N.toConcretePicture . toInterface
+reduce = toConcretePicture . toInterface
 
 {- |
 Same as `reduce`,

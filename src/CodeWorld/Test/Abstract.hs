@@ -23,14 +23,14 @@ someSolidSquare = solidRectangle 1 1
 
 {- |
 Draw an abstract, hollow rectangle.
-This is the same function as `someSquare`.
+This is an alias for `someSquare`.
 -}
 someRectangle :: NormalizedPicture
 someRectangle = someSquare
 
 {- |
 Draw an abstract, filled in rectangle.
-This is the same function as `someSolidSquare`.
+This is an alias for `someSolidSquare`.
 -}
 someSolidRectangle :: NormalizedPicture
 someSolidRectangle = someSolidSquare
