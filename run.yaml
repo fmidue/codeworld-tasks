@@ -16,5 +16,5 @@ extra-deps:
     commit: 81278a30d63449879c39f403a2cad108ab0785ec
     subdirs:
       - .
-      - raw 
+      - raw
   - hint-0.9.0.8
