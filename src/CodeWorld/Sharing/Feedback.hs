@@ -63,7 +63,8 @@ testCSE p = do
         , "The highlighted terms can be defined globally or locally at their use-site."
         , "For a local definition, you can use either a 'let' or 'where' binding."
         , "Of course, you can also change the proposed names to your liking, e.g. make them more concise."
-        , "Also consider that your actual code is most likely structured slightly differently than this suggested improvement."
+        , "Also consider that your actual code is most likely " ++
+          "structured slightly differently than this suggested improvement."
         , "As such, the location of the binding as shown here might also have to be adjusted."
         ]
   where
