@@ -1,3 +1,4 @@
+{-# language PatternSynonyms #-}
 
 {- |
 Module exporting all functionality needed for running tests on student submissions.
@@ -120,8 +121,40 @@ module CodeWorld.Test (
   -- $StrictPictures
 
   -- **Type Internals
-  Picture(..),
-  ReifyPicture(..),
+  Picture,
+  pattern Rectangle,
+  pattern ThickRectangle,
+  pattern SolidRectangle,
+  pattern Circle,
+  pattern ThickCircle,
+  pattern SolidCircle,
+  pattern Polygon,
+  pattern SolidPolygon,
+  pattern ThickPolygon,
+  pattern Polyline,
+  pattern ThickPolyline,
+  pattern Sector,
+  pattern Arc,
+  pattern ThickArc,
+  pattern Curve,
+  pattern ThickCurve,
+  pattern ClosedCurve,
+  pattern SolidClosedCurve,
+  pattern ThickClosedCurve,
+  pattern Lettering,
+  pattern StyledLettering,
+  pattern Color,
+  pattern Translate,
+  pattern Scale,
+  pattern Dilate,
+  pattern Rotate,
+  pattern Reflect,
+  pattern Clip,
+  pattern Pictures,
+  pattern And,
+  pattern CoordinatePlane,
+  pattern Logo,
+  pattern Blank,
 
   -- ** Misc. Functions for Pictures
   hasInnerPicture,
@@ -172,7 +205,10 @@ module CodeWorld.Test (
   ) where
 
 
+import Data.Text                        (Text)
+
 import CodeWorld.Tasks.API              (Drawable(..))
+import CodeWorld.Tasks.Color            (Color)
 import CodeWorld.Tasks.Types            (Font(..), TextStyle(..))
 import CodeWorld.Test.Abstract (
   larger,
@@ -304,13 +340,13 @@ import CodeWorld.Tasks.VectorSpace (
   )
 import CodeWorld.Tasks.Picture (
   Picture(..),
-  ReifyPicture(..),
   toInterface,
   hasInnerPicture,
   innerPicture,
   isIn,
   )
 import Data.List (sort)
+import qualified CodeWorld.Tasks.Picture as P
 
 
 
@@ -379,5 +415,104 @@ but also erases information on which subpictures are drawn in front or behind ot
 -}
 reduceNoOrder :: Picture -> Picture
 reduceNoOrder p = case reduce p of
-  PRec (Pictures ps) -> PRec $ Pictures $ sort ps
+  PRec (P.Pictures ps) -> PRec $ P.Pictures $ sort ps
   rp                 -> rp
+
+pattern Rectangle :: Double -> Double -> Picture
+pattern Rectangle x y <- PRec (P.Rectangle x y)
+
+pattern ThickRectangle :: Double -> Double -> Double -> Picture
+pattern ThickRectangle t x y <- PRec (P.ThickRectangle t x y)
+
+pattern SolidRectangle :: Double -> Double -> Picture
+pattern SolidRectangle x y <- PRec (P.SolidRectangle x y)
+
+pattern Circle :: Double -> Picture
+pattern Circle r <- PRec (P.Circle r)
+
+pattern ThickCircle :: Double -> Double -> Picture
+pattern ThickCircle t r <- PRec (P.ThickCircle t r)
+
+pattern SolidCircle :: Double -> Picture
+pattern SolidCircle r <- PRec (P.SolidCircle r)
+
+pattern Polygon :: [Point] -> Picture
+pattern Polygon ps <- PRec (P.Polygon ps)
+
+pattern SolidPolygon :: [Point] -> Picture
+pattern SolidPolygon ps <- PRec (P.SolidPolygon ps)
+
+pattern ThickPolygon :: Double -> [Point] -> Picture
+pattern ThickPolygon t ps <- PRec (P.ThickPolygon t ps)
+
+pattern Polyline :: [Point] -> Picture
+pattern Polyline ps <- PRec (P.Polyline ps)
+
+pattern ThickPolyline :: Double -> [Point] -> Picture
+pattern ThickPolyline t ps <- PRec (P.ThickPolyline t ps)
+
+pattern Sector :: Double -> Double -> Double -> Picture
+pattern Sector a1 a2 r <- PRec (P.Sector a1 a2 r)
+
+pattern Arc :: Double -> Double -> Double -> Picture
+pattern Arc a1 a2 r <- PRec (P.Arc a1 a2 r)
+
+pattern ThickArc :: Double -> Double -> Double -> Double -> Picture
+pattern ThickArc t a1 a2 r <- PRec (P.ThickArc t a1 a2 r)
+
+pattern Curve :: [Point] -> Picture
+pattern Curve ps <- PRec (P.Curve ps)
+
+pattern ThickCurve :: Double -> [Point] -> Picture
+pattern ThickCurve t ps <- PRec (P.ThickCurve t ps)
+
+pattern ClosedCurve :: [Point] -> Picture
+pattern ClosedCurve ps <- PRec (P.ClosedCurve ps)
+
+pattern SolidClosedCurve :: [Point] -> Picture
+pattern SolidClosedCurve ps <- PRec (P.SolidClosedCurve ps)
+
+pattern ThickClosedCurve :: Double -> [Point] -> Picture
+pattern ThickClosedCurve t ps <- PRec (P.ThickClosedCurve t ps)
+
+pattern Lettering :: Text -> Picture
+pattern Lettering t <- PRec (P.Lettering t)
+
+pattern StyledLettering :: TextStyle -> Font -> Text -> Picture
+pattern StyledLettering ts f t <- PRec (P.StyledLettering ts f t)
+
+pattern Color :: Color -> Picture -> Picture
+pattern Color c p <- PRec (P.Color c p)
+
+pattern Translate :: Double -> Double -> Picture -> Picture
+pattern Translate x y p <- PRec (P.Translate x y p)
+
+pattern Scale :: Double -> Double -> Picture -> Picture
+pattern Scale fac1 fac2 p <- PRec (P.Scale fac1 fac2 p)
+
+pattern Dilate :: Double -> Picture -> Picture
+pattern Dilate fac p <- PRec (P.Dilate fac p)
+
+pattern Rotate :: Double -> Picture -> Picture
+pattern Rotate a p <- PRec (P.Rotate a p)
+
+pattern Reflect :: Double -> Picture -> Picture
+pattern Reflect a p <- PRec (P.Reflect a p)
+
+pattern Clip :: Double -> Double -> Picture -> Picture
+pattern Clip x y p <- PRec (P.Clip x y p)
+
+pattern Pictures :: [Picture] -> Picture
+pattern Pictures ps <- PRec (P.Pictures ps)
+
+pattern And :: Picture -> Picture -> Picture
+pattern And p1 p2 <- PRec (P.And p1 p2)
+
+pattern CoordinatePlane :: Picture
+pattern CoordinatePlane <- PRec P.CoordinatePlane
+
+pattern Logo :: Picture
+pattern Logo <- PRec P.Logo
+
+pattern Blank :: Picture
+pattern Blank <- PRec P.Blank

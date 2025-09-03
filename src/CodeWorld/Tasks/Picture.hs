@@ -125,9 +125,7 @@ data ReifyPicture a
 
 {- |
 Student facing, basic picture type.
-The constructor is only in scope when importing "CodeWorld.Test" and hidden otherwise.
-
-Students build a value of this type using the below API.
+A value of this type can be build using the CodeWorld API.
 -}
 newtype Picture = PRec (ReifyPicture Picture)
   {- ^
