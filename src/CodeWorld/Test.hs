@@ -14,6 +14,7 @@ module CodeWorld.Test (
   module Abstract,
 
   -- ** Queries on NormalizedPictures
+  -- $NormalizedQueries
   module Normalize,
 
   -- *** Abstract Representations of CodeWorld Types
@@ -23,10 +24,12 @@ module CodeWorld.Test (
   -- ** Spatial Relations
   module Relative,
 
-  -- ** Predicates
+  -- ** Predicates on Components
   module SolutionPred,
 
-  -- ** Queries
+  -- | #queries#
+
+  -- ** Queries on Components
   module SolutionQuery,
 
   -- * Strict Pictures
@@ -41,7 +44,7 @@ module CodeWorld.Test (
   isIn,
 
   -- * Test Utility
-  -- | Miscellaneous functions for use in tests
+  -- | Miscellaneous functions to use in tests.
 
   -- ** Type Conversions
   normalize,
@@ -175,6 +178,16 @@ import Data.List (sort)
 Using the `Drawable` API directly does not make much sense with t`CodeWorld.Test.NormalizedPicture`s,
 since concrete parameters are abstracted.
 The following functions can be used instead to build an image more generally.
+-}
+
+{- $NormalizedQueries
+Functions for retrieving parameters of a t`CodeWorld.Test.NormalizedPicture`.
+For each parameter there is an abstract and a concrete version.
+The concrete version simply removes the abstract type wrapper and returns the contained value.
+
+These are meant to be used on non-composite values only (no `&` or `pictures`),
+meaning only one value is returned.
+Use the functions in [Queries on Components](#queries) if retrieval of all parameters of a specific kind is desired.
 -}
 
 {- $PointLists
