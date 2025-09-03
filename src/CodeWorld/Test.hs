@@ -18,6 +18,7 @@ module CodeWorld.Test (
   module Normalize,
 
   -- *** Abstract Representations of CodeWorld Types
+  -- $AbsTypes
   module AbsTypes,
 
   -- * Spatial View
@@ -76,7 +77,17 @@ module CodeWorld.Test (
 import CodeWorld.Tasks.API as API
 import CodeWorld.Tasks.Types as Types
 import CodeWorld.Test.Abstract as Abstract
-import CodeWorld.Test.AbsTypes as AbsTypes
+import CodeWorld.Test.AbsTypes as AbsTypes (
+  Size,
+  Position,
+  Angle,
+  Factor,
+  AbsColor,
+  ShapeKind,
+  AbsPoint,
+  isSameColor,
+  equalColorCustom,
+  )
 import CodeWorld.Test.Animation as Animation
 import CodeWorld.Test.Normalize as Normalize (
   contains,
@@ -188,6 +199,11 @@ The concrete version simply removes the abstract type wrapper and returns the co
 These are meant to be used on non-composite values only (no `&` or `pictures`),
 meaning only one value is returned.
 Use the functions in [Queries on Components](#queries) if retrieval of all parameters of a specific kind is desired.
+-}
+
+{- $AbsTypes
+Abstract versions of data types used as parameters in CodeWorld's `Picture` type.
+Retain the concrete value, unless stated otherwise, so it can be extracted if necessary.
 -}
 
 {- $PointLists
