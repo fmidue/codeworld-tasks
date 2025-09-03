@@ -29,6 +29,7 @@ library
       CodeWorld.Sharing.Feedback
       CodeWorld.Sharing.HashCons
       CodeWorld.Tasks.API
+      CodeWorld.Tasks.Color
       CodeWorld.Tasks.Picture
       CodeWorld.Tasks.Types
       CodeWorld.Tasks.VectorSpace

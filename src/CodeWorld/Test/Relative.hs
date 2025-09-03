@@ -51,7 +51,7 @@ data Direction = Direction {
 
 
 {- |
-Abstract representation of spatial positioning between picture components.
+Abstract representation of spatial positioning between two picture components.
 -}
 data RelativePicSpec
   = Is NormalizedPicture Direction NormalizedPicture
@@ -60,7 +60,8 @@ data RelativePicSpec
 
 
 {- |
-Abstract representation of a picture in terms of components and spatial positioning.
+Abstract representation of a picture in terms of its components
+and the pairwise spatial positioning between them.
 -}
 newtype Components = Components (NormalizedPicture,[RelativePicSpec]) deriving (Eq,Ord,Show)
 

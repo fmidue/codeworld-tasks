@@ -25,14 +25,18 @@ module CodeWorld.Test.Solution (
   findMaybeActualAnd,
   oneOf,
   getComponents,
-  count
   ) where
 
 
 import Data.Maybe (listToMaybe)
 
 import CodeWorld.Tasks.Picture (Picture, toInterface)
-import CodeWorld.Test.Normalize (NormalizedPicture(..), contains, getSubPictures)
+import CodeWorld.Test.Normalize (
+  NormalizedPicture(..),
+  contains,
+  count,
+  getSubPictures,
+  )
 import CodeWorld.Test.Relative (
   Components(..),
   SpatialQuery,
@@ -181,15 +185,6 @@ True if amount of times this subpicture is contained in the image lies in the sp
 -}
 inRangeOf :: NormalizedPicture -> (Int,Int) -> PicPredicate
 inRangeOf p (lower,upper) = specElems (\ps -> let occurs = count p ps in occurs >= lower && occurs <= upper)
-
-
-{- |
-Returns how often a subpicture appears in the image.
--}
-count :: NormalizedPicture -> NormalizedPicture -> Int
-count thing inside = minimum $ map singleCount $ getSubPictures thing
-  where
-    singleCount p = length $ filter (`contains` p) $ getSubPictures inside
 
 
 {- |

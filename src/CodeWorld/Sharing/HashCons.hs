@@ -13,7 +13,9 @@ import Data.List                        (elemIndex)
 import Data.Text                        (Text)
 
 import CodeWorld.Tasks.API              (Drawable(..))
-import CodeWorld.Tasks.Types            (Color, Font, Point, TextStyle)
+import CodeWorld.Tasks.Color            (Color)
+import CodeWorld.Tasks.Types            (Font, TextStyle)
+import CodeWorld.Tasks.VectorSpace      (Point)
 
 
 
