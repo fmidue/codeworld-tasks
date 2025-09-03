@@ -63,7 +63,8 @@ testCSE p = do
         , "The highlighted terms can be defined globally or locally at their use-site."
         , "For a local definition, you can use either a 'let' or 'where' binding."
         , "Of course, you can also change the proposed names to your liking, e.g. make them more concise."
-        , "Also consider that your actual code is most likely structured slightly differently than this suggested improvement."
+        , "Also consider that your actual code is most likely " ++
+          "structured slightly differently than this suggested improvement."
         , "As such, the location of the binding as shown here might also have to be adjusted."
         ]
   where
@@ -99,88 +100,127 @@ bindMapping sharedTerms allTerms = map toName (filter (`elem` sharedTerms) allTe
     camelCase (c:s) = c : camelCase s
 
 printOriginal :: [(Int,String)] -> [(Int, ReifyPicture Int)] -> ReifyPicture Int -> String
-printOriginal bindings termLookup term = case term of
-  Color c i             -> unwords
-                             [ "colored"
-                             , map toLower (parensShow c)
-                             , printNext i
-                             ]
-  Translate x y i       -> unwords
-                             [ "translated"
-                             , truncatedShow x
-                             , truncatedShow y
-                             , printNext i
-                             ]
-  Scale x y i           -> unwords
-                             [ "scaled"
-                             , truncatedShow x
-                             , truncatedShow y
-                             , printNext i
-                             ]
-  Dilate fac i          -> unwords ["dilated", truncatedShow fac, printNext i]
-  Rotate a i            -> unwords ["rotated", truncatedShow a, printNext i]
-  Reflect a i           -> unwords ["reflected", truncatedShow a, printNext i]
-  Clip x y i            -> unwords
-                             [ "clipped"
-                             , truncatedShow x
-                             , truncatedShow y
-                             , printNext i
-                             ]
-  Pictures is           -> indentedList "pictures" $ map printNextAnd is
-  And i1 i2             -> printNextAnd i1 ++ " &\n" ++ printNextAnd i2
-  Rectangle x y         -> unwords ["rectangle", truncatedShow x, truncatedShow y]
-  ThickRectangle t x y  -> unwords
-                             [ "thickRectangle"
-                             , truncatedShow t
-                             , truncatedShow x
-                             , truncatedShow y
-                             ]
-  SolidRectangle x y    -> unwords
-                             [ "solidRectangle"
-                             , truncatedShow x
-                             , truncatedShow y
-                             ]
-  Circle r              -> "circle " ++ truncatedShow r
-  ThickCircle t r       -> unwords
-                             [ "thickCircle"
-                             , truncatedShow t
-                             , truncatedShow r
-                             ]
-  SolidCircle r         -> "solidCircle " ++ truncatedShow r
-  Polygon ps            -> indentedList "polygon" $ map show ps
-  ThickPolygon t ps     -> indentedList ("thickPolygon " ++ truncatedShow t) $ map show ps
-  SolidPolygon ps       -> indentedList "solidPolygon" $ map show ps
-  Polyline ps           -> indentedList "polyline" $ map show ps
-  ThickPolyline t ps    -> indentedList ("thickPolyline " ++ truncatedShow t) $ map show ps
-  Sector a1 a2 r        -> unwords
-                             [ "sector"
-                             , truncatedShow a1
-                             , truncatedShow a2
-                             , truncatedShow r
-                             ]
-  Arc a1 a2 r           -> unwords
-                             [ "arc"
-                             , truncatedShow a1
-                             , truncatedShow a2
-                             , truncatedShow r
-                             ]
-  ThickArc t a1 a2 r    -> unwords
-                             [ "thickArc"
-                             , truncatedShow t
-                             , truncatedShow a1
-                             , truncatedShow a2
-                             , truncatedShow r
-                             ]
-  Curve ps              -> indentedList "curve" $ map show ps
-  ThickCurve t ps       -> indentedList ("thickCurve " ++ truncatedShow t) $ map show ps
-  ClosedCurve ps        -> indentedList "closedCurve" $ map show ps
-  ThickClosedCurve t ps -> indentedList ("thickClosedCurve " ++ truncatedShow t) $ map show ps
-  SolidClosedCurve ps   -> indentedList "solidClosedCurve" $ map show ps
-  Lettering t           -> "lettering " ++ show t
-  StyledLettering s f t -> unwords ["styledLettering", show s, show f, show t]
-  CoordinatePlane       -> "coordinatePlane"
-  Logo                  -> "codeWorldLogo"
-  Blank                 -> "blank"
+printOriginal bindings termLookup term = unwords $ case term of
+  Color c i             ->
+    [ "colored"
+    , map toLower (parensShow c)
+    , printNext i
+    ]
+  Translate x y i       ->
+    [ "translated"
+    , truncatedShow x
+    , truncatedShow y
+    , printNext i
+    ]
+  Scale x y i           ->
+    [ "scaled"
+    , truncatedShow x
+    , truncatedShow y
+    , printNext i
+    ]
+  Dilate fac i          ->
+    [ "dilated"
+    , truncatedShow fac
+    , printNext i
+    ]
+  Rotate a i            ->
+    [ "rotated"
+    , truncatedShow a
+    , printNext i
+    ]
+  Reflect a i           ->
+    [ "reflected"
+    , truncatedShow a
+    , printNext i
+    ]
+  Clip x y i            ->
+    [ "clipped"
+    , truncatedShow x
+    , truncatedShow y
+    , printNext i
+    ]
+  Pictures is           ->
+    indentedList "pictures" $ map printNextAnd is
+  And i1 i2             ->
+    [printNextAnd i1 ++ " &\n" ++ printNextAnd i2]
+  Rectangle x y         ->
+    [ "rectangle"
+    , truncatedShow x
+    , truncatedShow y
+    ]
+  ThickRectangle t x y  ->
+    [ "thickRectangle"
+    , truncatedShow t
+    , truncatedShow x
+    , truncatedShow y
+    ]
+  SolidRectangle x y    ->
+    [ "solidRectangle"
+    , truncatedShow x
+    , truncatedShow y
+    ]
+  Circle r              ->
+    ["circle " ++ truncatedShow r]
+  ThickCircle t r       ->
+    [ "thickCircle"
+    , truncatedShow t
+    , truncatedShow r
+    ]
+  SolidCircle r         ->
+    ["solidCircle " ++ truncatedShow r]
+  Polygon ps            ->
+    indentedList "polygon" $ map show ps
+  ThickPolygon t ps     ->
+    indentedList ("thickPolygon " ++ truncatedShow t) $ map show ps
+  SolidPolygon ps       ->
+    indentedList "solidPolygon" $ map show ps
+  Polyline ps           ->
+    indentedList "polyline" $ map show ps
+  ThickPolyline t ps    ->
+    indentedList ("thickPolyline " ++ truncatedShow t) $ map show ps
+  Sector a1 a2 r        ->
+    [ "sector"
+    , truncatedShow a1
+    , truncatedShow a2
+    , truncatedShow r
+    ]
+  Arc a1 a2 r           ->
+    [ "arc"
+    , truncatedShow a1
+    , truncatedShow a2
+    , truncatedShow r
+    ]
+  ThickArc t a1 a2 r    ->
+    [ "thickArc"
+    , truncatedShow t
+    , truncatedShow a1
+    , truncatedShow a2
+    , truncatedShow r
+    ]
+  Curve ps              ->
+    indentedList "curve" $ map show ps
+  ThickCurve t ps       ->
+    indentedList ("thickCurve " ++ truncatedShow t) $ map show ps
+  ClosedCurve ps        ->
+    indentedList "closedCurve" $ map show ps
+  ThickClosedCurve t ps ->
+    indentedList ("thickClosedCurve " ++ truncatedShow t) $ map show ps
+  SolidClosedCurve ps   ->
+    indentedList "solidClosedCurve" $ map show ps
+  Lettering t           ->
+    ["lettering " ++ show t]
+  StyledLettering s f t ->
+    [ "styledLettering"
+    , show s
+    , show f
+    , show t
+    ]
+  CoordinatePlane       ->
+    ["coordinatePlane"]
+  Logo                  ->
+    ["codeWorldLogo"]
+  Blank                 ->
+    ["blank"]
 
   where
     printNext :: Int -> String
@@ -230,8 +270,8 @@ maxLineWidth :: Int
 maxLineWidth = 80
 
 
-indentedList :: String -> [String] -> String
-indentedList name xs = unwords
+indentedList :: String -> [String] -> [String]
+indentedList name xs =
   [ name ++ "\n  ["
   , intercalate "\n  , " xs
   , "\n  ]"

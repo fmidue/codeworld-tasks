@@ -203,9 +203,9 @@ instance Drawable NormalizedPicture where
   scaled fac1 fac2 p = case p of
     Scale f1 f2 q    -> scaled (fromFactor f1 * fac1) (fromFactor f2 * fac2) q
     Translate x y q  -> Translate
-                         (toPosition $ fromPosition x*fac1)
-                         (toPosition $ fromPosition y*fac2)
-                         $ scaled fac1 fac2 q
+      (toPosition $ fromPosition x*fac1)
+      (toPosition $ fromPosition y*fac2)
+      $ scaled fac1 fac2 q
     Blank            -> Blank
     Color c q        -> Color c $ scaled fac1 fac2 q
     Pictures ps      -> Pictures $ map (scaled fac1 fac2) ps
@@ -260,7 +260,7 @@ instance Drawable NormalizedPicture where
   reflected a (Color c q)   = Color c $ reflected a q
   reflected a p = Reflect (toAngle a) p
 
-   -- TODO: clip free shapes?
+  -- TODO: clip free shapes?
   clipped x y = Clip (toSize x) (toSize y)
 
 

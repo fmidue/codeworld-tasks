@@ -22,8 +22,10 @@ Generates irregular sample frames starting from 0 with given step size and cutof
 The step size is only an approximation, since the generated values are based on irrational numbers.
 -}
 samplesUntil :: Double -> Double -> [Double]
-samplesUntil stepSize cutOff = fuzzyNub $ filter (`fuzzyElem` [0, stepSize .. cutOff]) $ takeWhile (<= cutOff+epsilon) irregularSamples
+samplesUntil stepSize cutOff = fuzzyNub $ filter (`fuzzyElem` [0, stepSize .. cutOff]) rawSamples
   where
+    rawSamples = takeWhile (<= cutOff+epsilon) irregularSamples
+
     fuzzyElem _ []     = False
     fuzzyElem x (y:xs) = abs (x-y) < epsilon || fuzzyElem x xs
 
