@@ -41,6 +41,8 @@ module CodeWorld.Test (
   isIn,
 
   -- * Test Utility
+  -- | Miscellaneous functions for use in tests
+
   -- ** Type Conversions
   normalize,
   N.toConcretePicture,
