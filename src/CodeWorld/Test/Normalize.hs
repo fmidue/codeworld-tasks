@@ -8,6 +8,7 @@ module CodeWorld.Test.Normalize (
   NormalizedPicture(..),
   contains,
   couldHaveTranslation,
+  count,
   getColor,
   getRotation,
   getExactRotation,
@@ -36,8 +37,8 @@ import Data.Tuple.Extra                 (both)
 import Data.Generics.Uniplate.Data      (transform, universe)
 
 import CodeWorld.Tasks.API              (Drawable(..))
-import CodeWorld.Tasks.Types            (Point)
 import CodeWorld.Tasks.VectorSpace (
+  Point,
   vectorSum,
   atOriginWithOffset,
   isRectangle,
@@ -56,6 +57,7 @@ import qualified CodeWorld.Tasks.Picture as P
 A more abstract syntax tree representing images.
 Comparisons between values of this type are intentionally fuzzy:
 Concrete number or point values are abstracted into coarser categories.
+Notably, those values are not lost and can be retrieved if desired.
 
 The constructors of this type are not exposed.
 Values are built using the CodeWorld API.
@@ -389,6 +391,15 @@ p `contains` q = p == q || case p of
   _ -> False
 
 
+{- |
+Returns how often a subpicture appears in the image.
+-}
+count :: NormalizedPicture -> NormalizedPicture -> Int
+count thing inside = minimum $ map singleCount $ getSubPictures thing
+  where
+    singleCount p = length $ filter (`contains` p) $ getSubPictures inside
+
+
 stripTranslation :: NormalizedPicture -> NormalizedPicture
 stripTranslation (Translate _ _ p) = p
 stripTranslation (Color c p) = Color c $ stripTranslation p
@@ -517,7 +528,7 @@ getExactRectangleLengths = fmap (both fromSize) . getRectangleLengths
 
 
 {-|
-Returns actual list of points in the image if it is a /free shape/,
+Returns actual list of points in the image if it is a \"free shape\",
 [] otherwise.
 -}
 getExactPointList :: NormalizedPicture -> [Point]

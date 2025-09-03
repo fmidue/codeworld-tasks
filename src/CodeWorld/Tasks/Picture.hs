@@ -64,8 +64,10 @@ import qualified Data.IntMap            as IM
 import qualified Data.Text              as T
 
 import qualified CodeWorld.Tasks.API    as API
-import CodeWorld.Tasks.Types            (Font, TextStyle, Point, Color)
+import CodeWorld.Tasks.Color            (Color)
+import CodeWorld.Tasks.Types            (Font, TextStyle)
 import CodeWorld.Tasks.VectorSpace (
+  Point,
   dilatedPoint,
   vectorDifference,
   rotatedPoint,
@@ -125,7 +127,7 @@ data ReifyPicture a
 Student facing, basic Picture type.
 The constructor is only in scope when importing "CodeWorld.Test" and hidden otherwise.
 
-Students build a value of this type using the Codeworld API.
+Students build a value of this type using the below API.
 -}
 newtype Picture = PRec (ReifyPicture Picture)
   {- ^

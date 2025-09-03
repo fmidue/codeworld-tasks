@@ -32,24 +32,28 @@ module CodeWorld.Test.AbsTypes (
 import Data.Data                        (Data)
 import Data.Tuple.Extra                 (both)
 
-import CodeWorld.Tasks.Types            (Color, Point)
-import qualified CodeWorld.Tasks.Types  as T
+import CodeWorld.Tasks.Color            (Color)
+import CodeWorld.Tasks.VectorSpace      (Point)
+import qualified CodeWorld.Tasks.Color  as T
 
 
 
 {- |
 Abstract representation of radii and side lengths.
+All values are considered equal.
 -}
 newtype Size = Size Double deriving (Ord,Data)
 
 {- |
 Abstract representation of points in 2D space.
+All values are considered equal.
 -}
 newtype AbsPoint = AbsPoint {unAbsPoint :: (Position,Position)} deriving (Ord,Show,Data)
 
 
 {- |
 Abstract representation of line width.
+Differentiates between standard line width and custom thickness.
 -}
 data Thickness
   = Normal
@@ -59,6 +63,9 @@ data Thickness
 
 {- |
 Abstract representation of line drawing and filling mode.
+Differentiates between the three common shapes: standard, thick, filled.
+
+This does not retain the concrete value.
 -}
 data ShapeKind
   = Hollow Thickness
@@ -68,6 +75,7 @@ data ShapeKind
 
 {- |
 Abstract representation of angles.
+Rotation is divided into four equal sections on the unit circle.
 -}
 data Angle
   = ToQuarter Double
@@ -79,6 +87,8 @@ data Angle
 
 {- |
 Abstract representation of translations.
+Considers values equal if
+both are translated by a positive or negative number or not at all.
 -}
 data Position
   = Neg Double
@@ -89,6 +99,8 @@ data Position
 
 {- |
 Abstract representation of scaling factors.
+Considers values equal if
+both are scaled larger, smaller or not at all.
 -}
 data Factor
   = Smaller Double
@@ -99,18 +111,18 @@ data Factor
 
 {- |
 Abstract representation of `Color`.
+Equal if each HSLA parameter has an acceptable distance from those of the other color.
 -}
 data AbsColor
   = Tone Double Double Double
+  -- ^ Represents concrete `Color`'s HSL value
   | Translucent Double AbsColor
+  -- ^ Transparency modifier
   | AnyColor
   -- ^ Is equal to any color when compared.
   deriving (Ord,Show,Data)
 
 
-{- |
-Equal if each HSLA parameter has an acceptable distance from those of the other color.
--}
 instance Eq AbsColor where
   Tone h1 s1 l1      == Tone h2 s2 l2
     -- Luminosity at extremes => almost pure white/black
