@@ -22,10 +22,12 @@ module CodeWorld.Test (
   module AbsTypes,
 
   -- * Spatial View
+  -- $SpatialView
   -- ** Spatial Relations
   module Relative,
 
   -- ** Predicates on Components
+  R.Components,
   module SolutionPred,
 
   -- | #queries#
@@ -34,8 +36,9 @@ module CodeWorld.Test (
   module SolutionQuery,
 
   -- * Strict Pictures
+  -- $StrictPictures
+
   -- **Type Internals
-  -- $Picture
   Picture(..),
   ReifyPicture(..),
 
@@ -108,8 +111,8 @@ import CodeWorld.Test.Normalize as Normalize (
   getExactPointList,
   )
 import qualified CodeWorld.Test.Normalize as N
+import qualified CodeWorld.Test.Relative as R
 import CodeWorld.Test.Relative as Relative (
-  Components,
   RelativePicSpec,
   SpatialQuery,
   isSouthOf,
@@ -206,6 +209,13 @@ Abstract versions of data types used as parameters in CodeWorld's `Picture` type
 Retain the concrete value, unless stated otherwise, so it can be extracted if necessary.
 -}
 
+{- $SpatialView
+Aside from normalizing the picture and retrieving (individual) parameters,
+we also want to inspect how components are laid out on the canvas
+and query their parameters as a whole.
+The following data types and functions implement this more /zoomed out/ approach.
+-}
+
 {- $PointLists
 Point list based shapes like `curve`, `polyline` or `polygon` differ from other basic shapes
 in that they can be drawn anywhere instead of only in a fixed position in the origin.
@@ -214,10 +224,10 @@ These functions help remedy this problem by comparing two point lists
 to see if a transformation was applied to one to get the other.
 -}
 
-{- $Picture
-Exposed constructors of the student facing Picture type.
-This is used if specific attributes can be determined directly from the un-normalized syntax tree.
-Primitives from [Uniplate](https://hackage.haskell.org/package/uniplate-1.6.13) can then be used
+{- $StrictPictures
+Exposed internals of the student facing `Picture` type.
+This is useful if specific attributes can be determined directly from the un-normalized syntax tree.
+Primitives from [Uniplate](https://hackage.haskell.org/package/uniplate-1.6.13) can then be employed
 to generically traverse the structure.
 -}
 
