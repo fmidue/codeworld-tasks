@@ -457,7 +457,8 @@ TODO: Change return type to [Picture] and adjust the tests.
 Returns the contained `Picture` if the argument is not a basic shape and the argument itself if it is.
 
 __Warning: This is intended to be used on non-composite pictures only.__
-`Pictures` and `And` will be treated as a basic picture (i.e. the function will behave like `id`) if used as an argument.
+`Pictures` and `And` will be treated as a basic picture (i.e. the function will behave like `id`)
+if used as an argument.
 -}
 innerPicture :: Picture -> Picture
 innerPicture p@(PRec (Pictures {})) = p
@@ -484,7 +485,8 @@ The coordinates of the box are given as two points with the following format:
   2. (minimum y-value, maximum y-value)
 -}
 isIn :: Picture -> (Point,Point) -> Bool
-isIn pic ((lowerX, upperX), (lowerY, upperY)) = handle pic ((lowerX,lowerY),(lowerX,upperY),(upperX,upperY),(upperX,lowerY))
+isIn pic ((lowerX, upperX), (lowerY, upperY)) =
+  handle pic ((lowerX,lowerY),(lowerX,upperY),(upperX,upperY),(upperX,lowerY))
 
 handle :: Picture -> (Point,Point,Point,Point) -> Bool
 handle (PRec p) corners@(a,b,c,d) = case p of
