@@ -16,3 +16,8 @@ max_line_length = unset
 
 [.github/{linters,actions/spelling,workflows}/*]
 max_line_length = unset
+
+[examples/*]
+max_line_length = unset
+trim_trailing_whitespace = false
+indent_size = unset
