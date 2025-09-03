@@ -77,6 +77,7 @@ import CodeWorld.Test.AbsTypes as AbsTypes
 import CodeWorld.Test.Animation as Animation
 import CodeWorld.Test.Normalize as Normalize (
   contains,
+  count,
   getColor,
   getRotation,
   getExactRotation,
@@ -140,7 +141,6 @@ import CodeWorld.Test.Solution as SolutionQuery (
   findAllActualAnd,
   findMaybeActualAnd,
   getComponents,
-  count,
   )
 import qualified CodeWorld.Tasks.VectorSpace as V
 import CodeWorld.Tasks.VectorSpace as VectorSpace (

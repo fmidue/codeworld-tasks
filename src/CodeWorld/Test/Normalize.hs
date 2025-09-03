@@ -8,6 +8,7 @@ module CodeWorld.Test.Normalize (
   NormalizedPicture(..),
   contains,
   couldHaveTranslation,
+  count,
   getColor,
   getRotation,
   getExactRotation,
@@ -388,6 +389,15 @@ p `contains` q = p == q || case p of
     Color c2 innerP -> c == c2 && pic `contains` innerP
     _               -> pic `contains` q
   _ -> False
+
+
+{- |
+Returns how often a subpicture appears in the image.
+-}
+count :: NormalizedPicture -> NormalizedPicture -> Int
+count thing inside = minimum $ map singleCount $ getSubPictures thing
+  where
+    singleCount p = length $ filter (`contains` p) $ getSubPictures inside
 
 
 stripTranslation :: NormalizedPicture -> NormalizedPicture
