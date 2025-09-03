@@ -124,7 +124,7 @@ data ReifyPicture a
 
 
 {- |
-Student facing, basic Picture type.
+Student facing, basic picture type.
 The constructor is only in scope when importing "CodeWorld.Test" and hidden otherwise.
 
 Students build a value of this type using the below API.
@@ -186,7 +186,7 @@ arc a1 a2 = PRec . Arc a1 a2
 
 {-|
 Draw a filled in circle segment with these start and end angles and radius.
-This would be `solidArc` following the usual naming scheme.
+This would be @solidArc@ following the usual naming scheme.
 -}
 sector :: Double -> Double -> Double -> Picture
 sector a1 a2 = PRec . Sector a1 a2
@@ -330,7 +330,7 @@ pictures :: [Picture] -> Picture
 pictures = PRec . Pictures
 
 {-|
-Compose two `Pictures`.
+Compose two `Picture`s.
 The left argument will drawn on top of the right argument if they overlap.
 -}
 (&) :: Picture -> Picture -> Picture

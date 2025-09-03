@@ -61,7 +61,7 @@ class Drawable a where
 
   {-|
   Draw a filled in circle segment with these start and end angles and radius.
-  This would be `solidArc` following the usual naming scheme.
+  This would be @solidArc@ following the usual naming scheme.
   -}
   sector :: Double -> Double -> Double -> a
 
@@ -170,13 +170,13 @@ class Drawable a where
   clipped :: Double -> Double -> a -> a
 
   {-|
-  Compose a list of `Picture`s.
+  Compose a list of pictures.
   Equivalent to @foldr (&) blank@.
   -}
   pictures :: [a] -> a
 
   {-|
-  Compose two `Pictures`.
+  Compose two pictures.
   The left argument will be drawn on top of the right argument if they overlap.
   -}
   (&) :: a -> a -> a
@@ -192,7 +192,7 @@ class Drawable a where
   codeWorldLogo :: a
 
   {-|
-  An empty `Picture`.
+  An empty picture.
   This is the identity element of `&`.
   -}
   blank :: a

@@ -551,7 +551,7 @@ isBasic _ = True
 
 
 {- |
-Transform a `NormalizedPicture` into a `Picture`.
+Transform a `NormalizedPicture` into a t`CodeWorld.Test.Picture`.
 Used to compare normalized sample solution to student submission in plain form.
 This only makes sense if there's exactly one way to solve the given task.
 -}
