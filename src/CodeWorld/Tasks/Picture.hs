@@ -126,6 +126,9 @@ data ReifyPicture a
 {- |
 Student facing, basic picture type.
 A value of this type can be build using the CodeWorld API.
+
+"CodeWorld.Test" also exports pattern synonyms for all contained constructors.
+This allows for easier pattern matching in generic traversals.
 -}
 newtype Picture = PRec (ReifyPicture Picture)
   {- ^
