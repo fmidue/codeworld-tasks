@@ -203,13 +203,74 @@ module CodeWorld.Test (
   -- ** Text Rendering Modifiers
   Font(..),
   TextStyle(..),
+
+  -- ** Colour
+  Color,
+  Colour,
+  red,
+  green,
+  yellow,
+  black,
+  white,
+  blue,
+  orange,
+  brown,
+  pink,
+  purple,
+  grey,
+  gray,
+  mixed,
+  lighter,
+  light,
+  darker,
+  dark,
+  brighter,
+  bright,
+  duller,
+  dull,
+  translucent,
+  assortedColors,
+  hue,
+  saturation,
+  luminosity,
+  alpha,
   ) where
 
 
 import Data.Text                        (Text)
 
 import CodeWorld.Tasks.API              (Drawable(..))
-import CodeWorld.Tasks.Color            (Color)
+import CodeWorld.Tasks.Color (
+  Color,
+  Colour,
+  red,
+  green,
+  yellow,
+  black,
+  white,
+  blue,
+  orange,
+  brown,
+  pink,
+  purple,
+  grey,
+  gray,
+  mixed,
+  lighter,
+  light,
+  darker,
+  dark,
+  brighter,
+  bright,
+  duller,
+  dull,
+  translucent,
+  assortedColors,
+  hue,
+  saturation,
+  luminosity,
+  alpha,
+  )
 import CodeWorld.Tasks.Types            (Font(..), TextStyle(..))
 import CodeWorld.Test.Abstract (
   larger,
