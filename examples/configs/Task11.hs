@@ -216,12 +216,11 @@ scene t = undefined
 module Test (test) where
 import qualified Task11
 
-import Data.Generics.Uniplate.Data (para, universe, universeBi)
+import Data.Generics.Uniplate.Data (para, universe)
 import Data.List.Extra (notNull, nubBy, nub)
 import Data.Maybe (fromMaybe, mapMaybe)
 import CodeWorld.Test (
-  Picture(PRec),
-  ReifyPicture(Rotate, Translate),
+  Picture(Rotate, Translate),
   normalize,
 
   (&),
@@ -346,15 +345,15 @@ test =
 
     correctSwaying :: Picture -> Bool
     correctSwaying pic = notNull
-      [ p | Translate x _ p <- universeBi pic, x /= 0, hasRotation p]
+      [ p | Translate x _ p <- universe pic, x /= 0, hasRotation p]
 
     hasRotation :: Picture -> Bool
-    hasRotation pic = notNull [ p | Rotate _ p <- universeBi pic, movedUpEgg p]
+    hasRotation pic = notNull [ p | Rotate _ p <- universe pic, movedUpEgg p]
 
     movedUpEgg :: Picture -> Bool
     movedUpEgg pic = notNull
       [ p
-      | Translate x y p <- universeBi pic
+      | Translate x y p <- universe pic
       , let normalized = normalize p
       , let eggSize = snd (getExactScalingFactors normalized) *
                       fromMaybe 0 (getExactCircleRadius normalized)
@@ -365,5 +364,5 @@ test =
 
 
 gatherTranslations :: Picture -> [(Double,Double)]
-gatherTranslations p = [ (x,y) | PRec (Translate x y _)  <- universe p]
+gatherTranslations p = [ (x,y) | Translate x y _  <- universe p]
 
