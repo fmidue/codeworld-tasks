@@ -235,8 +235,7 @@ module Test (test) where
 import qualified Task08
 
 import CodeWorld.Test (
-  Picture(PRec),
-  ReifyPicture(Rotate),
+  Picture (Rotate),
   hasInnerPicture,
   normalize,
 
@@ -339,7 +338,7 @@ test =
 
 
 moonRotation :: Picture -> [Maybe Double] -> Maybe Double
-moonRotation (PRec (Rotate a q)) res = (+ a) <$> maximum res
+moonRotation (Rotate a q) res = (+ a) <$> maximum res
 moonRotation p res
   | hasInnerPicture p = maximum res
   | p == Task08.moon = Just 0
