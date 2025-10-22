@@ -51,7 +51,7 @@ module CodeWorld.Tasks.Picture (
 
 
 import Control.DeepSeq                  (NFData)
-import Data.Data                        (Data, Typeable)
+import Data.Data                        (Data)
 import Data.Foldable                    (toList)
 import Data.IntMap                      (IntMap, Key)
 import Data.List.Extra                  (headDef)
@@ -120,8 +120,7 @@ data ReifyPicture a
   | CoordinatePlane
   | Logo
   | Blank
-  deriving (Show, Foldable, Eq, Ord, Generic, NFData, Data, Typeable)
-
+  deriving (Show, Foldable, Eq, Ord, Generic, NFData, Data)
 
 {- |
 Student facing, basic picture type.
@@ -135,7 +134,7 @@ newtype Picture = PRec (ReifyPicture Picture)
   The recursive structure of the type is necessary
   for [Reify CSE detection](https://hackage.haskell.org/package/data-reify).
   -}
-  deriving (Show,Eq,Ord,Generic,NFData,Data,Typeable)
+  deriving (Show,Eq,Ord,Generic,NFData,Data)
 
 
 {-|

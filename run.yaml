@@ -1,5 +1,5 @@
 ---
-resolver: nightly-2024-03-20
+resolver: nightly-2025-10-07
 
 packages:
   - .
@@ -18,3 +18,5 @@ extra-deps:
       - .
       - raw
   - hint-0.9.0.8
+  # later versions incompatible with current IO-Tasks
+  - QuickCheck-2.15

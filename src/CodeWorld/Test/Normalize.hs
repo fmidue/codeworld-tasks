@@ -29,7 +29,7 @@ module CodeWorld.Test.Normalize (
   ) where
 
 
-import Data.Data                        (Data,Typeable)
+import Data.Data                        (Data)
 import Data.Text                        (Text)
 import Data.List.Extra                  (headDef, takeEnd)
 import Data.Maybe                       (listToMaybe)
@@ -79,7 +79,7 @@ data NormalizedPicture
   | Arc !ShapeKind !Angle !Angle !Size
   | Reflect !Angle !NormalizedPicture
   | Clip !Size !Size !NormalizedPicture
-  deriving (Show,Eq,Ord,Data,Typeable)
+  deriving (Show,Eq,Ord,Data)
 
 
 instance Drawable NormalizedPicture where
