@@ -331,7 +331,7 @@ pictures = PRec . Pictures
 
 {-|
 Compose two `Picture`s.
-The left argument will drawn on top of the right argument if they overlap.
+The left argument will be drawn on top of the right argument if they overlap.
 -}
 (&) :: Picture -> Picture -> Picture
 a & b = PRec $ And a b
