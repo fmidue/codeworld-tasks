@@ -31,6 +31,7 @@ library
       CodeWorld.Tasks.API
       CodeWorld.Tasks.Color
       CodeWorld.Tasks.Picture
+      CodeWorld.Tasks.Rewrite
       CodeWorld.Tasks.Types
       CodeWorld.Tasks.VectorSpace
       CodeWorld.Test.Abstract
