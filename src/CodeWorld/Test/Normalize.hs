@@ -86,17 +86,6 @@ instance Drawable NormalizedPicture where
 
   pictures = foldr (&) Blank
 
-  Blank & p = p
-  p & Blank = p
-  Polyline (Hollow Normal) ps1 & Polyline (Hollow Thick) ps2 =
-    Polyline (Hollow Thick) ps2 & Polyline (Hollow Normal) ps1
-  Polyline (Hollow t) ps1 & Polyline Solid ps2 =
-    Polyline Solid ps2 & Polyline (Hollow t) ps1
-  Curve (Hollow Normal) ps1 & Curve (Hollow Thick) ps2 =
-    Curve (Hollow Thick) ps2 & Curve (Hollow Normal) ps1
-  Curve (Hollow t) ps1 & Curve Solid ps2 =
-    Curve Solid ps2 & Curve (Hollow t) ps1
-  Polyline sp ps1 & Curve sc ps2 = Curve sc ps2 & Polyline sp ps1
   Polyline s1 ps1 & Polyline s2 ps2 = handleFreeShape True  s1 s2 ps1 ps2
   Curve    s1 ps1 & Curve    s2 ps2 = handleFreeShape False s1 s2 ps1 ps2
   p & Polyline s ps = Polyline s ps & p
@@ -115,13 +104,10 @@ instance Drawable NormalizedPicture where
   coordinatePlane = CoordinatePlane
   codeWorldLogo = Logo
 
-  circle 0 = blank
   circle r = Circle (Hollow Normal) $ toSize r
 
-  solidCircle 0 = blank
   solidCircle r = Circle Solid $ toSize r
 
-  thickCircle 0 _ = blank
   thickCircle (validThickness -> t) (abs -> r)
     | t <= 2 * r = Circle shape $ toSize (r + t/2)
     | otherwise = error $
@@ -132,16 +118,10 @@ instance Drawable NormalizedPicture where
         | t == 2*r = Solid
         | otherwise = Hollow $ thickness t
 
-  rectangle 0 _ = blank
-  rectangle _ 0 = blank
-  rectangle l w = toWideRectangle (Hollow Normal) l w
+  rectangle = toWideRectangle (Hollow Normal)
 
-  solidRectangle 0 _ = blank
-  solidRectangle _ 0 = blank
-  solidRectangle l w = toWideRectangle Solid l w
+  solidRectangle = toWideRectangle Solid
 
-  thickRectangle _ 0 _ = blank
-  thickRectangle _ _ 0 = blank
   thickRectangle (validThickness -> t) (abs -> l) (abs -> w) =
       toWideRectangle shape (l + t/2) (w + t/2)
     where
@@ -167,98 +147,25 @@ instance Drawable NormalizedPicture where
   polygon        = polyline . toOpenShape
   thickPolygon (validThickness -> t) = thickPolyline t . toOpenShape
 
-  lettering "" = blank
-  lettering t  = Lettering t
+  lettering = Lettering
 
-  styledLettering _ _ "" = blank
-  styledLettering _ _ t = Lettering t
+  styledLettering _ _ = Lettering
 
-  translated 0 0 p = p
-  translated x y p = case p of
-    Translate a b q -> translated (x + fromPosition a) (y + fromPosition b) q
-    Pictures ps     -> Pictures $ map (translated x y) ps
-    Blank           -> Blank
-    Color c q       -> Color c $ translated x y q
-    Polyline s ps   -> Polyline s $ map (applyToAbsPoint (vectorSum (x,y))) ps
-    Curve s ps      -> Curve    s $ map (applyToAbsPoint (vectorSum (x,y))) ps
-    a               -> Translate (toPosition x) (toPosition y) a
+  translated x y = Translate (toPosition x) (toPosition y)
 
-  colored c p = case p of
-    Color _ q      -> colored c q
-    Pictures ps    -> Pictures $ map (colored c) ps
-    Blank          -> Blank
-    q              -> case toAbsColor c of
-      Tone 0 0 0 -> q
-      absC       -> Color absC q
+  colored c = Color (toAbsColor c)
 
   dilated fac = scaled fac fac
 
-  scaled 0 _ _ = blank
-  scaled _ 0 _ = blank
-  scaled 1 1 p = p
   scaled fac1 fac2 (Circle sk s) | fac1 == fac2 =
     Circle sk (toSize $ fromSize s *fac1)
   scaled fac1 fac2 (Rectangle sk s1 s2) =
     shapeKindToRectangle sk (fromSize s1 *fac1) (fromSize s2 *fac2)
-  scaled fac1 fac2 p = case p of
-    Scale f1 f2 q    -> scaled (fromFactor f1 * fac1) (fromFactor f2 * fac2) q
-    Translate x y q  -> Translate
-      (toPosition $ fromPosition x*fac1)
-      (toPosition $ fromPosition y*fac2)
-      $ scaled fac1 fac2 q
-    Blank            -> Blank
-    Color c q        -> Color c $ scaled fac1 fac2 q
-    Pictures ps      -> Pictures $ map (scaled fac1 fac2) ps
-    Polyline s ps    -> Polyline s $ map (applyToAbsPoint (scaledVector fac1 fac2)) ps
-    Curve s ps       -> Curve    s $ map (applyToAbsPoint (scaledVector fac1 fac2)) ps
-    a                -> Scale (toFactor fac1) (toFactor fac2) a
+  scaled fac1 fac2 p = Scale (toFactor fac1) (toFactor fac2) p
 
-  rotated a p
-    | modAngle == 0 = p
-    | otherwise = case p of
-      Scale fac1 fac2 c@(Circle {})
-        | modAngle == pi/2 || modAngle == 3*pi/2
-                      -> scaled (fromFactor fac2) (fromFactor fac1) c
-      Rotate a2 q     -> rotated (a + fromAngle a2) q
-      Reflect a2 q    -> reflected (fromAngle a2 + a/2) q
-      Translate x y q -> Translate
-                          (toPosition $ fromPosition x*cos a - fromPosition y*sin a)
-                          (toPosition $ fromPosition x*sin a + fromPosition y*cos a)
-                          $ rotated a q
-      Color c q       -> Color c $ rotated a q
-      Pictures ps     -> Pictures $ map (rotated a) ps
-      Polyline s ps   -> Polyline s $ map (applyToAbsPoint (rotatedVector a)) ps
-      Curve s ps      -> Curve    s $ map (applyToAbsPoint (rotatedVector a)) ps
-      Rectangle s x y
-        | fromAngle absAngle >=  pi  -> rotated (modAngle - pi) $ Rectangle s x y
-      Circle s r      -> Circle s r
-      q               -> Rotate absAngle q
-    where
-      absAngle = toAngle a
-      modAngle = fromAngle absAngle
+  rotated a = Rotate (toAngle a)
 
-
-  reflected a1 (Reflect a2 p)
-    | a1 == fromAngle a2 = p
-    | otherwise = rotated (a1*2 - fromAngle a2*2) p
-  reflected a (Rectangle s x y) = rotated (a*2) $ Rectangle s x y
-  reflected _ (Circle s r) = Circle s r
-  reflected a (Polyline s ps) = Polyline s $ map (applyToAbsPoint (reflectedPoint a)) ps
-  reflected a (Curve s ps) = Curve s $ map (applyToAbsPoint (reflectedPoint a)) ps
-  reflected a (Pictures ps) = Pictures $ map (reflected a) ps
-  reflected a (Translate x y p) =
-    let
-      exactX = fromPosition x
-      exactY = fromPosition y
-      twoTimesSquaredSubOne f = 2 * f a^(2 :: Int) -1
-      twoTimesCosSin = 2 * cos a * sin a
-    in translated
-      (twoTimesSquaredSubOne cos * exactX + twoTimesCosSin * exactY)
-      (twoTimesCosSin * exactX + twoTimesSquaredSubOne sin * exactY)
-      $ reflected a p
-  reflected a (Rotate a2 p) = reflected (a - (fromAngle a2/2)) p
-  reflected a (Color c q)   = Color c $ reflected a q
-  reflected a p = Reflect (toAngle a) p
+  reflected a = Reflect (toAngle a)
 
   -- TODO: clip free shapes?
   clipped x y = Clip (toSize x) (toSize y)

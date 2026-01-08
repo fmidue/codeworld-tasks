@@ -1,3 +1,5 @@
+{-# Language OverloadedStrings #-}
+
 module CodeWorld.Tasks.Rewrite (
   rewriting,
   maybeRewritten,
@@ -15,9 +17,12 @@ maybeRewritten p
 
 rewriting :: Picture -> Picture
 rewriting (Circle 0) = Blank
+
 rewriting (ThickCircle 0 _) = Blank
 rewriting (ThickCircle t r)
   | t == 2 * r = SolidCircle (r + t/2)
+
+rewriting (SolidCircle 0) = Blank
 
 rewriting (Rectangle 0 _) = Blank
 rewriting (Rectangle _ 0) = Blank
@@ -30,21 +35,31 @@ rewriting (ThickRectangle _ _ 0) = Blank
 rewriting (ThickRectangle t l w)
   | t >= 2*l || t >= 2*w = SolidRectangle (l + t/2) (w + t/2)
 
+rewriting (Polygon ps) = Polyline $ toOpenShape ps
+rewriting (ThickPolygon t ps) = ThickPolyline t $ toOpenShape ps
+rewriting (ClosedCurve ps) = Curve $ toOpenShape ps
+rewriting (ThickClosedCurve t ps) = ThickCurve t $ toOpenShape ps
+
+rewriting (Lettering "") = Blank
+rewriting (StyledLettering _ _ "") = Blank
+rewriting (StyledLettering _ _ t) = Lettering t
+
 rewriting (Translate 0 0 p) = p
 rewriting (Translate x y p) = case p of
   Translate a b q -> Translate (x + a) (y + b) q
   Pictures ps     -> Pictures $ map (Translate x y) ps
   Blank           -> Blank
   Color c q       -> Color c $ Translate x y q
-  -- other polyshapes!
-  Polyline ps     -> Polyline $ map (vectorSum (x,y)) ps
-  Curve ps        -> Curve $ map (vectorSum (x,y)) ps
-  a               -> Translate x y a
+  _
+    | isPointBased p -> applyToPoints p $ vectorSum (x,y)
+    | otherwise      -> Translate x y p
+
 rewriting (Color c p) = case p of
   Color _ q      -> Color c q
   Pictures ps    -> Pictures $ map (Color c) ps
   Blank          -> Blank
-  q              -> if c == black then q else Color c q
+  _              -> if c == black then p else Color c p
+
 rewriting (Dilate fac p) = Scale fac fac p
 
 rewriting (Scale 0 _ _) = Blank
@@ -65,10 +80,9 @@ rewriting (Scale fac1 fac2 p) = case p of
   Blank            -> Blank
   Color c q        -> Color c $ Scale fac1 fac2 q
   Pictures ps      -> Pictures $ map (Scale fac1 fac2) ps
-  -- other polyshapes!
-  Polyline ps    -> Polyline $ map (scaledVector fac1 fac2) ps
-  Curve ps       -> Curve $ map (scaledVector fac1 fac2) ps
-  a                -> Scale fac1 fac2 a
+  _
+    | isPointBased p -> applyToPoints p $ scaledVector fac1 fac2
+    | otherwise      -> Scale fac1 fac2 p
 
 -- Seems I need to do more mod 2*pi here now...
 rewriting (Rotate a p)
@@ -85,13 +99,12 @@ rewriting (Rotate a p)
                           $ Rotate a q
       Color c q       -> Color c $ Rotate a q
       Pictures ps     -> Pictures $ map (Rotate a) ps
-      -- other shapes!
-      Polyline ps   -> Polyline $ map (rotatedVector a) ps
-      Curve ps      -> Curve $ map (rotatedVector a) ps
       Rectangle x y
         | modAngle >= pi -> Rotate (modAngle - pi) $ Rectangle x y
       Circle r      -> Circle r
-      q               -> Rotate a q
+      _
+        | isPointBased p -> applyToPoints p $ rotatedVector a
+        | otherwise      -> Rotate a p
     where
       modAngle = toAngle a
       toAngle ang
@@ -105,8 +118,6 @@ rewriting (Reflect a1 (Reflect a2 p))
   | otherwise = Rotate (a1*2 - a2*2) p
 rewriting (Reflect a (Rectangle x y)) = Rotate (a*2) $ Rectangle x y
 rewriting (Reflect _ (Circle r)) = Circle r
-rewriting (Reflect a (Polyline ps)) = Polyline $ map (reflectedPoint a) ps
-rewriting (Reflect a (Curve ps)) = Curve $ map (reflectedPoint a) ps
 rewriting (Reflect a (Pictures ps)) = Pictures $ map (Reflect a) ps
 rewriting (Reflect a (Translate x y p)) =
   let
@@ -118,7 +129,9 @@ rewriting (Reflect a (Translate x y p)) =
     $ Reflect a p
 rewriting (Reflect a (Rotate a2 p)) = Reflect (a - (a2/2)) p
 rewriting (Reflect a (Color c q))   = Color c $ Reflect a q
-rewriting (Reflect a p) = Reflect a p
+rewriting (Reflect a p)
+  | isPointBased p = applyToPoints p $ reflectedPoint a
+  | otherwise = Reflect a p
 
 rewriting (And Blank p) = p
 rewriting (And p Blank) = p
@@ -126,32 +139,43 @@ rewriting (And p q ) = if lowerPrecedence p q then And q p else And p q
 rewriting p = p
 
 
+-- Everything beyond here only considers the "open shape" variant if both kinds exist.
+-- The closed variant is rewritten to an open one in a rule above.
 lowerPrecedence :: Picture -> Picture -> Bool
 lowerPrecedence (Polyline {}) p = isThickOrSolidPoly p || isCurve p
-lowerPrecedence (ThickPolygon {}) (SolidPolygon {}) = True
-lowerPrecedence (ThickPolygon {}) p = isCurve p
 lowerPrecedence (ThickPolyline {}) (SolidPolygon {}) = True
 lowerPrecedence (ThickPolyline {}) p = isCurve p
-lowerPrecedence (Polygon {}) p = isThickOrSolidPoly p || isCurve p
 lowerPrecedence (Curve {}) p = isThickOrSolidCurve p
-lowerPrecedence (ClosedCurve {}) p = isThickOrSolidCurve p
 lowerPrecedence (ThickCurve {}) (SolidClosedCurve {}) = True
-lowerPrecedence (ThickClosedCurve {}) (SolidClosedCurve {}) = True
 lowerPrecedence _ _ = False
 
 isThickOrSolidPoly :: Picture -> Bool
 isThickOrSolidPoly (ThickPolyline {}) = True
-isThickOrSolidPoly (ThickPolygon {}) = True
 isThickOrSolidPoly (SolidPolygon {}) = True
 isThickOrSolidPoly _ = False
 
 isThickOrSolidCurve :: Picture -> Bool
 isThickOrSolidCurve (ThickCurve {}) = True
-isThickOrSolidCurve (ThickClosedCurve {}) = True
 isThickOrSolidCurve (SolidClosedCurve {}) = True
 isThickOrSolidCurve _ = False
+
+isPointBased :: Picture -> Bool
+isPointBased (Polyline {}) = True
+isPointBased p = isThickOrSolidPoly p || isCurve p
+
+applyToPoints :: Picture -> (Point -> Point) -> Picture
+applyToPoints (Polyline ps) f = Polyline $ map f ps
+applyToPoints (ThickPolyline t ps) f = ThickPolyline t $ map f ps
+applyToPoints (SolidPolygon ps) f = SolidPolygon $ map f ps
+applyToPoints (Curve ps) f = Curve $ map f ps
+applyToPoints (ThickCurve t ps) f = ThickCurve t $ map f ps
+applyToPoints (SolidClosedCurve ps) f = SolidClosedCurve $ map f ps
+applyToPoints p _ = p
 
 isCurve :: Picture -> Bool
 isCurve (Curve {}) = True
 isCurve (ClosedCurve {}) = True
 isCurve p = isThickOrSolidCurve p
+
+toOpenShape :: [Point] -> [Point]
+toOpenShape ps = ps ++ take 1 ps
