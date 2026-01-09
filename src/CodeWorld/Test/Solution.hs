@@ -27,7 +27,7 @@ module CodeWorld.Test.Solution (
   getComponents,
   ) where
 
-
+import Control.Monad.Reader
 import Data.Maybe (listToMaybe)
 
 import CodeWorld.Tasks.Picture (Picture)
@@ -54,21 +54,21 @@ type PicPredicate = Components -> Bool
 {- |
 At least one of many predicates evaluates to True.
 -}
-options :: [PicPredicate] -> PicPredicate
-options ps c = any (\p -> p c) ps
+options :: [Reader Components Bool] -> Reader Components Bool
+options = foldr (<||>) (pure False)
 
 
 {- |
 At least one of two predicates evaluates to True.
 -}
-(<||>) :: PicPredicate -> PicPredicate -> PicPredicate
-(<||>) p q c = p c || q c
+(<||>) :: Reader Components Bool -> Reader Components Bool -> Reader Components Bool
+(<||>) p q = (||) <$> p <*> q
 
 
 {- |
 Alias for (`<||>`)
 -}
-option :: PicPredicate -> PicPredicate -> PicPredicate
+option :: Reader Components Bool -> Reader Components Bool -> Reader Components Bool
 option = (<||>)
 
 
@@ -76,20 +76,20 @@ option = (<||>)
 The predicate is satisfied by at least one of the given options.
 Use when there's multiple shape primitives a student could use to solve the task.
 -}
-oneOf :: (a -> PicPredicate) -> [a] ->  PicPredicate
-oneOf p = foldr ((<||>) . p) (const False)
+oneOf :: (a -> Reader Components Bool) -> [a] ->  Reader Components Bool
+oneOf p = fmap or . mapM p
 
 
--- Use a predicate on the list of sub images
-specElems :: (AbstractPicture -> Bool) -> PicPredicate
+-- Apply a function to the list of sub images and retrieve the result
+specElems :: (AbstractPicture -> a) -> (Components -> a)
 specElems f (Components (ps,_)) = f ps
 
 
 {- |
 Returns the first picture element satisfying the predicate if it exists. (translation is removed)
 -}
-findMaybe :: (AbstractPicture -> Bool) -> Components -> Maybe AbstractPicture
-findMaybe f = listToMaybe . findAll f
+findMaybe :: (AbstractPicture -> Bool) -> Reader Components (Maybe AbstractPicture)
+findMaybe = fmap listToMaybe . findAll
 
 
 {- |
@@ -130,70 +130,70 @@ findMaybeActualAnd f g = listToMaybe . findAllActualAnd f g
 {- |
 Finds all picture elements satisfying a predicate, then applies a function. (translation is removed)
 -}
-findAllAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> Components -> [a]
-findAllAnd f g = map g . findAll f
+findAllAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> Reader Components [a]
+findAllAnd f g = map g <$> findAll f
 
 
 {- |
 Finds the first element satisfying a predicate, then applies a function if it exists. (translation is removed)
 -}
-findMaybeAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> Components -> Maybe a
-findMaybeAnd f g = listToMaybe . findAllAnd f g
+findMaybeAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> Reader Components (Maybe a)
+findMaybeAnd f = fmap listToMaybe . findAllAnd f
 
 
 {- |
 True if image contains exactly these subpictures and nothing else.
 -}
-containsExactElems :: [AbstractPicture] -> PicPredicate
-containsExactElems ps = specElems (all (\tp -> Pictures ps `contains` tp) . getSubPictures)
+containsExactElems :: [AbstractPicture] -> Reader Components Bool
+containsExactElems ps = asks $ specElems (all (\tp -> Pictures ps `contains` tp) . getSubPictures)
 
 {- |
 True if image contains at least this subpicture and optionally something else.
 -}
-containsElem :: AbstractPicture -> PicPredicate
-containsElem p = specElems (`contains` p)
+containsElem :: AbstractPicture -> Reader Components Bool
+containsElem p = asks $ specElems (`contains` p)
 
 {- |
 True if image contains at least these subpictures and optionally something else.
 -}
-containsElems :: [AbstractPicture] -> PicPredicate
-containsElems ps = specElems (\t -> all (\p -> t `contains` p) ps)
+containsElems :: [AbstractPicture] -> Reader Components Bool
+containsElems ps = asks $ specElems (\t -> all (\p -> t `contains` p) ps)
 
 
 {- |
 True if image contains this subpicture exactly this many times.
 -}
-thisOften :: AbstractPicture -> Int -> PicPredicate
-thisOften p amount = specElems (\ps -> count p ps == amount)
+thisOften :: AbstractPicture -> Int -> Reader Components Bool
+thisOften p amount = asks $ specElems (\ps -> count p ps == amount)
 
 
 {- |
 True if image contains this subpicture at least this many times.
 -}
-atLeast :: AbstractPicture -> Int -> PicPredicate
-atLeast p amount = specElems (\ps -> count p ps >= amount)
+atLeast :: AbstractPicture -> Int -> Reader Components Bool
+atLeast p amount = asks $ specElems (\ps -> count p ps >= amount)
 
 
 {- |
 True if image contains this subpicture at most many times.
 -}
-atMost :: AbstractPicture -> Int -> PicPredicate
-atMost p amount = specElems (\ps -> count p ps <= amount)
+atMost :: AbstractPicture -> Int -> Reader Components Bool
+atMost p amount = asks $ specElems (\ps -> count p ps <= amount)
 
 
 {- |
 True if amount of times this subpicture is contained in the image lies in the specified range.
 -}
-inRangeOf :: AbstractPicture -> (Int,Int) -> PicPredicate
-inRangeOf p (lower,upper) = specElems (\ps -> let occurs = count p ps in occurs >= lower && occurs <= upper)
+inRangeOf :: AbstractPicture -> (Int,Int) -> Reader Components Bool
+inRangeOf p (lower,upper) = asks $ specElems (\ps -> let occurs = count p ps in occurs >= lower && occurs <= upper)
 
 
 {- |
 Runs the first predicate p, then the second q if p evaluated to `True`.
 Does not run q if p evaluates to `False`.
 -}
-ifThen :: PicPredicate -> PicPredicate -> PicPredicate
-ifThen f g comp = not (f comp) || g comp
+ifThen :: Reader Components Bool -> Reader Components Bool -> Reader Components Bool
+ifThen p q = (not <$> p) <||> q
 
 
 -- Use a predicate on the list of relative positions
@@ -204,15 +204,15 @@ specPosition f (Components (_,rP)) = f rP
 {- |
 Evaluates given predicates on a student submission.
 -}
-evaluatePreds :: [PicPredicate] -> Picture -> Bool
+evaluatePreds :: [Reader Components Bool] -> Picture -> Bool
 evaluatePreds fs pic = all (`evaluatePred` pic) fs
 
 
 {- |
 Evaluates the given predicate on a student submission.
 -}
-evaluatePred :: PicPredicate -> Picture -> Bool
-evaluatePred f = f . getComponents
+evaluatePred :: Reader Components Bool -> Picture -> Bool
+evaluatePred f p = runReader f $ getComponents p
 
 
 {- |
@@ -226,5 +226,5 @@ getComponents = toRelative . normalizeAndAbstract
 True if image contains the specified spatial relations.
 Used with corresponding functions like `CodeWorld.Test.isNorthOf`, `CodeWorld.Test.isLeftOf`, etc.
 -}
-hasRelation :: SpatialQuery -> PicPredicate
-hasRelation = specPosition
+hasRelation :: SpatialQuery -> Reader Components Bool
+hasRelation = asks . specPosition
