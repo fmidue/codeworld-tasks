@@ -95,36 +95,36 @@ findMaybe = fmap listToMaybe . findAll
 {- |
 Returns all picture elements satisfying the predicate. (translation is removed)
 -}
-findAll :: (AbstractPicture -> Bool) -> Components -> [AbstractPicture]
-findAll f (Components (ps,_)) = filter f $ getSubPictures ps
+findAll :: (AbstractPicture -> Bool) -> Reader Components [AbstractPicture]
+findAll f = asks $ filter f . specElems getSubPictures
 
 
 {- |
 Returns all subpictures satisfying the predicate. (includes translation)
 -}
-findAllActual :: (AbstractPicture -> Bool) -> Picture -> [AbstractPicture]
-findAllActual f = filter f . getSubPictures . normalizeAndAbstract
+findAllActual :: (AbstractPicture -> Bool) -> Reader Picture [AbstractPicture]
+findAllActual f = asks $ filter f . getSubPictures . normalizeAndAbstract
 
 
 {- |
 Returns the first subpicture satisfying the predicate if it exists. (includes translation)
 -}
-findMaybeActual :: (AbstractPicture -> Bool) -> Picture -> Maybe AbstractPicture
-findMaybeActual f = listToMaybe . findAllActual f
+findMaybeActual :: (AbstractPicture -> Bool) -> Reader Picture (Maybe AbstractPicture)
+findMaybeActual = fmap listToMaybe . findAllActual
 
 
 {- |
 Finds all subpictures satisfying a predicate, then applies a function. (includes translation)
 -}
-findAllActualAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> Picture -> [a]
-findAllActualAnd f g = map g . findAllActual f
+findAllActualAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> Reader Picture [a]
+findAllActualAnd p f = map f <$> findAllActual p
 
 
 {- |
 Finds the first subpicture satisfying a predicate, then applies a function if it exists. (includes translation)
 -}
-findMaybeActualAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> Picture -> Maybe a
-findMaybeActualAnd f g = listToMaybe . findAllActualAnd f g
+findMaybeActualAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> Reader Picture (Maybe a)
+findMaybeActualAnd p = fmap listToMaybe . findAllActualAnd p
 
 
 {- |
