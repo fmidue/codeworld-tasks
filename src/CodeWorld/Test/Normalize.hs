@@ -118,20 +118,16 @@ instance Drawable NormalizedPicture where
         | t == 2*r = Solid
         | otherwise = Hollow $ thickness t
 
-  rectangle = toWideRectangle (Hollow Normal)
+  rectangle l w = Rectangle (Hollow Normal) (toSize l) (toSize w)
 
-  solidRectangle = toWideRectangle Solid
+  solidRectangle l w = Rectangle Solid (toSize l) (toSize w)
 
   thickRectangle (validThickness -> t) (abs -> l) (abs -> w) =
-      toWideRectangle shape (l + t/2) (w + t/2)
-    where
-      shape
-        | t >= 2*l || t >= 2*w = Solid
-        | otherwise = Hollow $ thickness t
+    Rectangle (Hollow $ thickness t) (toSize l) (toSize w)
 
-  arc      = checkForCircle $ Hollow Normal
-  sector   = checkForCircle Solid
-  thickArc (validThickness -> t) = checkForCircle $ Hollow $ thickness t
+  arc a1 a2 r = Arc (Hollow Normal) (toAngle a1) (toAngle a2) (toSize r)
+  sector a1 a2 r = Arc Solid (toAngle a1) (toAngle a2) (toSize r)
+  thickArc t a1 a2 r = Arc (Hollow $ thickness t) (toAngle a1) (toAngle a2) (toSize r)
 
   curve            = handlePointList $ Curve $ Hollow Normal
   thickCurve (validThickness -> t) = handlePointList $ Curve $ Hollow $ thickness t
@@ -157,11 +153,7 @@ instance Drawable NormalizedPicture where
 
   dilated fac = scaled fac fac
 
-  scaled fac1 fac2 (Circle sk s) | fac1 == fac2 =
-    Circle sk (toSize $ fromSize s *fac1)
-  scaled fac1 fac2 (Rectangle sk s1 s2) =
-    shapeKindToRectangle sk (fromSize s1 *fac1) (fromSize s2 *fac2)
-  scaled fac1 fac2 p = Scale (toFactor fac1) (toFactor fac2) p
+  scaled fac1 fac2 = Scale (toFactor fac1) (toFactor fac2)
 
   rotated a = Rotate (toAngle a)
 
@@ -169,20 +161,6 @@ instance Drawable NormalizedPicture where
 
   -- TODO: clip free shapes?
   clipped x y = Clip (toSize x) (toSize y)
-
-
-checkForCircle :: ShapeKind -> Double -> Double -> Double -> NormalizedPicture
-checkForCircle _ _ _ 0 = blank
-checkForCircle shape a1 a2 r
-  | a1 == a2  = blank
-  | a1 > a2 = arc a2 a1 r
-  | abs (a1 - a2) >= 2*pi = circleKind r
-  | otherwise = Arc shape (toAngle a1) (toAngle a2) (toSize r)
-  where
-    circleKind = case shape of
-      Hollow Normal -> circle
-      Hollow Thick  -> thickCircle 1
-      Solid         -> solidCircle
 
 
 checkForRectangle :: ShapeKind -> [Point] -> NormalizedPicture
@@ -223,18 +201,6 @@ pointsToRectangle shapeKind ps
       Hollow Normal -> rectangle
       Hollow Thick  -> thickRectangle 1
       Solid         -> solidRectangle
-
-
-toWideRectangle :: ShapeKind -> Double -> Double -> NormalizedPicture
-toWideRectangle shape l w
-    | l >= w = Rectangle shape (toSize l) $ toSize w
-    | otherwise = rotated (pi/2) $ Rectangle shape (toSize w) $ toSize l
-
-
-shapeKindToRectangle :: ShapeKind -> Double -> Double -> NormalizedPicture
-shapeKindToRectangle (Hollow Normal) = rectangle
-shapeKindToRectangle (Hollow Thick) = thickRectangle 1
-shapeKindToRectangle Solid = solidRectangle
 
 
 handleFreeShape

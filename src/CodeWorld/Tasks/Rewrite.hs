@@ -26,14 +26,21 @@ rewriting (SolidCircle 0) = Blank
 
 rewriting (Rectangle 0 _) = Blank
 rewriting (Rectangle _ 0) = Blank
+rewriting (Rectangle l w) = toWideRectangle Rectangle l w
 
 rewriting (SolidRectangle 0 _) = Blank
 rewriting (SolidRectangle _ 0) = Blank
+rewriting (SolidRectangle l w) = toWideRectangle SolidRectangle l w
 
 rewriting (ThickRectangle _ 0 _) = Blank
 rewriting (ThickRectangle _ _ 0) = Blank
 rewriting (ThickRectangle t l w)
   | t >= 2*l || t >= 2*w = SolidRectangle (l + t/2) (w + t/2)
+  | otherwise = toWideRectangle (ThickRectangle t) l w
+
+rewriting (Arc a1 a2 r) = checkArc Arc a1 a2 r
+rewriting (ThickArc t a1 a2 r) = checkArc (ThickArc t) a1 a2 r
+rewriting (Sector a1 a2 r) = checkArc Sector a1 a2 r
 
 rewriting (Polygon ps) = Polyline $ toOpenShape ps
 rewriting (ThickPolygon t ps) = ThickPolyline t $ toOpenShape ps
@@ -65,12 +72,18 @@ rewriting (Dilate fac p) = Scale fac fac p
 rewriting (Scale 0 _ _) = Blank
 rewriting (Scale _ 0 _) = Blank
 rewriting (Scale 1 1 p) = p
--- other circles missing!
 rewriting (Scale fac1 fac2 (Circle s)) | fac1 == fac2 =
   Circle (s * fac1)
--- other rectangles missing!
+rewriting (Scale fac1 fac2 (ThickCircle t s)) | fac1 == fac2 =
+  ThickCircle t (s * fac1)
+rewriting (Scale fac1 fac2 (SolidCircle s)) | fac1 == fac2 =
+  SolidCircle (s * fac1)
 rewriting (Scale fac1 fac2 (Rectangle s1 s2)) =
   Rectangle (s1 * fac1) (s2 * fac2)
+rewriting (Scale fac1 fac2 (ThickRectangle t s1 s2)) =
+  ThickRectangle t (s1 * fac1) (s2 * fac2)
+rewriting (Scale fac1 fac2 (SolidRectangle s1 s2)) =
+  SolidRectangle (s1 * fac1) (s2 * fac2)
 rewriting (Scale fac1 fac2 p) = case p of
   Scale f1 f2 q    -> Scale (f1 * fac1) (f2 * fac2) q
   Translate x y q  -> Translate
@@ -179,3 +192,25 @@ isCurve p = isThickOrSolidCurve p
 
 toOpenShape :: [Point] -> [Point]
 toOpenShape ps = ps ++ take 1 ps
+
+toWideRectangle :: (Double -> Double -> Picture) -> Double -> Double -> Picture
+toWideRectangle shape l w
+    | l >= w = shape l w
+    | otherwise = Rotate (pi/2) $ shape w l
+
+
+-- angle still needs to be "mod 2pi'ed"
+checkArc :: (Double -> Double -> Double -> Picture) -> Double -> Double -> Double -> Picture
+checkArc _ _ _ 0 = Blank
+checkArc shape a1 a2 r
+  | a1 == a2  = Blank
+  | a1 > a2 = shape a2 a1 r
+  | abs (a1 - a2) >= 2*pi = circleKind r
+  | otherwise = shape a1 a2 r
+  where
+    -- terrible hack
+    circleKind = case shape undefined undefined undefined of
+      Arc {}-> Circle
+      ThickArc t _ _ _-> ThickCircle t
+      Sector {}        -> SolidCircle
+      _ -> error "That's not an arc!"
