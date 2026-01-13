@@ -1,4 +1,3 @@
-{-# language PatternSynonyms #-}
 
 {- |
 Module exporting all functionality needed for running tests on student submissions.
@@ -351,7 +350,7 @@ import CodeWorld.Test.Relative as Relative (
   atSamePosition,
   )
 import CodeWorld.Sharing.Feedback       (testCSE)
-import CodeWorld.Test.Rewrite           (maybeRewritten)
+import CodeWorld.Test.Rewrite           (applyRewritingRules)
 import CodeWorld.Test.Solution (
   PicPredicate,
   containsElem,
@@ -460,7 +459,7 @@ This applies a number of simplifications, abstractions and rearrangements on the
 The result is a new tree in /canonical/ form.
 -}
 normalize :: Picture -> NormalizedPicture
-normalize = toInterface . rewrite maybeRewritten
+normalize = toInterface . rewrite applyRewritingRules
 
 {- |
 Apply `normalize`, then re-concretize the abstracted syntax tree.

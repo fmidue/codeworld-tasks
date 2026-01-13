@@ -2,7 +2,7 @@
 {-# Language ViewPatterns #-}
 
 module CodeWorld.Test.Rewrite (
-  maybeRewritten,
+  applyRewritingRules,
   ) where
 
 
@@ -24,8 +24,8 @@ import CodeWorld.Tasks.VectorSpace (
 import CodeWorld.Tasks.Picture          (Picture(..))
 
 
-maybeRewritten :: Picture -> Maybe Picture
-maybeRewritten p
+applyRewritingRules :: Picture -> Maybe Picture
+applyRewritingRules p
   | p == rewritten = Nothing
   | otherwise = Just rewritten
   where
