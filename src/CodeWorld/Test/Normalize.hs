@@ -85,11 +85,6 @@ data NormalizedPicture
 instance Drawable NormalizedPicture where
 
   pictures = foldr (&) Blank
-
-  Polyline s1 ps1 & Polyline s2 ps2 = handleFreeShape True  s1 s2 ps1 ps2
-  Curve    s1 ps1 & Curve    s2 ps2 = handleFreeShape False s1 s2 ps1 ps2
-  p & Polyline s ps = Polyline s ps & p
-  p & Curve s ps = Curve s ps & p
   p1 & p2 = Pictures $ ps1 ++ ps2
     where
       ps1 = case p1 of
@@ -108,30 +103,21 @@ instance Drawable NormalizedPicture where
 
   solidCircle r = Circle Solid $ toSize r
 
-  thickCircle (validThickness -> t) (abs -> r)
-    | t <= 2 * r = Circle shape $ toSize (r + t/2)
-    | otherwise = error $
-        "The line width of a thickCircle must not be greater than the diameter. " ++
-        "(This error was thrown inside the test suite)"
-    where
-      shape
-        | t == 2*r = Solid
-        | otherwise = Hollow $ thickness t
+  thickCircle t r = Circle (Hollow $ thickness t) (toSize r)
 
   rectangle l w = Rectangle (Hollow Normal) (toSize l) (toSize w)
 
   solidRectangle l w = Rectangle Solid (toSize l) (toSize w)
 
-  thickRectangle (validThickness -> t) (abs -> l) (abs -> w) =
-    Rectangle (Hollow $ thickness t) (toSize l) (toSize w)
+  thickRectangle t l w = Rectangle (Hollow $ thickness t) (toSize l) (toSize w)
 
   arc a1 a2 r = Arc (Hollow Normal) (toAngle a1) (toAngle a2) (toSize r)
   sector a1 a2 r = Arc Solid (toAngle a1) (toAngle a2) (toSize r)
   thickArc t a1 a2 r = Arc (Hollow $ thickness t) (toAngle a1) (toAngle a2) (toSize r)
 
-  curve            = handlePointList $ Curve $ Hollow Normal
-  thickCurve (validThickness -> t) = handlePointList $ Curve $ Hollow $ thickness t
-  solidClosedCurve = handlePointList (Curve Solid) . toOpenShape
+  curve = Curve (Hollow Normal) . map toAbsPoint
+  thickCurve t = Curve (Hollow $ thickness t) . map toAbsPoint
+  solidClosedCurve = Curve Solid . map toAbsPoint . toOpenShape
 
   closedCurve        = curve . toOpenShape
   thickClosedCurve (validThickness -> t) = thickCurve t . toOpenShape
@@ -201,41 +187,6 @@ pointsToRectangle shapeKind ps
       Hollow Normal -> rectangle
       Hollow Thick  -> thickRectangle 1
       Solid         -> solidRectangle
-
-
-handleFreeShape
-  :: Bool
-  -> ShapeKind
-  -> ShapeKind
-  -> [AbsPoint]
-  -> [AbsPoint]
-  -> NormalizedPicture
-handleFreeShape isPolyline s1 s2 ps1 ps2
-  | endPs1 == toPoints startPs2
-    && s1 == s2
-  = func s1 (toPoints $ ps1 ++ restPs2)
-  | endPs1 == toPoints startRevPs2
-    && s1 == s2
-  = func s1 (toPoints $ ps1 ++ endRevPs2)
-  | otherwise = Pictures [func s1 (toPoints ps1), func s2 (toPoints ps2)]
-    where
-      toPoints = map fromAbsPoint
-      (startPs2,restPs2) = splitAt 1 ps2
-      (startRevPs2, endRevPs2) = splitAt 1 $ reverse ps2
-      endPs1 = toPoints $ takeEnd 1 ps1
-      solidCurveHelper = handlePointList $ Curve Solid
-      solidPolylineHelper = checkForRectangle Solid
-
-      func s = case s of
-        (Hollow Normal)
-          | isPolyline -> polyline
-          | otherwise  -> curve
-        (Hollow Thick)
-          | isPolyline -> thickPolyline 1
-          | otherwise  -> thickCurve 1
-        Solid
-          | isPolyline -> solidPolylineHelper
-          | otherwise  -> solidCurveHelper
 
 
 {-|

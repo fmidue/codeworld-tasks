@@ -1,10 +1,15 @@
 {-# Language OverloadedStrings #-}
+{-# Language ViewPatterns #-}
 
 module CodeWorld.Tasks.Rewrite (
   rewriting,
   maybeRewritten,
   ) where
 
+
+import Data.List.Extra (takeEnd)
+
+import CodeWorld.Tasks.VectorSpace
 import CodeWorld.Test
 
 
@@ -17,24 +22,27 @@ maybeRewritten p
 
 rewriting :: Picture -> Picture
 rewriting (Circle 0) = Blank
+rewriting (Circle (abs -> r)) = Circle r
 
 rewriting (ThickCircle 0 _) = Blank
-rewriting (ThickCircle t r)
+rewriting (ThickCircle t (abs -> r))
   | t == 2 * r = SolidCircle (r + t/2)
+  | otherwise = ThickCircle t  r
 
 rewriting (SolidCircle 0) = Blank
+rewriting (SolidCircle (abs -> r)) = SolidCircle r
 
 rewriting (Rectangle 0 _) = Blank
 rewriting (Rectangle _ 0) = Blank
-rewriting (Rectangle l w) = toWideRectangle Rectangle l w
+rewriting (Rectangle (abs -> l) (abs -> w)) = toWideRectangle Rectangle l w
 
 rewriting (SolidRectangle 0 _) = Blank
 rewriting (SolidRectangle _ 0) = Blank
-rewriting (SolidRectangle l w) = toWideRectangle SolidRectangle l w
+rewriting (SolidRectangle (abs -> l) (abs -> w)) = toWideRectangle SolidRectangle l w
 
 rewriting (ThickRectangle _ 0 _) = Blank
 rewriting (ThickRectangle _ _ 0) = Blank
-rewriting (ThickRectangle t l w)
+rewriting (ThickRectangle t (abs -> l) (abs -> w))
   | t >= 2*l || t >= 2*w = SolidRectangle (l + t/2) (w + t/2)
   | otherwise = toWideRectangle (ThickRectangle t) l w
 
@@ -46,6 +54,10 @@ rewriting (Polygon ps) = Polyline $ toOpenShape ps
 rewriting (ThickPolygon t ps) = ThickPolyline t $ toOpenShape ps
 rewriting (ClosedCurve ps) = Curve $ toOpenShape ps
 rewriting (ThickClosedCurve t ps) = ThickCurve t $ toOpenShape ps
+
+rewriting (Curve ps) = handlePointList Curve ps
+rewriting (ThickCurve t ps) = handlePointList (ThickCurve t) ps
+rewriting (SolidClosedCurve ps) = handlePointList SolidClosedCurve ps
 
 rewriting (Lettering "") = Blank
 rewriting (StyledLettering _ _ "") = Blank
@@ -148,19 +160,32 @@ rewriting (Reflect a p)
 
 rewriting (And Blank p) = p
 rewriting (And p Blank) = p
+rewriting (And (Polyline ps1) (Polyline ps2)) = handleLikeFreeShapes Polyline ps1 ps2
+rewriting (And (ThickPolyline t ps1) (ThickPolyline _ ps2)) = handleLikeFreeShapes (ThickPolyline t) ps1 ps2
+rewriting (And (SolidPolygon ps1) (SolidPolygon ps2)) = handleLikeFreeShapes SolidPolygon ps1 ps2
+rewriting (And (Curve ps1) (Curve ps2)) = handleLikeFreeShapes Curve ps1 ps2
+rewriting (And (ThickCurve t ps1) (ThickCurve _ ps2)) = handleLikeFreeShapes (ThickCurve t) ps1 ps2
+rewriting (And (SolidClosedCurve ps1) (SolidClosedCurve ps2)) = handleLikeFreeShapes SolidClosedCurve ps1 ps2
 rewriting (And p q ) = if lowerPrecedence p q then And q p else And p q
+
 rewriting p = p
 
 
 -- Everything beyond here only considers the "open shape" variant if both kinds exist.
 -- The closed variant is rewritten to an open one in a rule above.
 lowerPrecedence :: Picture -> Picture -> Bool
-lowerPrecedence (Polyline {}) p = isThickOrSolidPoly p || isCurve p
+lowerPrecedence (Polyline {}) p = isThickOrSolidPolyOrCurve p
 lowerPrecedence (ThickPolyline {}) (SolidPolygon {}) = True
 lowerPrecedence (ThickPolyline {}) p = isCurve p
 lowerPrecedence (Curve {}) p = isThickOrSolidCurve p
 lowerPrecedence (ThickCurve {}) (SolidClosedCurve {}) = True
-lowerPrecedence _ _ = False
+lowerPrecedence p q = not (isPolyOrCurve p) && isPolyOrCurve q
+  where
+    isPolyOrCurve (Polyline {}) = True
+    isPolyOrCurve pic = isThickOrSolidPolyOrCurve pic
+
+isThickOrSolidPolyOrCurve :: Picture -> Bool
+isThickOrSolidPolyOrCurve = (||) <$> isThickOrSolidPoly <*> isCurve
 
 isThickOrSolidPoly :: Picture -> Bool
 isThickOrSolidPoly (ThickPolyline {}) = True
@@ -214,3 +239,61 @@ checkArc shape a1 a2 r
       ThickArc t _ _ _-> ThickCircle t
       Sector {}        -> SolidCircle
       _ -> error "That's not an arc!"
+
+handlePointList :: ([Point] -> Picture) -> [Point] -> Picture
+handlePointList shape ps
+    | length noRepeats < 2 = Blank
+    | otherwise = shape noRepeats
+  where
+    noRepeats = removeDupes ps
+
+removeDupes :: Eq a => [a] -> [a]
+removeDupes (x:y:xs)
+  | x == y    =      rec
+  | otherwise =  x : rec
+  where rec = removeDupes (y:xs)
+removeDupes xs = xs
+
+handleLikeFreeShapes
+  :: ([Point] -> Picture)
+  -> [Point]
+  -> [Point]
+  -> Picture
+handleLikeFreeShapes s1 ps1 ps2
+  | endPs1 == startPs2
+  = func s1 $ ps1 ++ restPs2
+  | endPs1 == startRevPs2
+  = func s1 $ ps1 ++ endRevPs2
+  | otherwise = Pictures [func s1 ps1, func s1 ps2]
+    where
+      (startPs2,restPs2) = splitAt 1 ps2
+      (startRevPs2, endRevPs2) = splitAt 1 $ reverse ps2
+      endPs1 = takeEnd 1 ps1
+
+      func s = case s undefined of
+        Polyline _ -> Polyline
+        Curve _    -> Curve
+        ThickPolyline t _ -> ThickPolyline t
+        ThickCurve t _    -> ThickCurve t
+        SolidPolygon _ -> checkForRectangle SolidPolygon
+        SolidClosedCurve _ -> handlePointList SolidClosedCurve
+        _ -> error "Not a point based shape!"
+
+checkForRectangle :: ([Point] -> Picture) -> [Point] -> Picture
+checkForRectangle shape ps = case pointsToRectangle shape ps of
+  Nothing -> handlePointList Polyline ps
+  Just r  -> r
+
+pointsToRectangle :: ([Point] -> Picture) -> [Point] -> Maybe Picture
+pointsToRectangle shapeKind ps
+  | isRectangle ps = Just $ Translate x y $ Rotate angle $ shapeToUse xLen yLen
+  | otherwise = Nothing
+  where
+    (xLen,yLen) = sideLengths ps
+    angle = rotationAngle originPs
+    (originPs,(x,y)) = atOriginWithOffset (drop 1 ps)
+    shapeToUse = case shapeKind undefined of
+      Polyline _        -> Rectangle
+      ThickPolyline t _ -> ThickRectangle t
+      SolidPolygon _    -> SolidRectangle
+      _ -> error "not a Polyline or Polygon shape!"
