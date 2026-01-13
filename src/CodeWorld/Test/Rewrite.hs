@@ -131,12 +131,15 @@ rewriting (Rotate (capAngle -> a) p)
         | isPointBased p -> applyToPoints p $ rotatedVector a
         | otherwise      -> Rotate a p
 
--- shapes missing here...
 rewriting (Reflect (capAngle -> a1) (Reflect (capAngle -> a2) p))
   | a1 == a2 = p
   | otherwise = Rotate (capAngle $ a1*2 - a2*2) p
 rewriting (Reflect a (Rectangle x y)) = Rotate (capAngle $ a*2) $ Rectangle x y
+rewriting (Reflect a (ThickRectangle t x y)) = Rotate (capAngle $ a*2) $ ThickRectangle t x y
+rewriting (Reflect a (SolidRectangle x y)) = Rotate (capAngle $ a*2) $ SolidRectangle x y
 rewriting (Reflect _ (Circle r)) = Circle r
+rewriting (Reflect _ (ThickCircle t r)) = ThickCircle t r
+rewriting (Reflect _ (SolidCircle r)) = SolidCircle r
 rewriting (Reflect a (Pictures ps)) = Pictures $ map (Reflect a) ps
 rewriting (Reflect (capAngle -> a) (Translate x y p)) =
   let
