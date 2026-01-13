@@ -31,7 +31,6 @@ library
       CodeWorld.Tasks.API
       CodeWorld.Tasks.Color
       CodeWorld.Tasks.Picture
-      CodeWorld.Tasks.Rewrite
       CodeWorld.Tasks.Types
       CodeWorld.Tasks.VectorSpace
       CodeWorld.Test.Abstract
@@ -39,6 +38,7 @@ library
       CodeWorld.Test.Animation
       CodeWorld.Test.Normalize
       CodeWorld.Test.Relative
+      CodeWorld.Test.Rewrite
       CodeWorld.Test.Solution
       Paths_codeworld_tasks
   autogen-modules:

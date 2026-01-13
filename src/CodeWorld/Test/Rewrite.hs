@@ -1,7 +1,7 @@
 {-# Language OverloadedStrings #-}
 {-# Language ViewPatterns #-}
 
-module CodeWorld.Tasks.Rewrite (
+module CodeWorld.Test.Rewrite (
   rewriting,
   maybeRewritten,
   ) where
