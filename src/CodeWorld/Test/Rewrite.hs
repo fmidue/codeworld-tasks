@@ -7,7 +7,8 @@ module CodeWorld.Test.Rewrite (
   ) where
 
 
-import Data.List.Extra (takeEnd)
+import Data.Fixed                       (mod')
+import Data.List.Extra                  (takeEnd)
 
 import CodeWorld.Tasks.VectorSpace
 import CodeWorld.Test
@@ -109,12 +110,11 @@ rewriting (Scale fac1 fac2 p) = case p of
     | isPointBased p -> applyToPoints p $ scaledVector fac1 fac2
     | otherwise      -> Scale fac1 fac2 p
 
--- Seems I need to do more mod 2*pi here now...
-rewriting (Rotate a p)
-    | modAngle == 0 = p
+rewriting (Rotate (capAngle -> a) p)
+    | a == 0 = p
     | otherwise = case p of
       Scale fac1 fac2 c@(Circle {})
-        | modAngle == pi/2 || modAngle == 3*pi/2
+        | a == pi/2 || a == 3*pi/2
                       -> Scale fac2 fac1 c
       Rotate a2 q     -> Rotate (a + a2) q
       Reflect a2 q    -> Reflect (a2 + a/2) q
@@ -125,26 +125,20 @@ rewriting (Rotate a p)
       Color c q       -> Color c $ Rotate a q
       Pictures ps     -> Pictures $ map (Rotate a) ps
       Rectangle x y
-        | modAngle >= pi -> Rotate (modAngle - pi) $ Rectangle x y
+        | a >= pi -> Rotate (a - pi) $ Rectangle x y
       Circle r      -> Circle r
       _
         | isPointBased p -> applyToPoints p $ rotatedVector a
         | otherwise      -> Rotate a p
-    where
-      modAngle = toAngle a
-      toAngle ang
-        | ang < 0 = toAngle (ang+2*pi)
-        | ang < 2*pi = ang
-        | otherwise = toAngle (ang-2*pi)
 
--- shapes and angle mods missing here...
-rewriting (Reflect a1 (Reflect a2 p))
+-- shapes missing here...
+rewriting (Reflect (capAngle -> a1) (Reflect (capAngle -> a2) p))
   | a1 == a2 = p
-  | otherwise = Rotate (a1*2 - a2*2) p
-rewriting (Reflect a (Rectangle x y)) = Rotate (a*2) $ Rectangle x y
+  | otherwise = Rotate (capAngle $ a1*2 - a2*2) p
+rewriting (Reflect a (Rectangle x y)) = Rotate (capAngle $ a*2) $ Rectangle x y
 rewriting (Reflect _ (Circle r)) = Circle r
 rewriting (Reflect a (Pictures ps)) = Pictures $ map (Reflect a) ps
-rewriting (Reflect a (Translate x y p)) =
+rewriting (Reflect (capAngle -> a) (Translate x y p)) =
   let
     twoTimesSquaredSubOne f = 2 * f a^(2 :: Int) -1
     twoTimesCosSin = 2 * cos a * sin a
@@ -152,9 +146,9 @@ rewriting (Reflect a (Translate x y p)) =
     (twoTimesSquaredSubOne cos * x + twoTimesCosSin * y)
     (twoTimesCosSin * x + twoTimesSquaredSubOne sin * y)
     $ Reflect a p
-rewriting (Reflect a (Rotate a2 p)) = Reflect (a - (a2/2)) p
+rewriting (Reflect a (Rotate a2 p)) = Reflect (capAngle $ a - (a2/2)) p
 rewriting (Reflect a (Color c q))   = Color c $ Reflect a q
-rewriting (Reflect a p)
+rewriting (Reflect (capAngle -> a) p)
   | isPointBased p = applyToPoints p $ reflectedPoint a
   | otherwise = Reflect a p
 
@@ -306,3 +300,6 @@ pointsToRectangle shapeKind ps
       ThickPolyline t _ -> ThickRectangle t
       SolidPolygon _    -> SolidRectangle
       _ -> error "not a Polyline or Polygon shape!"
+
+capAngle :: (Floating a, Real a) => a -> a
+capAngle a = a `mod'` (2*pi)
