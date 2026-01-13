@@ -125,7 +125,7 @@ rewriting (Color c p) = case p of
   Blank          -> Blank
   _              -> if c == black then p else Color c p
 
-rewriting (Dilate fac p) = Scale fac fac p
+rewriting (Dilate d p) = Scale d d p
 
 rewriting (Scale 0 _ _) = Blank
 rewriting (Scale _ 0 _) = Blank
