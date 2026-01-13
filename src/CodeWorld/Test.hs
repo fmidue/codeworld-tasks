@@ -237,8 +237,6 @@ module CodeWorld.Test (
   ) where
 
 
-import Data.Text                        (Text)
-
 import CodeWorld.Tasks.API              (Drawable(..))
 import CodeWorld.Tasks.Color (
   Color,
@@ -353,6 +351,7 @@ import CodeWorld.Test.Relative as Relative (
   atSamePosition,
   )
 import CodeWorld.Sharing.Feedback       (testCSE)
+import CodeWorld.Test.Rewrite           (maybeRewritten)
 import CodeWorld.Test.Solution (
   PicPredicate,
   containsElem,
@@ -407,8 +406,8 @@ import CodeWorld.Tasks.Picture (
   innerPicture,
   isIn,
   )
+import Data.Generics.Uniplate.Data      (rewrite)
 import Data.List (sort)
-import qualified CodeWorld.Tasks.Picture as P
 
 
 
@@ -461,7 +460,7 @@ This applies a number of simplifications, abstractions and rearrangements on the
 The result is a new tree in /canonical/ form.
 -}
 normalize :: Picture -> NormalizedPicture
-normalize = toInterface
+normalize = toInterface . rewrite maybeRewritten
 
 {- |
 Apply `normalize`, then re-concretize the abstracted syntax tree.
@@ -469,7 +468,7 @@ The result is a new syntax tree, which draws the same image,
 but was simplified and rearranged via `normalize`'s rules.
 -}
 reduce :: Picture -> Picture
-reduce = toConcretePicture . toInterface
+reduce = toConcretePicture . normalize
 
 {- |
 Same as `reduce`,
@@ -477,104 +476,5 @@ but also erases information on which subpictures are drawn in front or behind ot
 -}
 reduceNoOrder :: Picture -> Picture
 reduceNoOrder p = case reduce p of
-  PRec (P.Pictures ps) -> PRec $ P.Pictures $ sort ps
-  rp                 -> rp
-
-pattern Rectangle :: Double -> Double -> Picture
-pattern Rectangle x y = PRec (P.Rectangle x y)
-
-pattern ThickRectangle :: Double -> Double -> Double -> Picture
-pattern ThickRectangle t x y = PRec (P.ThickRectangle t x y)
-
-pattern SolidRectangle :: Double -> Double -> Picture
-pattern SolidRectangle x y = PRec (P.SolidRectangle x y)
-
-pattern Circle :: Double -> Picture
-pattern Circle r = PRec (P.Circle r)
-
-pattern ThickCircle :: Double -> Double -> Picture
-pattern ThickCircle t r = PRec (P.ThickCircle t r)
-
-pattern SolidCircle :: Double -> Picture
-pattern SolidCircle r = PRec (P.SolidCircle r)
-
-pattern Polygon :: [Point] -> Picture
-pattern Polygon ps = PRec (P.Polygon ps)
-
-pattern SolidPolygon :: [Point] -> Picture
-pattern SolidPolygon ps = PRec (P.SolidPolygon ps)
-
-pattern ThickPolygon :: Double -> [Point] -> Picture
-pattern ThickPolygon t ps = PRec (P.ThickPolygon t ps)
-
-pattern Polyline :: [Point] -> Picture
-pattern Polyline ps = PRec (P.Polyline ps)
-
-pattern ThickPolyline :: Double -> [Point] -> Picture
-pattern ThickPolyline t ps = PRec (P.ThickPolyline t ps)
-
-pattern Sector :: Double -> Double -> Double -> Picture
-pattern Sector a1 a2 r = PRec (P.Sector a1 a2 r)
-
-pattern Arc :: Double -> Double -> Double -> Picture
-pattern Arc a1 a2 r = PRec (P.Arc a1 a2 r)
-
-pattern ThickArc :: Double -> Double -> Double -> Double -> Picture
-pattern ThickArc t a1 a2 r = PRec (P.ThickArc t a1 a2 r)
-
-pattern Curve :: [Point] -> Picture
-pattern Curve ps = PRec (P.Curve ps)
-
-pattern ThickCurve :: Double -> [Point] -> Picture
-pattern ThickCurve t ps = PRec (P.ThickCurve t ps)
-
-pattern ClosedCurve :: [Point] -> Picture
-pattern ClosedCurve ps = PRec (P.ClosedCurve ps)
-
-pattern SolidClosedCurve :: [Point] -> Picture
-pattern SolidClosedCurve ps = PRec (P.SolidClosedCurve ps)
-
-pattern ThickClosedCurve :: Double -> [Point] -> Picture
-pattern ThickClosedCurve t ps = PRec (P.ThickClosedCurve t ps)
-
-pattern Lettering :: Text -> Picture
-pattern Lettering t = PRec (P.Lettering t)
-
-pattern StyledLettering :: TextStyle -> Font -> Text -> Picture
-pattern StyledLettering ts f t = PRec (P.StyledLettering ts f t)
-
-pattern Color :: Color -> Picture -> Picture
-pattern Color c p = PRec (P.Color c p)
-
-pattern Translate :: Double -> Double -> Picture -> Picture
-pattern Translate x y p = PRec (P.Translate x y p)
-
-pattern Scale :: Double -> Double -> Picture -> Picture
-pattern Scale fac1 fac2 p = PRec (P.Scale fac1 fac2 p)
-
-pattern Dilate :: Double -> Picture -> Picture
-pattern Dilate fac p = PRec (P.Dilate fac p)
-
-pattern Rotate :: Double -> Picture -> Picture
-pattern Rotate a p = PRec (P.Rotate a p)
-
-pattern Reflect :: Double -> Picture -> Picture
-pattern Reflect a p = PRec (P.Reflect a p)
-
-pattern Clip :: Double -> Double -> Picture -> Picture
-pattern Clip x y p = PRec (P.Clip x y p)
-
-pattern Pictures :: [Picture] -> Picture
-pattern Pictures ps = PRec (P.Pictures ps)
-
-pattern And :: Picture -> Picture -> Picture
-pattern And p1 p2 = PRec (P.And p1 p2)
-
-pattern CoordinatePlane :: Picture
-pattern CoordinatePlane = PRec P.CoordinatePlane
-
-pattern Logo :: Picture
-pattern Logo = PRec P.Logo
-
-pattern Blank :: Picture
-pattern Blank = PRec P.Blank
+  Pictures ps -> Pictures $ sort ps
+  rp          -> rp

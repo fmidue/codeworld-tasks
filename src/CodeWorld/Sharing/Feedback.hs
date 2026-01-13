@@ -14,7 +14,8 @@ import qualified Data.IntMap            as IM
 
 import CodeWorld                        (Picture)
 import CodeWorld.Sharing.HashCons       (BiMap, Node(..), hashconsShare)
-import CodeWorld.Tasks.Picture          (ReifyPicture(..), share, toInterface)
+import CodeWorld.Tasks.Picture          (share, toInterface)
+import CodeWorld.Tasks.Types            (ReifyPicture(..))
 
 
 

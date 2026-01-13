@@ -374,7 +374,7 @@ Used to compare normalized sample solution to student submission in plain form.
 This only makes sense if there's exactly one way to solve the given task.
 -}
 toConcretePicture :: NormalizedPicture -> P.Picture
-toConcretePicture p = P.PRec $ case p of
+toConcretePicture p = case p of
   Rectangle sk sx sy -> (case sk of
     Hollow Normal -> P.Rectangle
     Hollow Thick  -> P.ThickRectangle 1

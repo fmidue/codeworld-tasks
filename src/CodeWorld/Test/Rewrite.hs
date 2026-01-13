@@ -2,7 +2,6 @@
 {-# Language ViewPatterns #-}
 
 module CodeWorld.Test.Rewrite (
-  rewriting,
   maybeRewritten,
   ) where
 
@@ -10,8 +9,19 @@ module CodeWorld.Test.Rewrite (
 import Data.Fixed                       (mod')
 import Data.List.Extra                  (takeEnd)
 
-import CodeWorld.Tasks.VectorSpace
-import CodeWorld.Test
+import CodeWorld.Tasks.Color            (black)
+import CodeWorld.Tasks.VectorSpace (
+  Point,
+  atOriginWithOffset,
+  isRectangle,
+  reflectedPoint,
+  rotatedVector,
+  rotationAngle,
+  scaledVector,
+  sideLengths,
+  vectorSum,
+  )
+import CodeWorld.Tasks.Picture          (Picture(..))
 
 
 maybeRewritten :: Picture -> Maybe Picture
