@@ -2,12 +2,16 @@
 {-# Language ViewPatterns #-}
 
 module CodeWorld.Test.Rewrite (
+  normalize,
+  reduce,
+  reduceNoOrder,
   applyRewritingRules,
   ) where
 
 
 import Data.Fixed                       (mod')
-import Data.List.Extra                  (takeEnd)
+import Data.Generics.Uniplate.Data      (rewrite)
+import Data.List.Extra                  (sort, takeEnd)
 
 import CodeWorld.Tasks.Color            (black)
 import CodeWorld.Tasks.VectorSpace (
@@ -21,7 +25,38 @@ import CodeWorld.Tasks.VectorSpace (
   sideLengths,
   vectorSum,
   )
-import CodeWorld.Tasks.Picture          (Picture(..))
+import CodeWorld.Tasks.Picture          (Picture(..), toInterface)
+import CodeWorld.Test.Normalize         (NormalizedPicture)
+
+
+
+{- |
+Apply a set of rewriting rules to the Picture's syntax tree,
+then abstract concrete parameters of the nodes,
+resulting in a t`CodeWorld.Test.NormalizedPicture`.
+
+The new tree is normalized, simplified
+and allows for more /fuzzy/ comparisons and queries.
+-}
+normalize :: Picture -> NormalizedPicture
+normalize = toInterface . reduce
+
+{- |
+Apply a set of rewriting rules to the Picture's syntax tree.
+The result is a normalized and simplified tree in /canonical/ form,
+which draws the same image.
+-}
+reduce :: Picture -> Picture
+reduce = rewrite applyRewritingRules
+
+{- |
+Same as `reduce`,
+but also erases information on which subpictures are drawn in front or behind others.
+-}
+reduceNoOrder :: Picture -> Picture
+reduceNoOrder p = case reduce p of
+  Pictures ps -> Pictures $ sort ps
+  rp          -> rp
 
 
 applyRewritingRules :: Picture -> Maybe Picture

@@ -350,7 +350,7 @@ import CodeWorld.Test.Relative as Relative (
   atSamePosition,
   )
 import CodeWorld.Sharing.Feedback       (testCSE)
-import CodeWorld.Test.Rewrite           (applyRewritingRules)
+import CodeWorld.Test.Rewrite           (normalize, reduce, reduceNoOrder)
 import CodeWorld.Test.Solution (
   PicPredicate,
   containsElem,
@@ -400,13 +400,10 @@ import CodeWorld.Tasks.VectorSpace (
   )
 import CodeWorld.Tasks.Picture (
   Picture(..),
-  toInterface,
   hasInnerPicture,
   innerPicture,
   isIn,
   )
-import Data.Generics.Uniplate.Data      (rewrite)
-import Data.List (sort)
 
 
 
@@ -452,28 +449,3 @@ This is useful if specific attributes can be determined directly from the un-nor
 Primitives from [Uniplate](https://hackage.haskell.org/package/uniplate-1.6.13) can then be employed
 to generically traverse the structure.
 -}
-
-{- |
-Convert a `Picture` into a t`CodeWorld.Test.NormalizedPicture`.
-This applies a number of simplifications, abstractions and rearrangements on the syntax tree of the image.
-The result is a new tree in /canonical/ form.
--}
-normalize :: Picture -> NormalizedPicture
-normalize = toInterface . rewrite applyRewritingRules
-
-{- |
-Apply `normalize`, then re-concretize the abstracted syntax tree.
-The result is a new syntax tree, which draws the same image,
-but was simplified and rearranged via `normalize`'s rules.
--}
-reduce :: Picture -> Picture
-reduce = toConcretePicture . normalize
-
-{- |
-Same as `reduce`,
-but also erases information on which subpictures are drawn in front or behind others.
--}
-reduceNoOrder :: Picture -> Picture
-reduceNoOrder p = case reduce p of
-  Pictures ps -> Pictures $ sort ps
-  rp          -> rp
