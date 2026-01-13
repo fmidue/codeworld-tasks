@@ -84,15 +84,9 @@ data NormalizedPicture
 
 instance Drawable NormalizedPicture where
 
-  pictures = foldr (&) Blank
-  p1 & p2 = Pictures $ ps1 ++ ps2
-    where
-      ps1 = case p1 of
-        Pictures ps -> ps
-        _           -> [p1]
-      ps2 = case p2 of
-        Pictures ps -> ps
-        _           -> [p2]
+  pictures = Pictures
+
+  p1 & p2 = Pictures [p1,p2]
 
   blank = Blank
 

@@ -158,6 +158,7 @@ rewriting (Reflect a p)
   | isPointBased p = applyToPoints p $ reflectedPoint a
   | otherwise = Reflect a p
 
+rewriting (Pictures ps) = foldr (\a -> rewriting . And a) Blank ps
 rewriting (And Blank p) = p
 rewriting (And p Blank) = p
 rewriting (And (Polyline ps1) (Polyline ps2)) = handleLikeFreeShapes Polyline ps1 ps2
@@ -166,8 +167,16 @@ rewriting (And (SolidPolygon ps1) (SolidPolygon ps2)) = handleLikeFreeShapes Sol
 rewriting (And (Curve ps1) (Curve ps2)) = handleLikeFreeShapes Curve ps1 ps2
 rewriting (And (ThickCurve t ps1) (ThickCurve _ ps2)) = handleLikeFreeShapes (ThickCurve t) ps1 ps2
 rewriting (And (SolidClosedCurve ps1) (SolidClosedCurve ps2)) = handleLikeFreeShapes SolidClosedCurve ps1 ps2
-rewriting (And p q ) = if lowerPrecedence p q then And q p else And p q
-
+rewriting (And p q) = if lowerPrecedence p q
+    then And q p
+    else Pictures $  ps1 ++ ps2
+  where
+    ps1 = case p of
+      Pictures ps -> ps
+      _           -> [p]
+    ps2 = case q of
+      Pictures ps -> ps
+      _           -> [q]
 rewriting p = p
 
 
