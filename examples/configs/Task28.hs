@@ -283,8 +283,6 @@ main = drawingOf (visualize level)
 {-# LANGUAGE DeriveAnyClass #-}
 module Test (test) where
 import qualified Task28
-import CodeWorld (Picture)
-import qualified CodeWorld as CW
 import CodeWorld.Test
 
 import Data.Data (Data)
@@ -332,9 +330,9 @@ test =
     numberOfTiles = length $ filter isJust $ map Task28.level coords
 
     checkDrawnLevel level =
-      reduce ( Task28.visualize level ) ==
-      reduce ( CW.pictures
-        [CW.translated (fromIntegral x) (fromIntegral y) $ maybe CW.blank Task28.aTile $ level (x,y)
+      normalize ( Task28.visualize level ) ==
+      normalize ( pictures
+        [translated (fromIntegral x) (fromIntegral y) $ maybe blank Task28.aTile $ level (x,y)
         | (x,y) <- coords])
 
 

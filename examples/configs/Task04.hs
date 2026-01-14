@@ -243,7 +243,7 @@ import Data.List.Extra (nubOrd)
 import Data.Tuple.Extra (both)
 import Test.HUnit ((~:), (~?), Test(..), assertBool)
 import CodeWorld.Test (
-  colored,
+  withColor,
   green,
   someSolidCircle,
   someSolidRectangle,
@@ -301,8 +301,8 @@ test =
   ]
   where
     frames = samplesUntil 0.2 5
-    grass = colored green someSolidRectangle
-    cheat = colored white someSolidRectangle
+    grass = withColor green someSolidRectangle
+    cheat = withColor white someSolidRectangle
     onSceneAt t = flip evaluatePred (Task04.scene t)
     sceneAt = getComponents . Task04.scene
     mapUniques f = length . nubOrd . map f
@@ -311,5 +311,5 @@ test =
     rotationAt p t = getRotation <$> getElementAt p t
     grassRotations = mapUniques $ rotationAt grass
     grassMovement = mapUniques (fmap getExactTranslation . getElementAt grass)
-    sun = colored yellow someSolidCircle
+    sun = withColor yellow someSolidCircle
 

@@ -284,14 +284,14 @@ import TestHelper (isDeeplyDefined)
 test :: [ Test ]
 test =
   [ "scene =/= undefined?" ~: isDeeplyDefined (Task19.scene 10 0.3)
-  , reduce (Task19.scene 4 1) == toConcretePicture (correct 4 1) ~?
+  , normalize (Task19.scene 4 1) == correct 4 1 ~?
     "submission can produce first, unscaled sample picture?"
-  , reduce (Task19.scene 10 0.3) == toConcretePicture (correct 10 0.3) ~?
+  , normalize (Task19.scene 10 0.3) == correct 10 0.3 ~?
     "submission can produce second, scaled sample picture (scene 10 0.3)?"
   ]
 
-correct :: Int -> Double -> NormalizedPicture
-correct i d = dilated d $ pictures
+correct :: Int -> Double -> Picture
+correct i d = normalize $ dilated d $ pictures
   [ translated (fromIntegral p) 0 $ colored c $ solidRectangle 5 5
   | (c,p) <- reverse $ take i $ zip assortedColors Task19.primes
   ]

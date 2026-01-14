@@ -187,7 +187,7 @@ module Test (test) where
 import qualified Task01
 import Test.HUnit ((~:), (~?), Test)
 import CodeWorld.Test (
-  colored,
+  withColor,
   green,
   someSolidCircle,
   someSolidRectangle,
@@ -208,11 +208,11 @@ test =
     "This picture does not contain a solid circle."
   , onScene (containsElem someSolidRectangle) ~?
     "This picture does not contain a solid rectangle."
-  , onScene (containsElem $ colored yellow someSolidCircle) ~?
+  , onScene (containsElem $ withColor yellow someSolidCircle) ~?
     "The circle is not yellow."
-  , onScene (containsElem $ colored green someSolidRectangle) ~?
+  , onScene (containsElem $ withColor green someSolidRectangle) ~?
     "The rectangle is not green."
-  , onScene (hasRelation $ colored yellow someSolidCircle `isAbove` colored green someSolidRectangle) ~?
+  , onScene (hasRelation $ withColor yellow someSolidCircle `isAbove` withColor green someSolidRectangle) ~?
     "the sun should be positioned above the grass."
   ]
   where

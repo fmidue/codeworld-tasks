@@ -218,8 +218,8 @@ import Data.Maybe (fromJust, isNothing, mapMaybe)
 import Data.List.Extra (nubBy, nubOrd)
 import Test.HUnit ((~:), (~?), Test(..), assertBool)
 import CodeWorld.Test (
-  (&),
-  colored,
+  (.&.),
+  withColor,
   contains,
   green,
   someCircle,
@@ -276,12 +276,12 @@ test =
   ]
   where
     onScene = flip evaluatePred Task07.scene
-    grass = colored green someSolidRectangle
+    grass = withColor green someSolidRectangle
     sceneEggs = findAll isEgg $ getComponents Task07.scene
     usedColors = mapMaybe getColor sceneEggs
     eggChoices = [singleEgg, doubleEgg, polyEggSolid, polyEggThick]
     singleEgg = someCircle
-    doubleEgg = someSolidCircle & someSolidCircle
+    doubleEgg = someSolidCircle .&. someSolidCircle
     polyEggSolid = someSolidCurve 4
     polyEggThick = someCurve 4
     isEgg p = p `contains` singleEgg || p `contains` doubleEgg ||

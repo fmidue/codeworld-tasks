@@ -221,10 +221,10 @@ import Data.List.Extra (notNull, nubBy, nub)
 import Data.Maybe (fromMaybe, mapMaybe)
 import CodeWorld.Test (
   Picture(Rotate, Translate),
-  normalize,
+  normalizeAndAbstract,
 
-  (&),
-  colored,
+  (.&.),
+  withColor,
   green,
   someCircle,
   someCurve,
@@ -322,13 +322,13 @@ test =
     widerCheck = samplesUntil 1 50
     sceneAt t = getComponents (Task11.scene t)
     atStart = flip evaluatePred (Task11.scene 0)
-    grass = colored green someSolidRectangle
+    grass = withColor green someSolidRectangle
     sceneEggs = findAll isEgg $ getComponents $ Task11.scene 0
     usedColors = mapMaybe getColor sceneEggs
     eggChoices = [singleEgg, doubleEgg, polyEggSolid, polyEggThick]
     curveEggs = [polyEggSolid, polyEggThick]
     singleEgg = someCircle
-    doubleEgg = someSolidCircle & someSolidCircle
+    doubleEgg = someSolidCircle .&. someSolidCircle
     polyEggSolid = someSolidCurve 4
     polyEggThick = someCurve 4
 
@@ -354,7 +354,7 @@ test =
     movedUpEgg pic = notNull
       [ p
       | Translate x y p <- universe pic
-      , let normalized = normalize p
+      , let normalized = normalizeAndAbstract p
       , let eggSize = snd (getExactScalingFactors normalized) *
                       fromMaybe 0 (getExactCircleRadius normalized)
       , x == 0
