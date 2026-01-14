@@ -1,7 +1,7 @@
 # codeworld-tasks
 
 This library provides abstractions and functions for evaluating images created in the vector graphics domain CodeWorld.
-The interface is mostly used as part of a Haskell programming task type on our e-learning platform Autotool.
+The interface is mostly used as part of a Haskell programming task type on our e-learning platform [Autotool](https://git.uni-due.de/fmi/autotool-dev).
 
 Documentation is available on [GitHub Pages](https://fmidue.github.io/codeworld-tasks/).
 
