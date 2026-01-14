@@ -26,19 +26,19 @@ import CodeWorld.Tasks.VectorSpace (
   vectorSum,
   )
 import CodeWorld.Tasks.Picture          (Picture(..), toInterface)
-import CodeWorld.Test.Normalize         (NormalizedPicture)
+import CodeWorld.Test.Abstract          (AbstractPicture)
 
 
 
 {- |
 Apply a set of rewriting rules to the Picture's syntax tree,
 then abstract concrete parameters of the nodes,
-resulting in a t`CodeWorld.Test.NormalizedPicture`.
+resulting in an t`CodeWorld.Test.AbstractPicture`.
 
 The new tree is normalized, simplified
 and allows for more /fuzzy/ comparisons and queries.
 -}
-normalize :: Picture -> NormalizedPicture
+normalize :: Picture -> AbstractPicture
 normalize = toInterface . reduce
 
 {- |

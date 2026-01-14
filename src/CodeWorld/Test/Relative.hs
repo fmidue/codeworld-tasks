@@ -26,8 +26,8 @@ import Data.List                        (sort)
 
 import CodeWorld.Tasks.API              (Drawable(..))
 import CodeWorld.Test.AbsTypes          (Position(..), fromPosition)
-import CodeWorld.Test.Normalize (
-  NormalizedPicture(..),
+import CodeWorld.Test.Abstract (
+  AbstractPicture(..),
   getSubPictures,
   stripTranslation,
   getTranslation,
@@ -54,8 +54,8 @@ data Direction = Direction {
 Abstract representation of spatial positioning between two picture components.
 -}
 data RelativePicSpec
-  = Is NormalizedPicture Direction NormalizedPicture
-  | Alone NormalizedPicture
+  = Is AbstractPicture Direction AbstractPicture
+  | Alone AbstractPicture
   deriving(Eq,Ord)
 
 
@@ -63,7 +63,7 @@ data RelativePicSpec
 Abstract representation of a picture in terms of its components
 and the pairwise spatial positioning between them.
 -}
-newtype Components = Components (NormalizedPicture,[RelativePicSpec]) deriving (Eq,Ord,Show)
+newtype Components = Components (AbstractPicture,[RelativePicSpec]) deriving (Eq,Ord,Show)
 
 
 instance Show Direction where
@@ -80,63 +80,63 @@ instance Show RelativePicSpec where
 
 
 
-(===) :: NormalizedPicture -> NormalizedPicture -> Bool
+(===) :: AbstractPicture -> AbstractPicture -> Bool
 p1 === p2 = toRelative p1 == toRelative p2
 
 
-southOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
+southOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec
 southOf p1 = Is p1 (Direction (Just South) Nothing)
 
 
-northOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
+northOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec
 northOf = flip southOf
 
 
-westOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
+westOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec
 westOf p1 = Is p1 (Direction  Nothing (Just West))
 
 
-eastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
+eastOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec
 eastOf = flip westOf
 
 
-onTopOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
+onTopOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec
 onTopOf p1 = Is p1 (Direction Nothing Nothing)
 
 
-southwestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
+southwestOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec
 southwestOf p1 = Is p1 (Direction (Just South) (Just West))
 
 
-southeastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
+southeastOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec
 southeastOf p1 = Is p1 (Direction (Just South) (Just East))
 
 
-northwestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
+northwestOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec
 northwestOf = flip southeastOf
 
 
-northeastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec
+northeastOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec
 northeastOf = flip southwestOf
 
 
-alone :: NormalizedPicture -> RelativePicSpec
+alone :: AbstractPicture -> RelativePicSpec
 alone = Alone
 
 
-containedSouthOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedSouthOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedSouthOf p q (Is p1 (Direction (Just South) Nothing) p2) =
   p1 `contains` p && p2 `contains` q
 containedSouthOf _ _ _ = False
 
 
-containedNorthOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedNorthOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedNorthOf p q (Is p1 (Direction (Just South) Nothing) p2) =
   p1 `contains` q && p2 `contains` p
 containedNorthOf _ _ _ = False
 
 
-containedWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedWestOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedWestOf p q (Is p1 (Direction Nothing (Just West)) p2) =
   p1 `contains` p && p2 `contains` q
 containedWestOf p q (Is p1 (Direction Nothing (Just East)) p2) =
@@ -144,7 +144,7 @@ containedWestOf p q (Is p1 (Direction Nothing (Just East)) p2) =
 containedWestOf _ _ _ = False
 
 
-containedEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedEastOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedEastOf p q (Is p1 (Direction Nothing (Just East)) p2) =
   p1 `contains` p && p2 `contains` q
 containedEastOf p q (Is p1 (Direction Nothing (Just West)) p2) =
@@ -152,43 +152,43 @@ containedEastOf p q (Is p1 (Direction Nothing (Just West)) p2) =
 containedEastOf _ _ _ = False
 
 
-containedSouthWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedSouthWestOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedSouthWestOf p q (Is p1 (Direction (Just South) (Just West)) p2) =
   p1 `contains` p && p2 `contains` q
 containedSouthWestOf _ _ _ = False
 
 
-containedSouthEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedSouthEastOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedSouthEastOf p q (Is p1 (Direction (Just South) (Just East)) p2) =
   p1 `contains` p && p2 `contains` q
 containedSouthEastOf _ _ _ = False
 
 
-containedNorthWestOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedNorthWestOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedNorthWestOf p q (Is p1 (Direction (Just South) (Just East)) p2) =
   p1 `contains` q && p2 `contains` p
 containedNorthWestOf _ _ _ = False
 
 
-containedNorthEastOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedNorthEastOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedNorthEastOf p q (Is p1 (Direction (Just South) (Just West)) p2) =
   p1 `contains` q && p2 `contains` p
 containedNorthEastOf _ _ _ = False
 
 
-containedAbove :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedAbove :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedAbove p q (Is p1 (Direction (Just South) _) p2) =
   p1 `contains` q && p2 `contains` p
 containedAbove _ _ _ = False
 
 
-containedBelow :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedBelow :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedBelow p q (Is p1 (Direction (Just South) _) p2) =
   p1 `contains` p && p2 `contains` q
 containedBelow _ _ _ = False
 
 
-containedLeftOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedLeftOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedLeftOf p q (Is p1 (Direction _ (Just West)) p2) =
   p1 `contains` p && p2 `contains` q
 containedLeftOf p q (Is p1 (Direction _ (Just East)) p2) =
@@ -196,7 +196,7 @@ containedLeftOf p q (Is p1 (Direction _ (Just East)) p2) =
 containedLeftOf _ _ _ = False
 
 
-containedRightOf :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedRightOf :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedRightOf p q (Is p1 (Direction _ (Just East)) p2) =
   p1 `contains` p && p2 `contains` q
 containedRightOf p q (Is p1 (Direction _ (Just West)) p2) =
@@ -204,7 +204,7 @@ containedRightOf p q (Is p1 (Direction _ (Just West)) p2) =
 containedRightOf _ _ _ = False
 
 
-containedSameSpot :: NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool
+containedSameSpot :: AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool
 containedSameSpot p q (Is p1 (Direction Nothing Nothing) p2) =
   p1 `contains` p && p2 `contains` q || p1 `contains` q && p2 `contains` p
 containedSameSpot _ _ _ = False
@@ -213,112 +213,112 @@ containedSameSpot _ _ _ = False
 {- |
 True if the first argument is below the second and aligned on the X-axis.
 -}
-isSouthOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isSouthOf :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isSouthOf = compositeRelation containedSouthOf
 
 
 {- |
 True if the first argument is above the second and aligned on the X-axis.
 -}
-isNorthOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isNorthOf :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isNorthOf = compositeRelation containedNorthOf
 
 
 {- |
 True if the first argument is left of the second and aligned on the Y-axis.
 -}
-isWestOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isWestOf :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isWestOf = compositeRelation containedWestOf
 
 
 {- |
 True if the first argument is right of the second and aligned on the Y-axis.
 -}
-isEastOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isEastOf :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isEastOf = compositeRelation containedEastOf
 
 
 {- |
 True if the first argument is below and to the left of the second.
 -}
-isSouthWestOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isSouthWestOf :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isSouthWestOf = compositeRelation containedSouthWestOf
 
 
 {- |
 True if the first argument is below and to the right of the second.
 -}
-isSouthEastOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isSouthEastOf :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isSouthEastOf = compositeRelation containedSouthEastOf
 
 
 {- |
 True if the first argument is above and to the left of the second.
 -}
-isNorthWestOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isNorthWestOf :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isNorthWestOf = compositeRelation containedNorthWestOf
 
 
 {- |
 True if the first argument is above and to the right of the second.
 -}
-isNorthEastOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isNorthEastOf :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isNorthEastOf = compositeRelation containedNorthEastOf
 
 
 {- |
 True if the first argument is above the second, ignoring horizontal positioning.
 -}
-isAbove :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isAbove :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isAbove = compositeRelation containedAbove
 
 
 {- |
 True if the first argument is below the second, ignoring horizontal positioning.
 -}
-isBelow :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isBelow :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isBelow = compositeRelation containedBelow
 
 
 {- |
 True if the first argument is left of the second, ignoring vertical positioning.
 -}
-isLeftOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isLeftOf :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isLeftOf = compositeRelation containedLeftOf
 
 
 {- |
 True if the first argument is right of the second, ignoring vertical positioning.
 -}
-isRightOf :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+isRightOf :: AbstractPicture -> AbstractPicture -> SpatialQuery
 isRightOf = compositeRelation containedRightOf
 
 
 {- |
 True if the first argument is at the same position as the second.
 -}
-atSamePosition :: NormalizedPicture -> NormalizedPicture -> SpatialQuery
+atSamePosition :: AbstractPicture -> AbstractPicture -> SpatialQuery
 atSamePosition = compositeRelation containedSameSpot
 
 
 compositeRelation
-  :: (NormalizedPicture -> NormalizedPicture -> RelativePicSpec -> Bool)
-  -> NormalizedPicture
-  -> NormalizedPicture
+  :: (AbstractPicture -> AbstractPicture -> RelativePicSpec -> Bool)
+  -> AbstractPicture
+  -> AbstractPicture
   -> SpatialQuery
 compositeRelation g p q rs = all (`any` rs) allRelations
   where
     allRelations = [g x y | x <- getSubPictures p, y <- getSubPictures q]
 
 
-toRelative :: NormalizedPicture -> Components
+toRelative :: AbstractPicture -> Components
 toRelative p = case p of
   Pictures ps -> Components (Pictures $ map stripTranslation ps, sort $ relativePosition ps)
   a           -> let noTranslation = stripTranslation a in
     Components (noTranslation,[alone noTranslation])
 
 
-relativePosition :: [NormalizedPicture] -> [RelativePicSpec]
+relativePosition :: [AbstractPicture] -> [RelativePicSpec]
 relativePosition [] = []
 relativePosition (p:ps)
   | couldHaveTranslation p = othersTrans ++ relativePosition ps
@@ -338,9 +338,9 @@ relativePosition (p:ps)
 
 
 orientation
-  :: NormalizedPicture
-  -> NormalizedPicture
-  -> NormalizedPicture
+  :: AbstractPicture
+  -> AbstractPicture
+  -> AbstractPicture
   -> RelativePicSpec
 orientation = toDirection . getTranslation
   where

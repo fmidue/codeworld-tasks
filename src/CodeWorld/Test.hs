@@ -6,10 +6,10 @@ Module exporting all functionality needed for running tests on student submissio
 module CodeWorld.Test (
   -- * Normalized Pictures
   -- ** Data Type
-  NormalizedPicture,
+  AbstractPicture,
   Drawable(..),
 
-  -- ** Helpers for defining NormalizedPictures
+  -- ** Helpers for defining AbstractPictures
   -- $Helpers
   someCircle,
   someSolidCircle,
@@ -35,7 +35,7 @@ module CodeWorld.Test (
   smallerX,
   smallerY,
 
-  -- ** Queries on NormalizedPictures
+  -- ** Queries on AbstractPictures
   -- $NormalizedQueries
   contains,
   count,
@@ -269,7 +269,7 @@ import CodeWorld.Tasks.Color (
   alpha,
   )
 import CodeWorld.Tasks.Types            (Font(..), TextStyle(..))
-import CodeWorld.Test.Abstract (
+import CodeWorld.Test.AbstractHelpers (
   larger,
   largerX,
   largerY,
@@ -309,8 +309,8 @@ import CodeWorld.Test.Animation (
   samplesUntil,
   irregularSamples,
   )
-import CodeWorld.Test.Normalize (
-  NormalizedPicture,
+import CodeWorld.Test.Abstract (
+  AbstractPicture,
 
   contains,
   count,
@@ -408,13 +408,13 @@ import CodeWorld.Tasks.Picture (
 
 
 {- $Helpers
-Using the `Drawable` API directly does not make much sense with t`CodeWorld.Test.NormalizedPicture`s,
+Using the `Drawable` API directly does not make much sense with t`CodeWorld.Test.AbstractPicture`s,
 since concrete parameters are abstracted.
 The following functions can be used instead to build an image more generally.
 -}
 
 {- $NormalizedQueries
-Functions for retrieving parameters of a t`CodeWorld.Test.NormalizedPicture`.
+Functions for retrieving parameters of an t`CodeWorld.Test.AbstractPicture`.
 For each parameter there is an abstract and a concrete version.
 The concrete version simply removes the abstract type wrapper and returns the contained value.
 
