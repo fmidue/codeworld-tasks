@@ -34,6 +34,7 @@ module CodeWorld.Test (
   smaller,
   smallerX,
   smallerY,
+  (.&.),
 
   -- ** Queries on AbstractPictures
   -- $NormalizedQueries
@@ -184,6 +185,43 @@ module CodeWorld.Test (
   testCSE,
 
   -- * Re-exports of CodeWorld Interface
+
+  -- ** Pictures
+  rectangle,
+  thickRectangle,
+  solidRectangle,
+  circle,
+  thickCircle,
+  solidCircle,
+  arc,
+  sector,
+  thickArc,
+  curve,
+  thickCurve,
+  closedCurve,
+  thickClosedCurve,
+  solidClosedCurve,
+  polyline,
+  thickPolyline,
+  polygon,
+  thickPolygon,
+  solidPolygon,
+  lettering,
+  styledLettering,
+  colored,
+  coloured,
+  translated,
+  scaled,
+  dilated,
+  rotated,
+  reflected,
+  clipped,
+  pictures,
+  (&),
+  coordinatePlane,
+  codeWorldLogo,
+  blank,
+
   -- ** Math
   Point,
   Vector,
@@ -269,6 +307,7 @@ import CodeWorld.Tasks.Color (
   )
 import CodeWorld.Tasks.Types            (Font(..), TextStyle(..))
 import CodeWorld.Test.AbstractHelpers (
+  (.&.),
   larger,
   largerX,
   largerY,
@@ -407,6 +446,41 @@ import CodeWorld.Tasks.Picture (
   hasInnerPicture,
   innerPicture,
   isIn,
+
+  rectangle,
+  thickRectangle,
+  solidRectangle,
+  circle,
+  thickCircle,
+  solidCircle,
+  arc,
+  sector,
+  thickArc,
+  curve,
+  thickCurve,
+  closedCurve,
+  thickClosedCurve,
+  solidClosedCurve,
+  polyline,
+  thickPolyline,
+  polygon,
+  thickPolygon,
+  solidPolygon,
+  lettering,
+  styledLettering,
+  colored,
+  coloured,
+  translated,
+  scaled,
+  dilated,
+  rotated,
+  reflected,
+  clipped,
+  pictures,
+  (&),
+  coordinatePlane,
+  codeWorldLogo,
+  blank,
   )
 
 

@@ -168,5 +168,11 @@ someSolidCurve :: Int -> AbstractPicture
 someSolidCurve points = normalizeAndAbstract $
   solidClosedCurve $ take (points+1) $ iterate (both (+0.1)) (1,0)
 
+{- |
+Compose two abstract pictures.
+-}
+(.&.) :: AbstractPicture -> AbstractPicture -> AbstractPicture
+p .&. q = normalizeAndAbstract $ toConcretePicture p & toConcretePicture q
+
 reNormalize :: (Picture -> Picture) -> (AbstractPicture -> AbstractPicture)
 reNormalize f = normalizeAndAbstract . f . toConcretePicture
