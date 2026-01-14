@@ -3,9 +3,8 @@
 
 module CodeWorld.Test.Rewrite (
   normalize,
-  reduce,
-  reduceNoOrder,
-  applyRewritingRules,
+  normalizeNoOrder,
+  normalizeAndAbstract,
   ) where
 
 
@@ -38,23 +37,23 @@ resulting in an t`CodeWorld.Test.AbstractPicture`.
 The new tree is normalized, simplified
 and allows for more /fuzzy/ comparisons and queries.
 -}
-normalize :: Picture -> AbstractPicture
-normalize = toInterface . reduce
+normalizeAndAbstract :: Picture -> AbstractPicture
+normalizeAndAbstract = toInterface . normalize
 
 {- |
 Apply a set of rewriting rules to the Picture's syntax tree.
 The result is a normalized and simplified tree in /canonical/ form,
 which draws the same image.
 -}
-reduce :: Picture -> Picture
-reduce = rewrite applyRewritingRules
+normalize :: Picture -> Picture
+normalize = rewrite applyRewritingRules
 
 {- |
-Same as `reduce`,
+Same as `normalize`,
 but also erases information on which subpictures are drawn in front or behind others.
 -}
-reduceNoOrder :: Picture -> Picture
-reduceNoOrder p = case reduce p of
+normalizeNoOrder :: Picture -> Picture
+normalizeNoOrder p = case normalize p of
   Pictures ps -> Pictures $ sort ps
   rp          -> rp
 

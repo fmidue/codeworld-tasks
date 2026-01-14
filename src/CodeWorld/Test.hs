@@ -165,9 +165,9 @@ module CodeWorld.Test (
 
   -- ** Type Conversions
   normalize,
+  normalizeNoOrder,
+  normalizeAndAbstract,
   toConcretePicture,
-  reduce,
-  reduceNoOrder,
 
   -- ** Functions for Point-based Shapes
   -- $PointLists
@@ -348,7 +348,11 @@ import CodeWorld.Test.Relative as Relative (
   atSamePosition,
   )
 import CodeWorld.Sharing.Feedback       (testCSE)
-import CodeWorld.Test.Rewrite           (normalize, reduce, reduceNoOrder)
+import CodeWorld.Test.Rewrite (
+  normalize,
+  normalizeAndAbstract,
+  normalizeNoOrder,
+  )
 import CodeWorld.Test.Solution (
   PicPredicate,
   containsElem,

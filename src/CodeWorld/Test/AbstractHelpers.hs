@@ -6,7 +6,7 @@ import Data.Tuple.Extra                 (both)
 import CodeWorld.Tasks.Picture
 import CodeWorld.Tasks.Color            (Color(..))
 import CodeWorld.Test.Abstract          (AbstractPicture, toConcretePicture)
-import CodeWorld.Test.Rewrite           (normalize)
+import CodeWorld.Test.Rewrite           (normalizeAndAbstract)
 
 
 
@@ -14,13 +14,13 @@ import CodeWorld.Test.Rewrite           (normalize)
 Draw an abstract, hollow square.
 -}
 someSquare :: AbstractPicture
-someSquare = normalize $ rectangle 1 1
+someSquare = normalizeAndAbstract $ rectangle 1 1
 
 {- |
 Draw an abstract, filled in square.
 -}
 someSolidSquare :: AbstractPicture
-someSolidSquare = normalize $ solidRectangle 1 1
+someSolidSquare = normalizeAndAbstract $ solidRectangle 1 1
 
 {- |
 Draw an abstract, hollow rectangle.
@@ -40,37 +40,37 @@ someSolidRectangle = someSolidSquare
 Draw an abstract, hollow rectangle that is wider than tall.
 -}
 someWideRectangle :: AbstractPicture
-someWideRectangle = normalize $ rectangle 2 1
+someWideRectangle = normalizeAndAbstract $ rectangle 2 1
 
 {- |
 Draw an abstract, filled in rectangle that is wider than tall.
 -}
 someWideSolidRectangle :: AbstractPicture
-someWideSolidRectangle = normalize $ solidRectangle 2 1
+someWideSolidRectangle = normalizeAndAbstract $ solidRectangle 2 1
 
 {- |
 Draw an abstract, hollow rectangle that is taller than wide.
 -}
 someTallRectangle :: AbstractPicture
-someTallRectangle = normalize $ rectangle 1 2
+someTallRectangle = normalizeAndAbstract $ rectangle 1 2
 
 {- |
 Draw an abstract, filled in rectangle that is taller than wide.
 -}
 someTallSolidRectangle :: AbstractPicture
-someTallSolidRectangle = normalize $ solidRectangle 1 2
+someTallSolidRectangle = normalizeAndAbstract $ solidRectangle 1 2
 
 {- |
 Draw an abstract, hollow circle.
 -}
 someCircle :: AbstractPicture
-someCircle = normalize $ circle 1
+someCircle = normalizeAndAbstract $ circle 1
 
 {- |
 Draw an abstract, filled in circle.
 -}
 someSolidCircle :: AbstractPicture
-someSolidCircle = normalize $ solidCircle 1
+someSolidCircle = normalizeAndAbstract $ solidCircle 1
 
 {- |
 Provide an abstract shape with a color.
@@ -150,13 +150,15 @@ largerY = reNormalize $ scaled 1 2
 Draw an abstract, open curve with this many segments.
 -}
 someCurve :: Int -> AbstractPicture
-someCurve points = normalize $ curve $ take (points+1) $ iterate (both (+0.1)) (1,0)
+someCurve points = normalizeAndAbstract $
+  curve $ take (points+1) $ iterate (both (+0.1)) (1,0)
 
 {- |
 Draw an abstract, filled in and closed curve with this many segments.
 -}
 someSolidCurve :: Int -> AbstractPicture
-someSolidCurve points = normalize $ solidClosedCurve $ take (points+1) $ iterate (both (+0.1)) (1,0)
+someSolidCurve points = normalizeAndAbstract $
+  solidClosedCurve $ take (points+1) $ iterate (both (+0.1)) (1,0)
 
 reNormalize :: (Picture -> Picture) -> (AbstractPicture -> AbstractPicture)
-reNormalize f = normalize . f . toConcretePicture
+reNormalize f = normalizeAndAbstract . f . toConcretePicture
