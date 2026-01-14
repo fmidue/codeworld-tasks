@@ -7,7 +7,6 @@ module CodeWorld.Test (
   -- * Normalized Pictures
   -- ** Data Type
   AbstractPicture,
-  Drawable(..),
 
   -- ** Helpers for defining AbstractPictures
   -- $Helpers
@@ -236,7 +235,6 @@ module CodeWorld.Test (
   ) where
 
 
-import CodeWorld.Tasks.API              (Drawable(..))
 import CodeWorld.Tasks.Color (
   Color,
   Colour,
@@ -408,9 +406,11 @@ import CodeWorld.Tasks.Picture (
 
 
 {- $Helpers
-Using the `Drawable` API directly does not make much sense with t`CodeWorld.Test.AbstractPicture`s,
-since concrete parameters are abstracted.
-The following functions can be used instead to build an image more generally.
+You'll want to compare something to or query for some abstract picture frequently in tests,
+e.g. ask if there's a *yellow circle* somewhere in the image (but the size of the circle is not important).
+
+The following functions can be used to build such a generalized image directly,
+instead of creating a normal picture, then abstracting it.
 -}
 
 {- $NormalizedQueries
