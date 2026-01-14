@@ -22,6 +22,7 @@ module CodeWorld.Test (
   someWideSolidRectangle,
   someCurve,
   someSolidCurve,
+  withColor,
   someColor,
   rotatedHalf,
   rotatedQuarter,
@@ -291,6 +292,7 @@ import CodeWorld.Test.AbstractHelpers (
   someTallSolidRectangle,
   someWideRectangle,
   someWideSolidRectangle,
+  withColor,
   )
 import CodeWorld.Test.AbsTypes (
   Position,

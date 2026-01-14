@@ -73,11 +73,19 @@ someSolidCircle :: AbstractPicture
 someSolidCircle = normalizeAndAbstract $ solidCircle 1
 
 {- |
-Provide an abstract shape with a color.
-The color will be treated as equal with any other color.
+Provide an abstract shape with a wildcard color.
+The color will be treated as equal to any other color.
 -}
 someColor :: AbstractPicture -> AbstractPicture
 someColor = reNormalize $ colored AnyColor
+
+{- |
+Provide an abstract shape with a specific color.
+The color will be treated as equal to any color with *similar* HSL values.
+(See 'CodeWorld.Test.isSameColor' for more information)
+-}
+withColor :: Color -> AbstractPicture -> AbstractPicture
+withColor color = reNormalize $ colored color
 
 {- |
 Rotate an abstract shape by up to a quarter turn.
