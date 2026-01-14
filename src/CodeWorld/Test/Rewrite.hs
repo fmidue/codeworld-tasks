@@ -283,14 +283,13 @@ checkArc _ _ _ 0 = Blank
 checkArc shape a1 a2 r
   | a1 == a2  = Blank
   | a1 > a2 = shape a2 a1 r
-  | abs (a1 - a2) >= 2*pi = circleKind r
+  | abs (a1 - a2) >= 2*pi = circleKind
   | otherwise = shape a1 a2 r
   where
-    -- terrible hack
-    circleKind = case shape undefined undefined undefined of
-      Arc {}-> Circle
-      ThickArc t _ _ _-> ThickCircle t
-      Sector {}        -> SolidCircle
+    circleKind = case shape a1 a2 r of
+      Arc {}-> Circle r
+      ThickArc t _ _ _-> ThickCircle t r
+      Sector {}        -> SolidCircle r
       _ -> error "That's not an arc!"
 
 handlePointList :: ([Point] -> Picture) -> [Point] -> Picture
@@ -314,23 +313,14 @@ handleLikeFreeShapes
   -> Picture
 handleLikeFreeShapes s1 ps1 ps2
   | endPs1 == startPs2
-  = func s1 $ ps1 ++ restPs2
+  = s1 $ ps1 ++ restPs2
   | endPs1 == startRevPs2
-  = func s1 $ ps1 ++ endRevPs2
-  | otherwise = Pictures [func s1 ps1, func s1 ps2]
+  = s1 $ ps1 ++ endRevPs2
+  | otherwise = Pictures [s1 ps1, s1 ps2]
     where
       (startPs2,restPs2) = splitAt 1 ps2
       (startRevPs2, endRevPs2) = splitAt 1 $ reverse ps2
       endPs1 = takeEnd 1 ps1
-
-      func s = case s undefined of
-        Polyline _ -> Polyline
-        Curve _    -> Curve
-        ThickPolyline t _ -> ThickPolyline t
-        ThickCurve t _    -> ThickCurve t
-        SolidPolygon _ -> SolidPolygon
-        SolidClosedCurve _ -> SolidClosedCurve
-        _ -> error "Not a point based shape!"
 
 checkForRectangle :: ([Point] -> Picture) -> [Point] -> Picture
 checkForRectangle shape ps = case pointsToRectangle shape ps of
@@ -345,7 +335,7 @@ pointsToRectangle shapeKind ps
     (xLen,yLen) = sideLengths ps
     angle = rotationAngle originPs
     (originPs,(x,y)) = atOriginWithOffset (drop 1 ps)
-    shapeToUse = case shapeKind undefined of
+    shapeToUse = case shapeKind ps of
       Polyline _        -> Rectangle
       ThickPolyline t _ -> ThickRectangle t
       SolidPolygon _    -> SolidRectangle
