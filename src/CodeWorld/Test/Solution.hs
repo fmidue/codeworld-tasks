@@ -30,7 +30,7 @@ module CodeWorld.Test.Solution (
 
 import Data.Maybe (listToMaybe)
 
-import CodeWorld.Tasks.Picture (Picture, toInterface)
+import CodeWorld.Tasks.Picture (Picture)
 import CodeWorld.Test.Abstract (
   AbstractPicture(..),
   contains,
@@ -42,6 +42,7 @@ import CodeWorld.Test.Relative (
   SpatialQuery,
   toRelative,
   )
+import CodeWorld.Test.Rewrite (normalizeAndAbstract)
 
 
 {- |
@@ -102,7 +103,7 @@ findAll f (Components (ps,_)) = filter f $ getSubPictures ps
 Returns all subpictures satisfying the predicate. (includes translation)
 -}
 findAllActual :: (AbstractPicture -> Bool) -> Picture -> [AbstractPicture]
-findAllActual f = filter f . getSubPictures . toInterface
+findAllActual f = filter f . getSubPictures . normalizeAndAbstract
 
 
 {- |
@@ -218,7 +219,7 @@ evaluatePred f = f . getComponents
 Transforms student submission into spatial `Components` form.
 -}
 getComponents :: Picture -> Components
-getComponents = toRelative . toInterface
+getComponents = toRelative . normalizeAndAbstract
 
 
 {- |
