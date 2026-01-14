@@ -277,10 +277,9 @@ toWideRectangle shape l w
     | otherwise = Rotate (pi/2) $ shape w l
 
 
--- angle still needs to be "mod 2pi'ed"
 checkArc :: (Double -> Double -> Double -> Picture) -> Double -> Double -> Double -> Picture
 checkArc _ _ _ 0 = Blank
-checkArc shape a1 a2 r
+checkArc shape (capAngle -> a1) (capAngle -> a2) r
   | a1 == a2  = Blank
   | a1 > a2 = shape a2 a1 r
   | abs (a1 - a2) >= 2*pi = circleKind
