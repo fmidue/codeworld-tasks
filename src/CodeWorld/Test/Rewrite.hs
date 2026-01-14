@@ -100,6 +100,9 @@ rewriting (ThickPolygon t ps) = ThickPolyline t $ toOpenShape ps
 rewriting (ClosedCurve ps) = Curve $ toOpenShape ps
 rewriting (ThickClosedCurve t ps) = ThickCurve t $ toOpenShape ps
 
+rewriting (Polyline ps) = checkForRectangle Polyline ps
+rewriting (ThickPolyline t ps) = checkForRectangle (ThickPolyline t) ps
+rewriting (SolidPolygon ps) = checkForRectangle SolidPolygon ps
 rewriting (Curve ps) = handlePointList Curve ps
 rewriting (ThickCurve t ps) = handlePointList (ThickCurve t) ps
 rewriting (SolidClosedCurve ps) = handlePointList SolidClosedCurve ps
@@ -325,13 +328,13 @@ handleLikeFreeShapes s1 ps1 ps2
         Curve _    -> Curve
         ThickPolyline t _ -> ThickPolyline t
         ThickCurve t _    -> ThickCurve t
-        SolidPolygon _ -> checkForRectangle SolidPolygon
-        SolidClosedCurve _ -> handlePointList SolidClosedCurve
+        SolidPolygon _ -> SolidPolygon
+        SolidClosedCurve _ -> SolidClosedCurve
         _ -> error "Not a point based shape!"
 
 checkForRectangle :: ([Point] -> Picture) -> [Point] -> Picture
 checkForRectangle shape ps = case pointsToRectangle shape ps of
-  Nothing -> handlePointList Polyline ps
+  Nothing -> handlePointList shape ps
   Just r  -> r
 
 pointsToRectangle :: ([Point] -> Picture) -> [Point] -> Maybe Picture
