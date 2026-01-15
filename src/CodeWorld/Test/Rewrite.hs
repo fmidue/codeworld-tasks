@@ -78,13 +78,12 @@ rewriting (AnyRectangle _ _ 0) = Blank
 rewriting (ThickRectangle t (abs -> l) (abs -> w))
   | t >= 2*l || t >= 2*w = SolidRectangle (l + t/2) (w + t/2)
 
-rewriting (AnyRectangle s (abs -> l) (abs -> w)) = toWideRectangle (AnyRectangle s) l w
+rewriting (AnyRectangle s (abs -> l) (abs -> w)) = toWideRectangle s l w
 
-rewriting (AnyArc s a1 a2 r) = checkArc (AnyArc s) a1 a2 r
+rewriting (AnyArc s a1 a2 r) = checkArc s a1 a2 r
 
 rewriting (AnyPolyline (Closed (Outline mOutline)) ps) = AnyPolyline (Open mOutline) $ toOpenShape ps
-rewriting (AnyPolyline s@(Open _) ps) = checkForRectangle (AnyPolyline s) ps
-rewriting (SolidPolygon ps) = checkForRectangle SolidPolygon ps
+rewriting (AnyPolyline s ps) = checkForRectangle s ps
 
 rewriting (AnyCurve (Closed (Outline mOutline)) ps) = AnyCurve (Open mOutline) $ toOpenShape ps
 rewriting (AnyCurve s ps) = handlePointList (AnyCurve s) ps
@@ -95,13 +94,13 @@ rewriting (StyledLettering _ _ t) = Lettering t
 
 rewriting (Translate 0 0 p) = p
 rewriting (Translate x y p) = case p of
-  Translate a b q -> Translate (x + a) (y + b) q
-  Pictures ps     -> Pictures $ map (Translate x y) ps
-  Blank           -> Blank
-  Color c q       -> Color c $ Translate x y q
-  _
-    | isPointBased p -> applyToPoints p $ vectorSum (x,y)
-    | otherwise      -> Translate x y p
+  Translate a b q  -> Translate (x + a) (y + b) q
+  Pictures ps      -> Pictures $ map (Translate x y) ps
+  Blank            -> Blank
+  Color c q        -> Color c $ Translate x y q
+  AnyPolyline s ps -> AnyPolyline s $ map (vectorSum (x,y)) ps
+  AnyCurve s ps    -> AnyCurve s $ map (vectorSum (x,y)) ps
+  _                -> Translate x y p
 
 rewriting (Color c p) = case p of
   Color _ q      -> Color c q
@@ -127,9 +126,9 @@ rewriting (Scale fac1 fac2 p) = case p of
   Blank            -> Blank
   Color c q        -> Color c $ Scale fac1 fac2 q
   Pictures ps      -> Pictures $ map (Scale fac1 fac2) ps
-  _
-    | isPointBased p -> applyToPoints p $ scaledVector fac1 fac2
-    | otherwise      -> Scale fac1 fac2 p
+  AnyPolyline s ps -> AnyPolyline s $ map (scaledVector fac1 fac2) ps
+  AnyCurve s ps    -> AnyCurve s $ map (scaledVector fac1 fac2) ps
+  _                -> Scale fac1 fac2 p
 
 rewriting (Rotate (capAngle -> a) p)
     | a == 0 = p
@@ -148,9 +147,9 @@ rewriting (Rotate (capAngle -> a) p)
       r@AnyRectangle {}
         | a >= pi -> Rotate (a - pi) r
       c@AnyCircle {}      -> c
-      _
-        | isPointBased p -> applyToPoints p $ rotatedVector a
-        | otherwise      -> Rotate a p
+      AnyPolyline s ps -> AnyPolyline s $ map (rotatedVector a) ps
+      AnyCurve s ps    -> AnyCurve s $ map (rotatedVector a) ps
+      _                -> Rotate a p
 
 rewriting (Reflect (capAngle -> a1) (Reflect (capAngle -> a2) p))
   | a1 == a2 = p
@@ -168,19 +167,18 @@ rewriting (Reflect (capAngle -> a) (Translate x y p)) =
     $ Reflect a p
 rewriting (Reflect a (Rotate a2 p)) = Reflect (capAngle $ a - (a2/2)) p
 rewriting (Reflect a (Color c q))   = Color c $ Reflect a q
-rewriting (Reflect (capAngle -> a) p)
-  | isPointBased p = applyToPoints p $ reflectedPoint a
-  | otherwise = Reflect a p
+rewriting (Reflect (capAngle -> a) p) = case p of
+  AnyPolyline s ps -> AnyPolyline s $ map (reflectedPoint a) ps
+  AnyCurve s ps    -> AnyCurve s $ map (reflectedPoint a) ps
+  _                -> Reflect a p
 
 rewriting (Pictures ps) = foldr (\a -> rewriting . And a) Blank ps
 rewriting (And Blank p) = p
 rewriting (And p Blank) = p
-rewriting (And (Polyline ps1) (Polyline ps2)) = handleLikeFreeShapes Polyline ps1 ps2
-rewriting (And (ThickPolyline t ps1) (ThickPolyline _ ps2)) = handleLikeFreeShapes (ThickPolyline t) ps1 ps2
-rewriting (And (SolidPolygon ps1) (SolidPolygon ps2)) = handleLikeFreeShapes SolidPolygon ps1 ps2
-rewriting (And (Curve ps1) (Curve ps2)) = handleLikeFreeShapes Curve ps1 ps2
-rewriting (And (ThickCurve t ps1) (ThickCurve _ ps2)) = handleLikeFreeShapes (ThickCurve t) ps1 ps2
-rewriting (And (SolidClosedCurve ps1) (SolidClosedCurve ps2)) = handleLikeFreeShapes SolidClosedCurve ps1 ps2
+rewriting (And (AnyPolyline s1 ps1) (AnyPolyline s2 ps2))
+  | s1 == s2 = handleLikeFreeShapes (AnyPolyline s1) ps1 ps2
+rewriting (And (AnyCurve s1 ps1) (AnyCurve s2 ps2))
+  | s1 == s2 = handleLikeFreeShapes (AnyCurve s1) ps1 ps2
 rewriting (And p q) = if lowerPrecedence p q
     then And q p
     else Pictures $  ps1 ++ ps2
@@ -194,72 +192,32 @@ rewriting (And p q) = if lowerPrecedence p q
 rewriting p = p
 
 
--- Everything beyond here only considers the "open shape" variant if both kinds exist.
+-- This only considers the "open shape" variant if both kinds exist.
 -- The closed variant is rewritten to an open one in a rule above.
 lowerPrecedence :: Picture -> Picture -> Bool
-lowerPrecedence (Polyline {}) p = isThickOrSolidPolyOrCurve p
-lowerPrecedence (ThickPolyline {}) (SolidPolygon {}) = True
-lowerPrecedence (ThickPolyline {}) p = isCurve p
-lowerPrecedence (Curve {}) p = isThickOrSolidCurve p
-lowerPrecedence (ThickCurve {}) (SolidClosedCurve {}) = True
-lowerPrecedence p q = not (isPolyOrCurve p) && isPolyOrCurve q
-  where
-    isPolyOrCurve (Polyline {}) = True
-    isPolyOrCurve pic = isThickOrSolidPolyOrCurve pic
-
-isThickOrSolidPolyOrCurve :: Picture -> Bool
-isThickOrSolidPolyOrCurve = (||) <$> isThickOrSolidPoly <*> isCurve
-
-isThickOrSolidPoly :: Picture -> Bool
-isThickOrSolidPoly (ThickPolyline {}) = True
-isThickOrSolidPoly (SolidPolygon {}) = True
-isThickOrSolidPoly _ = False
-
-isThickOrSolidCurve :: Picture -> Bool
-isThickOrSolidCurve (ThickCurve {}) = True
-isThickOrSolidCurve (SolidClosedCurve {}) = True
-isThickOrSolidCurve _ = False
-
-isPointBased :: Picture -> Bool
-isPointBased (Polyline {}) = True
-isPointBased p = isThickOrSolidPoly p || isCurve p
-
-applyToPoints :: Picture -> (Point -> Point) -> Picture
-applyToPoints (Polyline ps) f = Polyline $ map f ps
-applyToPoints (ThickPolyline t ps) f = ThickPolyline t $ map f ps
-applyToPoints (SolidPolygon ps) f = SolidPolygon $ map f ps
-applyToPoints (Curve ps) f = Curve $ map f ps
-applyToPoints (ThickCurve t ps) f = ThickCurve t $ map f ps
-applyToPoints (SolidClosedCurve ps) f = SolidClosedCurve $ map f ps
-applyToPoints p _ = p
-
-isCurve :: Picture -> Bool
-isCurve (Curve {}) = True
-isCurve (ClosedCurve {}) = True
-isCurve p = isThickOrSolidCurve p
+lowerPrecedence (AnyPolyline {}) (AnyCurve {}) = True
+lowerPrecedence (AnyPolyline (Open _) _) (SolidPolygon {}) = True
+lowerPrecedence (Polyline {}) (ThickPolyline {}) = True
+lowerPrecedence (AnyCurve (Open _) _) (SolidClosedCurve {}) = True
+lowerPrecedence (Curve {}) (ThickCurve {}) = True
+lowerPrecedence _ _ = False
 
 toOpenShape :: [Point] -> [Point]
 toOpenShape ps = ps ++ take 1 ps
 
-toWideRectangle :: (Double -> Double -> Picture) -> Double -> Double -> Picture
-toWideRectangle shape l w
-    | l >= w = shape l w
-    | otherwise = Rotate (pi/2) $ shape w l
+toWideRectangle :: Style -> Double -> Double -> Picture
+toWideRectangle style l w
+    | l >= w = AnyRectangle style l w
+    | otherwise = Rotate (pi/2) $ AnyRectangle style w l
 
 
-checkArc :: (Double -> Double -> Double -> Picture) -> Double -> Double -> Double -> Picture
+checkArc :: Style -> Double -> Double -> Double -> Picture
 checkArc _ _ _ 0 = Blank
-checkArc shape (capAngle -> a1) (capAngle -> a2) r
-  | a1 == a2  = Blank
-  | a1 > a2 = shape a2 a1 r
-  | abs (a1 - a2) >= 2*pi = circleKind
-  | otherwise = shape a1 a2 r
-  where
-    circleKind = case shape a1 a2 r of
-      Arc {}-> Circle r
-      ThickArc t _ _ _-> ThickCircle t r
-      Sector {}        -> SolidCircle r
-      _ -> error "That's not an arc!"
+checkArc style (capAngle -> a1) (capAngle -> a2) r
+  | a1 == a2              = Blank
+  | a1 > a2               = AnyArc style a2 a1 r
+  | abs (a1 - a2) >= 2*pi = AnyCircle style r
+  | otherwise             = AnyArc style a1 a2 r
 
 handlePointList :: ([Point] -> Picture) -> [Point] -> Picture
 handlePointList shape ps
@@ -291,12 +249,12 @@ handleLikeFreeShapes s1 ps1 ps2
       (startRevPs2, endRevPs2) = splitAt 1 $ reverse ps2
       endPs1 = takeEnd 1 ps1
 
-checkForRectangle :: ([Point] -> Picture) -> [Point] -> Picture
+checkForRectangle :: Shape -> [Point] -> Picture
 checkForRectangle shape ps = case pointsToRectangle shape ps of
-  Nothing -> handlePointList shape ps
+  Nothing -> handlePointList (AnyPolyline shape) ps
   Just r  -> r
 
-pointsToRectangle :: ([Point] -> Picture) -> [Point] -> Maybe Picture
+pointsToRectangle :: Shape -> [Point] -> Maybe Picture
 pointsToRectangle shapeKind ps
   | isRectangle ps = Just $ Translate x y $ Rotate angle $ shapeToUse xLen yLen
   | otherwise = Nothing
@@ -304,11 +262,11 @@ pointsToRectangle shapeKind ps
     (xLen,yLen) = sideLengths ps
     angle = rotationAngle originPs
     (originPs,(x,y)) = atOriginWithOffset (drop 1 ps)
-    shapeToUse = case shapeKind ps of
-      Polyline _        -> Rectangle
-      ThickPolyline t _ -> ThickRectangle t
-      SolidPolygon _    -> SolidRectangle
-      _ -> error "not a Polyline or Polygon shape!"
+    shapeToUse = case shapeKind of
+      Closed (Outline (Just t)) -> ThickRectangle t
+      Open (Just t)             -> ThickRectangle t
+      Closed Solid              -> SolidRectangle
+      _                         -> Rectangle
 
 capAngle :: (Floating a, Real a) => a -> a
 capAngle a = a `mod'` (2*pi)
