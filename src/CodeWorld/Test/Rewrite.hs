@@ -25,6 +25,7 @@ import CodeWorld.Tasks.VectorSpace (
   vectorSum,
   )
 import CodeWorld.Tasks.Picture          (Picture(..), toInterface)
+import CodeWorld.Tasks.Types            (Shape(..), Style(..))
 import CodeWorld.Test.Abstract          (AbstractPicture)
 
 
@@ -66,46 +67,27 @@ applyRewritingRules p
     rewritten = rewriting p
 
 rewriting :: Picture -> Picture
-rewriting (Circle 0) = Blank
-rewriting (Circle (abs -> r)) = Circle r
-
-rewriting (ThickCircle 0 _) = Blank
+rewriting (AnyCircle _ 0) = Blank
 rewriting (ThickCircle t (abs -> r))
   | t == 2 * r = SolidCircle (r + t/2)
-  | otherwise = ThickCircle t  r
+rewriting (AnyCircle s (abs -> r)) = AnyCircle s r
 
-rewriting (SolidCircle 0) = Blank
-rewriting (SolidCircle (abs -> r)) = SolidCircle r
+rewriting (AnyRectangle _ 0 _) = Blank
+rewriting (AnyRectangle _ _ 0) = Blank
 
-rewriting (Rectangle 0 _) = Blank
-rewriting (Rectangle _ 0) = Blank
-rewriting (Rectangle (abs -> l) (abs -> w)) = toWideRectangle Rectangle l w
-
-rewriting (SolidRectangle 0 _) = Blank
-rewriting (SolidRectangle _ 0) = Blank
-rewriting (SolidRectangle (abs -> l) (abs -> w)) = toWideRectangle SolidRectangle l w
-
-rewriting (ThickRectangle _ 0 _) = Blank
-rewriting (ThickRectangle _ _ 0) = Blank
 rewriting (ThickRectangle t (abs -> l) (abs -> w))
   | t >= 2*l || t >= 2*w = SolidRectangle (l + t/2) (w + t/2)
-  | otherwise = toWideRectangle (ThickRectangle t) l w
 
-rewriting (Arc a1 a2 r) = checkArc Arc a1 a2 r
-rewriting (ThickArc t a1 a2 r) = checkArc (ThickArc t) a1 a2 r
-rewriting (Sector a1 a2 r) = checkArc Sector a1 a2 r
+rewriting (AnyRectangle s (abs -> l) (abs -> w)) = toWideRectangle (AnyRectangle s) l w
 
-rewriting (Polygon ps) = Polyline $ toOpenShape ps
-rewriting (ThickPolygon t ps) = ThickPolyline t $ toOpenShape ps
-rewriting (ClosedCurve ps) = Curve $ toOpenShape ps
-rewriting (ThickClosedCurve t ps) = ThickCurve t $ toOpenShape ps
+rewriting (AnyArc s a1 a2 r) = checkArc (AnyArc s) a1 a2 r
 
-rewriting (Polyline ps) = checkForRectangle Polyline ps
-rewriting (ThickPolyline t ps) = checkForRectangle (ThickPolyline t) ps
+rewriting (AnyPolyline (Closed (Outline mOutline)) ps) = AnyPolyline (Open mOutline) $ toOpenShape ps
+rewriting (AnyPolyline s@(Open _) ps) = checkForRectangle (AnyPolyline s) ps
 rewriting (SolidPolygon ps) = checkForRectangle SolidPolygon ps
-rewriting (Curve ps) = handlePointList Curve ps
-rewriting (ThickCurve t ps) = handlePointList (ThickCurve t) ps
-rewriting (SolidClosedCurve ps) = handlePointList SolidClosedCurve ps
+
+rewriting (AnyCurve (Closed (Outline mOutline)) ps) = AnyCurve (Open mOutline) $ toOpenShape ps
+rewriting (AnyCurve s ps) = handlePointList (AnyCurve s) ps
 
 rewriting (Lettering "") = Blank
 rewriting (StyledLettering _ _ "") = Blank
@@ -132,18 +114,10 @@ rewriting (Dilate d p) = Scale d d p
 rewriting (Scale 0 _ _) = Blank
 rewriting (Scale _ 0 _) = Blank
 rewriting (Scale 1 1 p) = p
-rewriting (Scale fac1 fac2 (Circle s)) | fac1 == fac2 =
-  Circle (s * fac1)
-rewriting (Scale fac1 fac2 (ThickCircle t s)) | fac1 == fac2 =
-  ThickCircle t (s * fac1)
-rewriting (Scale fac1 fac2 (SolidCircle s)) | fac1 == fac2 =
-  SolidCircle (s * fac1)
-rewriting (Scale fac1 fac2 (Rectangle s1 s2)) =
-  Rectangle (s1 * fac1) (s2 * fac2)
-rewriting (Scale fac1 fac2 (ThickRectangle t s1 s2)) =
-  ThickRectangle t (s1 * fac1) (s2 * fac2)
-rewriting (Scale fac1 fac2 (SolidRectangle s1 s2)) =
-  SolidRectangle (s1 * fac1) (s2 * fac2)
+rewriting (Scale fac1 fac2 (AnyCircle s r)) | fac1 == fac2 =
+  AnyCircle s (r * fac1)
+rewriting (Scale fac1 fac2 (AnyRectangle s l w)) =
+  AnyRectangle s (l * fac1) (w * fac2)
 rewriting (Scale fac1 fac2 p) = case p of
   Scale f1 f2 q    -> Scale (f1 * fac1) (f2 * fac2) q
   Translate x y q  -> Translate
@@ -160,7 +134,7 @@ rewriting (Scale fac1 fac2 p) = case p of
 rewriting (Rotate (capAngle -> a) p)
     | a == 0 = p
     | otherwise = case p of
-      Scale fac1 fac2 c@(Circle {})
+      Scale fac1 fac2 c@(AnyCircle {})
         | a == pi/2 || a == 3*pi/2
                       -> Scale fac2 fac1 c
       Rotate a2 q     -> Rotate (a + a2) q
@@ -171,9 +145,9 @@ rewriting (Rotate (capAngle -> a) p)
                           $ Rotate a q
       Color c q       -> Color c $ Rotate a q
       Pictures ps     -> Pictures $ map (Rotate a) ps
-      Rectangle x y
-        | a >= pi -> Rotate (a - pi) $ Rectangle x y
-      Circle r      -> Circle r
+      r@AnyRectangle {}
+        | a >= pi -> Rotate (a - pi) r
+      c@AnyCircle {}      -> c
       _
         | isPointBased p -> applyToPoints p $ rotatedVector a
         | otherwise      -> Rotate a p
@@ -181,12 +155,8 @@ rewriting (Rotate (capAngle -> a) p)
 rewriting (Reflect (capAngle -> a1) (Reflect (capAngle -> a2) p))
   | a1 == a2 = p
   | otherwise = Rotate (capAngle $ a1*2 - a2*2) p
-rewriting (Reflect a (Rectangle x y)) = Rotate (capAngle $ a*2) $ Rectangle x y
-rewriting (Reflect a (ThickRectangle t x y)) = Rotate (capAngle $ a*2) $ ThickRectangle t x y
-rewriting (Reflect a (SolidRectangle x y)) = Rotate (capAngle $ a*2) $ SolidRectangle x y
-rewriting (Reflect _ (Circle r)) = Circle r
-rewriting (Reflect _ (ThickCircle t r)) = ThickCircle t r
-rewriting (Reflect _ (SolidCircle r)) = SolidCircle r
+rewriting (Reflect a r@(AnyRectangle {})) = Rotate (capAngle $ a*2) r
+rewriting (Reflect _ c@(AnyCircle {})) = c
 rewriting (Reflect a (Pictures ps)) = Pictures $ map (Reflect a) ps
 rewriting (Reflect (capAngle -> a) (Translate x y p)) =
   let
