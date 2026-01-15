@@ -7,6 +7,8 @@ module CodeWorld.Tasks.Types (
   TextStyle(..),
   Font(..),
   ReifyPicture(..),
+  Shape(..),
+  Style(..),
   ) where
 
 
@@ -27,25 +29,11 @@ The type variable is necessary for CSE detection via [Reify](https://hackage.has
 The method replaces subexpressions with number ids, so we need to be flexible in the wrapped type.
 -}
 data ReifyPicture a
-  = Rectangle Double Double
-  | ThickRectangle Double Double Double
-  | SolidRectangle Double Double
-  | Circle Double
-  | ThickCircle Double Double
-  | SolidCircle Double
-  | Polygon [Point]
-  | SolidPolygon [Point]
-  | ThickPolygon Double [Point]
-  | Polyline [Point]
-  | ThickPolyline Double [Point]
-  | Sector Double Double Double
-  | Arc Double Double Double
-  | ThickArc Double Double Double Double
-  | Curve [Point]
-  | ThickCurve Double [Point]
-  | ClosedCurve [Point]
-  | SolidClosedCurve [Point]
-  | ThickClosedCurve Double [Point]
+  = Rectangle Style Double Double
+  | Circle Style Double
+  | Polyline Shape [Point]
+  | Arc Style Double Double Double
+  | Curve Shape [Point]
   | Lettering Text
   | StyledLettering TextStyle Font Text
   | Color Color a
@@ -62,6 +50,9 @@ data ReifyPicture a
   | Blank
   deriving (Show, Foldable, Eq, Ord, Generic, NFData, Data)
 
+
+data Style = Outline (Maybe Double) | Solid deriving (Show, Eq, Ord, Generic, NFData, Data)
+data Shape = Closed Style | Open (Maybe Double) deriving (Show, Eq, Ord, Generic, NFData, Data)
 
 {-|
 Font modifier type used for stylized message rendering.

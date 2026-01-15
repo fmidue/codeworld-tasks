@@ -40,7 +40,13 @@ module CodeWorld.Tasks.Picture (
     Pictures,
     CoordinatePlane,
     Blank,
-    Logo
+    Logo,
+
+    AnyRectangle,
+    AnyCircle,
+    AnyArc,
+    AnyPolyline,
+    AnyCurve
   ),
   share,
   toInterface,
@@ -100,7 +106,13 @@ import qualified Data.Text              as T
 import qualified CodeWorld.Tasks.API    as API
 import qualified CodeWorld.Tasks.Types  as T
 import CodeWorld.Tasks.Color            (Color)
-import CodeWorld.Tasks.Types            (Font, ReifyPicture, TextStyle)
+import CodeWorld.Tasks.Types (
+  Font,
+  ReifyPicture,
+  TextStyle,
+  Shape(..),
+  Style(..)
+  )
 import CodeWorld.Tasks.VectorSpace (
   Point,
   dilatedPoint,
@@ -131,61 +143,61 @@ newtype Picture = PRec (ReifyPicture Picture)
 
 
 pattern Rectangle :: Double -> Double -> Picture
-pattern Rectangle x y = PRec (T.Rectangle x y)
+pattern Rectangle x y = PRec (T.Rectangle (Outline Nothing) x y)
 
 pattern ThickRectangle :: Double -> Double -> Double -> Picture
-pattern ThickRectangle t x y = PRec (T.ThickRectangle t x y)
+pattern ThickRectangle t x y = PRec (T.Rectangle (Outline (Just t)) x y)
 
 pattern SolidRectangle :: Double -> Double -> Picture
-pattern SolidRectangle x y = PRec (T.SolidRectangle x y)
+pattern SolidRectangle x y = PRec (T.Rectangle Solid x y)
 
 pattern Circle :: Double -> Picture
-pattern Circle r = PRec (T.Circle r)
+pattern Circle r = PRec (T.Circle (Outline Nothing) r)
 
 pattern ThickCircle :: Double -> Double -> Picture
-pattern ThickCircle t r = PRec (T.ThickCircle t r)
+pattern ThickCircle t r = PRec (T.Circle (Outline (Just t)) r)
 
 pattern SolidCircle :: Double -> Picture
-pattern SolidCircle r = PRec (T.SolidCircle r)
+pattern SolidCircle r = PRec (T.Circle Solid r)
 
 pattern Polygon :: [Point] -> Picture
-pattern Polygon ps = PRec (T.Polygon ps)
+pattern Polygon ps = PRec (T.Polyline (Closed (Outline Nothing)) ps)
 
 pattern SolidPolygon :: [Point] -> Picture
-pattern SolidPolygon ps = PRec (T.SolidPolygon ps)
+pattern SolidPolygon ps = PRec (T.Polyline (Closed Solid) ps)
 
 pattern ThickPolygon :: Double -> [Point] -> Picture
-pattern ThickPolygon t ps = PRec (T.ThickPolygon t ps)
+pattern ThickPolygon t ps = PRec (T.Polyline (Closed (Outline (Just t))) ps)
 
 pattern Polyline :: [Point] -> Picture
-pattern Polyline ps = PRec (T.Polyline ps)
+pattern Polyline ps = PRec (T.Polyline (Open Nothing) ps)
 
 pattern ThickPolyline :: Double -> [Point] -> Picture
-pattern ThickPolyline t ps = PRec (T.ThickPolyline t ps)
+pattern ThickPolyline t ps = PRec (T.Polyline (Open (Just t)) ps)
 
 pattern Sector :: Double -> Double -> Double -> Picture
-pattern Sector a1 a2 r = PRec (T.Sector a1 a2 r)
+pattern Sector a1 a2 r = PRec (T.Arc Solid a1 a2 r)
 
 pattern Arc :: Double -> Double -> Double -> Picture
-pattern Arc a1 a2 r = PRec (T.Arc a1 a2 r)
+pattern Arc a1 a2 r = PRec (T.Arc (Outline Nothing) a1 a2 r)
 
 pattern ThickArc :: Double -> Double -> Double -> Double -> Picture
-pattern ThickArc t a1 a2 r = PRec (T.ThickArc t a1 a2 r)
+pattern ThickArc t a1 a2 r = PRec (T.Arc (Outline (Just t)) a1 a2 r)
 
 pattern Curve :: [Point] -> Picture
-pattern Curve ps = PRec (T.Curve ps)
+pattern Curve ps = PRec (T.Curve (Open Nothing) ps)
 
 pattern ThickCurve :: Double -> [Point] -> Picture
-pattern ThickCurve t ps = PRec (T.ThickCurve t ps)
+pattern ThickCurve t ps = PRec (T.Curve (Open (Just t)) ps)
 
 pattern ClosedCurve :: [Point] -> Picture
-pattern ClosedCurve ps = PRec (T.ClosedCurve ps)
+pattern ClosedCurve ps = PRec (T.Curve (Closed (Outline Nothing)) ps)
 
 pattern SolidClosedCurve :: [Point] -> Picture
-pattern SolidClosedCurve ps = PRec (T.SolidClosedCurve ps)
+pattern SolidClosedCurve ps = PRec (T.Curve (Closed Solid)ps)
 
 pattern ThickClosedCurve :: Double -> [Point] -> Picture
-pattern ThickClosedCurve t ps = PRec (T.ThickClosedCurve t ps)
+pattern ThickClosedCurve t ps = PRec (T.Curve (Closed (Outline (Just t))) ps)
 
 pattern Lettering :: Text -> Picture
 pattern Lettering t = PRec (T.Lettering t)
@@ -266,6 +278,44 @@ pattern Blank = PRec T.Blank
   Logo
   #-}
 
+-- For internal use
+pattern AnyRectangle :: Style -> Double -> Double -> Picture
+pattern AnyRectangle s x y = PRec (T.Rectangle s x y)
+
+pattern AnyCircle :: Style -> Double -> Picture
+pattern AnyCircle s r = PRec (T.Circle s r)
+
+pattern AnyArc :: Style -> Double -> Double-> Double -> Picture
+pattern AnyArc s a1 a2 r = PRec (T.Arc s a1 a2 r)
+
+pattern AnyPolyline :: Shape -> [Point] -> Picture
+pattern AnyPolyline s ps = PRec (T.Polyline s ps)
+
+pattern AnyCurve :: Shape -> [Point] -> Picture
+pattern AnyCurve s ps = PRec (T.Curve s ps)
+
+{-# COMPLETE
+  AnyRectangle,
+  AnyCircle,
+  AnyArc,
+  AnyPolyline,
+  AnyCurve,
+  Lettering,
+  StyledLettering,
+  Translate,
+  Scale,
+  Dilate,
+  Color,
+  Rotate,
+  Reflect,
+  Clip,
+  And,
+  Pictures,
+  CoordinatePlane,
+  Blank,
+  Logo
+  #-}
+
 
 {-|
 Draw a hollow, thin rectangle with this length and height.
@@ -299,7 +349,7 @@ causes a runtime error (mirrors behaviour in CodeWorld editor).
 -}
 thickCircle :: Double -> Double -> Picture
 thickCircle (validThickness -> t) r
-  | t <= 2 * r = ThickCircle t r
+  | t <= 2 * abs r = ThickCircle t r
   | otherwise  = error "The line width of a thickCircle must not be greater than the diameter."
 
 {-|
@@ -501,27 +551,13 @@ instance MuRef Picture where
     T.And a b               -> T.And <$> f a <*> f b
     T.Pictures ps           -> T.Pictures <$> traverse f ps
     p                     -> pure $ case p of
-      T.Rectangle x y         -> T.Rectangle x y
-      T.ThickRectangle t x y  -> T.ThickRectangle t x y
-      T.SolidRectangle x y    -> T.SolidRectangle x y
-      T.Circle r              -> T.Circle r
-      T.ThickCircle t r       -> T.ThickCircle t r
-      T.SolidCircle r         -> T.SolidCircle r
+      T.Rectangle s x y       -> T.Rectangle s x y
+      T.Circle s r              -> T.Circle s r
       T.Lettering t           -> T.Lettering t
       T.StyledLettering s w t -> T.StyledLettering s w t
-      T.Curve xs              -> T.Curve xs
-      T.ThickCurve t xs       -> T.ThickCurve t xs
-      T.ClosedCurve xs        -> T.ClosedCurve xs
-      T.SolidClosedCurve xs   -> T.SolidClosedCurve xs
-      T.ThickClosedCurve xs t -> T.ThickClosedCurve xs t
-      T.Polygon xs            -> T.Polygon xs
-      T.SolidPolygon xs       -> T.SolidPolygon xs
-      T.ThickPolygon xs t     -> T.ThickPolygon xs t
-      T.Polyline xs           -> T.Polyline xs
-      T.ThickPolyline xs t    -> T.ThickPolyline xs t
-      T.Sector a1 a2 r        -> T.Sector a1 a2 r
-      T.Arc a1 a2 r           -> T.Arc a1 a2 r
-      T.ThickArc t a1 a2 r    -> T.ThickArc t a1 a2 r
+      T.Curve s xs              -> T.Curve s xs
+      T.Polyline s xs           -> T.Polyline s xs
+      T.Arc s a1 a2 r           -> T.Arc s a1 a2 r
       T.CoordinatePlane       -> T.CoordinatePlane
       T.Logo                  -> T.Logo
       T.Blank                 -> T.Blank
