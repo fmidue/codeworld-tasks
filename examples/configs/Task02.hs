@@ -186,7 +186,28 @@ scene = undefined
 module Test (test) where
 import qualified Task02
 import Test.HUnit ((~:), (~?), Assertion, Test(..), assertBool)
-import CodeWorld.Test
+import CodeWorld.Test (
+  brown,
+  green,
+  rotatedQuarter,
+  rotatedUpToFull,
+  someSolidCircle,
+  someSolidRectangle,
+  someTallSolidRectangle,
+  withColor,
+
+  atLeast,
+  containsElem,
+  evaluatePred,
+  evaluatePreds,
+  hasRelation,
+  ifThen,
+  isAbove,
+  isLeftOf,
+  isNorthOf,
+
+  testCSE,
+  )
 import Data.Maybe (fromJust, isNothing)
 
 import TestHelper (isDeeplyDefined)
