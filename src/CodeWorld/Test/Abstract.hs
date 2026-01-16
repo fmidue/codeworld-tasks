@@ -93,11 +93,11 @@ instance Drawable AbstractPicture where
   coordinatePlane = CoordinatePlane
   codeWorldLogo = Logo
 
-  circle r = Circle (Hollow Normal) $ toSize r
+  circle = Circle (Hollow Normal) . toSize
 
-  solidCircle r = Circle Solid $ toSize r
+  solidCircle = Circle Solid . toSize
 
-  thickCircle t r = Circle (Hollow $ thickness t) (toSize r)
+  thickCircle t = Circle (Hollow $ thickness t) . toSize
 
   rectangle l w = Rectangle (Hollow Normal) (toSize l) (toSize w)
 
@@ -114,11 +114,11 @@ instance Drawable AbstractPicture where
   solidClosedCurve = Curve Solid . map toAbsPoint . toOpenShape
 
   closedCurve        = curve . toOpenShape
-  thickClosedCurve (validThickness -> t) = thickCurve t . toOpenShape
+  thickClosedCurve t = thickCurve t . toOpenShape
 
-  polyline        = checkForRectangle $ Hollow Normal
-  thickPolyline (validThickness -> t) = checkForRectangle $ Hollow $ thickness t
-  solidPolygon    = checkForRectangle Solid . toOpenShape
+  polyline        = Polyline (Hollow Normal) . map toAbsPoint
+  thickPolyline t = Polyline (Hollow $ thickness t) . map toAbsPoint
+  solidPolygon    = Polyline Solid . map toAbsPoint . toOpenShape
 
   polygon        = polyline . toOpenShape
   thickPolygon (validThickness -> t) = thickPolyline t . toOpenShape
@@ -143,44 +143,8 @@ instance Drawable AbstractPicture where
   clipped x y = Clip (toSize x) (toSize y)
 
 
-checkForRectangle :: ShapeKind -> [Point] -> AbstractPicture
-checkForRectangle shape ps = case pointsToRectangle shape ps of
-  Nothing -> handlePointList (Polyline shape) ps
-  Just r  -> r
-
-
-handlePointList :: Drawable a => ([AbsPoint] -> a) -> [Point] -> a
-handlePointList f ps
-    | length noRepeats < 2 = blank
-    | otherwise = f $ map toAbsPoint noRepeats
-  where
-    noRepeats = removeDupes ps
-
-
 toOpenShape :: [Point] -> [Point]
 toOpenShape ps = ps ++ take 1 ps
-
-
-removeDupes :: Eq a => [a] -> [a]
-removeDupes (x:y:xs)
-  | x == y    =      rec
-  | otherwise =  x : rec
-  where rec = removeDupes (y:xs)
-removeDupes xs = xs
-
-
-pointsToRectangle :: ShapeKind -> [Point] -> Maybe AbstractPicture
-pointsToRectangle shapeKind ps
-  | isRectangle ps = Just $ translated x y $ rotated angle $ shapeToUse xLen yLen
-  | otherwise = Nothing
-  where
-    (xLen,yLen) = sideLengths ps
-    angle = rotationAngle originPs
-    (originPs,(x,y)) = atOriginWithOffset (drop 1 ps)
-    shapeToUse = case shapeKind of
-      Hollow Normal -> rectangle
-      Hollow Thick  -> thickRectangle 1
-      Solid         -> solidRectangle
 
 
 {-|
