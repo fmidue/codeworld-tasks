@@ -225,11 +225,8 @@ handlePointList shape ps
     noRepeats = removeDupes ps
 
 removeDupes :: Eq a => [a] -> [a]
-removeDupes (x:y:xs)
-  | x == y    =      rec
-  | otherwise =  x : rec
-  where rec = removeDupes (y:xs)
-removeDupes xs = xs
+removeDupes []       = []
+removeDupes xs@(x:_) = x : [ a | (a,b) <- zip (drop 1 xs) xs, a /= b]
 
 handleLikeFreeShapes
   :: ([Point] -> Picture)
