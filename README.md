@@ -27,3 +27,8 @@ The submission will either be rejected or accepted and feedback be printed direc
 Running the stack command may take a while the first time, since a lot of dependencies will have to be installed.
 
 Sample solutions for all tasks are provided in `examples/solutions` for reference.
+
+
+## Single Page Application (SPA)
+
+You can also try out [my SPA](https://github.com/patritzenfeld/codeworld-demo) to interact with the task components in a web editor.
