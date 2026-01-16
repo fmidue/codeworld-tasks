@@ -1,13 +1,53 @@
-{-# language DeriveTraversable #-}
 {-# language DeriveDataTypeable #-}
 {-# language DeriveGeneric #-}
 {-# language DeriveAnyClass #-}
+{-# language PatternSynonyms #-}
 {-# language TypeFamilies #-}
 {-# language ViewPatterns #-}
 
 module CodeWorld.Tasks.Picture (
-  ReifyPicture(..),
-  Picture(..),
+  ReifyPicture,
+  Picture(
+    Rectangle,
+    ThickRectangle,
+    SolidRectangle,
+    Circle,
+    ThickCircle,
+    SolidCircle,
+    Arc,
+    ThickArc,
+    Sector,
+    Polyline,
+    ThickPolyline,
+    Polygon,
+    ThickPolygon,
+    SolidPolygon,
+    Curve,
+    ThickCurve,
+    ClosedCurve,
+    ThickClosedCurve,
+    SolidClosedCurve,
+    Lettering,
+    StyledLettering,
+    Translate,
+    Scale,
+    Dilate,
+    Color,
+    Rotate,
+    Reflect,
+    Clip,
+    And,
+    Pictures,
+    CoordinatePlane,
+    Blank,
+    Logo,
+
+    AnyRectangle,
+    AnyCircle,
+    AnyArc,
+    AnyPolyline,
+    AnyCurve
+  ),
   share,
   toInterface,
   innerPicture,
@@ -64,8 +104,15 @@ import qualified Data.IntMap            as IM
 import qualified Data.Text              as T
 
 import qualified CodeWorld.Tasks.API    as API
+import qualified CodeWorld.Tasks.Types  as T
 import CodeWorld.Tasks.Color            (Color)
-import CodeWorld.Tasks.Types            (Font, TextStyle)
+import CodeWorld.Tasks.Types (
+  Font,
+  ReifyPicture,
+  TextStyle,
+  Shape(..),
+  Style(..)
+  )
 import CodeWorld.Tasks.VectorSpace (
   Point,
   dilatedPoint,
@@ -79,48 +126,6 @@ import CodeWorld.Tasks.VectorSpace (
   )
 
 
-{-|
-Basic syntax tree type of the CodeWorld API.
-Each API function has a corresponding constructor.
-
-The type variable is necessary for CSE detection via [Reify](https://hackage.haskell.org/package/data-reify).
-The method replaces subexpressions with number ids, so we need to be flexible in the wrapped type.
--}
-data ReifyPicture a
-  = Rectangle Double Double
-  | ThickRectangle Double Double Double
-  | SolidRectangle Double Double
-  | Circle Double
-  | ThickCircle Double Double
-  | SolidCircle Double
-  | Polygon [Point]
-  | SolidPolygon [Point]
-  | ThickPolygon Double [Point]
-  | Polyline [Point]
-  | ThickPolyline Double [Point]
-  | Sector Double Double Double
-  | Arc Double Double Double
-  | ThickArc Double Double Double Double
-  | Curve [Point]
-  | ThickCurve Double [Point]
-  | ClosedCurve [Point]
-  | SolidClosedCurve [Point]
-  | ThickClosedCurve Double [Point]
-  | Lettering Text
-  | StyledLettering TextStyle Font Text
-  | Color Color a
-  | Translate Double Double a
-  | Scale Double Double a
-  | Dilate Double a
-  | Rotate Double a
-  | Reflect Double a
-  | Clip Double Double a
-  | Pictures [a]
-  | And a a
-  | CoordinatePlane
-  | Logo
-  | Blank
-  deriving (Show, Foldable, Eq, Ord, Generic, NFData, Data)
 
 {- |
 Student facing, basic picture type.
@@ -137,30 +142,205 @@ newtype Picture = PRec (ReifyPicture Picture)
   deriving (Show,Eq,Ord,Generic,NFData,Data)
 
 
+pattern Rectangle :: Double -> Double -> Picture
+pattern Rectangle x y = PRec (T.Rectangle (Outline Nothing) x y)
+
+pattern ThickRectangle :: Double -> Double -> Double -> Picture
+pattern ThickRectangle t x y = PRec (T.Rectangle (Outline (Just t)) x y)
+
+pattern SolidRectangle :: Double -> Double -> Picture
+pattern SolidRectangle x y = PRec (T.Rectangle Solid x y)
+
+pattern Circle :: Double -> Picture
+pattern Circle r = PRec (T.Circle (Outline Nothing) r)
+
+pattern ThickCircle :: Double -> Double -> Picture
+pattern ThickCircle t r = PRec (T.Circle (Outline (Just t)) r)
+
+pattern SolidCircle :: Double -> Picture
+pattern SolidCircle r = PRec (T.Circle Solid r)
+
+pattern Polygon :: [Point] -> Picture
+pattern Polygon ps = PRec (T.Polyline (Closed (Outline Nothing)) ps)
+
+pattern SolidPolygon :: [Point] -> Picture
+pattern SolidPolygon ps = PRec (T.Polyline (Closed Solid) ps)
+
+pattern ThickPolygon :: Double -> [Point] -> Picture
+pattern ThickPolygon t ps = PRec (T.Polyline (Closed (Outline (Just t))) ps)
+
+pattern Polyline :: [Point] -> Picture
+pattern Polyline ps = PRec (T.Polyline (Open Nothing) ps)
+
+pattern ThickPolyline :: Double -> [Point] -> Picture
+pattern ThickPolyline t ps = PRec (T.Polyline (Open (Just t)) ps)
+
+pattern Sector :: Double -> Double -> Double -> Picture
+pattern Sector a1 a2 r = PRec (T.Arc Solid a1 a2 r)
+
+pattern Arc :: Double -> Double -> Double -> Picture
+pattern Arc a1 a2 r = PRec (T.Arc (Outline Nothing) a1 a2 r)
+
+pattern ThickArc :: Double -> Double -> Double -> Double -> Picture
+pattern ThickArc t a1 a2 r = PRec (T.Arc (Outline (Just t)) a1 a2 r)
+
+pattern Curve :: [Point] -> Picture
+pattern Curve ps = PRec (T.Curve (Open Nothing) ps)
+
+pattern ThickCurve :: Double -> [Point] -> Picture
+pattern ThickCurve t ps = PRec (T.Curve (Open (Just t)) ps)
+
+pattern ClosedCurve :: [Point] -> Picture
+pattern ClosedCurve ps = PRec (T.Curve (Closed (Outline Nothing)) ps)
+
+pattern SolidClosedCurve :: [Point] -> Picture
+pattern SolidClosedCurve ps = PRec (T.Curve (Closed Solid)ps)
+
+pattern ThickClosedCurve :: Double -> [Point] -> Picture
+pattern ThickClosedCurve t ps = PRec (T.Curve (Closed (Outline (Just t))) ps)
+
+pattern Lettering :: Text -> Picture
+pattern Lettering t = PRec (T.Lettering t)
+
+pattern StyledLettering :: TextStyle -> Font -> Text -> Picture
+pattern StyledLettering ts f t = PRec (T.StyledLettering ts f t)
+
+pattern Color :: Color -> Picture -> Picture
+pattern Color c p = PRec (T.Color c p)
+
+pattern Translate :: Double -> Double -> Picture -> Picture
+pattern Translate x y p = PRec (T.Translate x y p)
+
+pattern Scale :: Double -> Double -> Picture -> Picture
+pattern Scale fac1 fac2 p = PRec (T.Scale fac1 fac2 p)
+
+pattern Dilate :: Double -> Picture -> Picture
+pattern Dilate fac p = PRec (T.Dilate fac p)
+
+pattern Rotate :: Double -> Picture -> Picture
+pattern Rotate a p = PRec (T.Rotate a p)
+
+pattern Reflect :: Double -> Picture -> Picture
+pattern Reflect a p = PRec (T.Reflect a p)
+
+pattern Clip :: Double -> Double -> Picture -> Picture
+pattern Clip x y p = PRec (T.Clip x y p)
+
+pattern Pictures :: [Picture] -> Picture
+pattern Pictures ps = PRec (T.Pictures ps)
+
+pattern And :: Picture -> Picture -> Picture
+pattern And p1 p2 = PRec (T.And p1 p2)
+
+pattern CoordinatePlane :: Picture
+pattern CoordinatePlane = PRec T.CoordinatePlane
+
+pattern Logo :: Picture
+pattern Logo = PRec T.Logo
+
+pattern Blank :: Picture
+pattern Blank = PRec T.Blank
+
+-- Tells the compiler that covering these patterns is exhaustive in a pattern match
+{-# COMPLETE
+  Rectangle,
+  ThickRectangle,
+  SolidRectangle,
+  Circle,
+  ThickCircle,
+  SolidCircle,
+  Arc,
+  ThickArc,
+  Sector,
+  Polyline,
+  ThickPolyline,
+  Polygon,
+  ThickPolygon,
+  SolidPolygon,
+  Curve,
+  ThickCurve,
+  ClosedCurve,
+  ThickClosedCurve,
+  SolidClosedCurve,
+  Lettering,
+  StyledLettering,
+  Translate,
+  Scale,
+  Dilate,
+  Color,
+  Rotate,
+  Reflect,
+  Clip,
+  And,
+  Pictures,
+  CoordinatePlane,
+  Blank,
+  Logo
+  #-}
+
+-- For internal use
+pattern AnyRectangle :: Style -> Double -> Double -> Picture
+pattern AnyRectangle s x y = PRec (T.Rectangle s x y)
+
+pattern AnyCircle :: Style -> Double -> Picture
+pattern AnyCircle s r = PRec (T.Circle s r)
+
+pattern AnyArc :: Style -> Double -> Double-> Double -> Picture
+pattern AnyArc s a1 a2 r = PRec (T.Arc s a1 a2 r)
+
+pattern AnyPolyline :: Shape -> [Point] -> Picture
+pattern AnyPolyline s ps = PRec (T.Polyline s ps)
+
+pattern AnyCurve :: Shape -> [Point] -> Picture
+pattern AnyCurve s ps = PRec (T.Curve s ps)
+
+{-# COMPLETE
+  AnyRectangle,
+  AnyCircle,
+  AnyArc,
+  AnyPolyline,
+  AnyCurve,
+  Lettering,
+  StyledLettering,
+  Translate,
+  Scale,
+  Dilate,
+  Color,
+  Rotate,
+  Reflect,
+  Clip,
+  And,
+  Pictures,
+  CoordinatePlane,
+  Blank,
+  Logo
+  #-}
+
+
 {-|
 Draw a hollow, thin rectangle with this length and height.
 -}
 rectangle :: Double -> Double -> Picture
-rectangle x = PRec . Rectangle x
+rectangle = Rectangle
 
 {-|
 Draw a hollow rectangle with this line width, length and height.
 Specifying a negative line width causes a runtime error (mirrors behaviour in CodeWorld editor).
 -}
 thickRectangle :: Double -> Double -> Double -> Picture
-thickRectangle (validThickness -> t) x = PRec . ThickRectangle t x
+thickRectangle (validThickness -> t) = ThickRectangle t
 
 {-|
 Draw a filled in rectangle with this length and height.
 -}
 solidRectangle :: Double -> Double -> Picture
-solidRectangle x = PRec . SolidRectangle x
+solidRectangle = SolidRectangle
 
 {-|
 Draw a hollow, thin circle with this radius.
 -}
 circle :: Double -> Picture
-circle = PRec . Circle
+circle = Circle
 
 {-|
 Draw a hollow circle with this line width and radius.
@@ -169,116 +349,116 @@ causes a runtime error (mirrors behaviour in CodeWorld editor).
 -}
 thickCircle :: Double -> Double -> Picture
 thickCircle (validThickness -> t) r
-  | t <= 2 * r = PRec $ ThickCircle t r
+  | t <= 2 * abs r = ThickCircle t r
   | otherwise  = error "The line width of a thickCircle must not be greater than the diameter."
 
 {-|
 Draw a filled in circle with this radius.
 -}
 solidCircle :: Double -> Picture
-solidCircle = PRec . SolidCircle
+solidCircle = SolidCircle
 
 {-|
 Draw a thin, hollow circle segment with these start and end angles and radius.
 -}
 arc :: Double -> Double -> Double -> Picture
-arc a1 a2 = PRec . Arc a1 a2
+arc = Arc
 
 {-|
 Draw a filled in circle segment with these start and end angles and radius.
 This would be @solidArc@ following the usual naming scheme.
 -}
 sector :: Double -> Double -> Double -> Picture
-sector a1 a2 = PRec . Sector a1 a2
+sector = Sector
 
 {-|
 Draw a hollow circle segment with this line width, these start and end angles and radius.
 Specifying a negative line width causes a runtime error (mirrors behaviour in CodeWorld editor).
 -}
 thickArc :: Double -> Double -> Double -> Double -> Picture
-thickArc (validThickness -> t) a1 a2 = PRec . ThickArc t a1 a2
+thickArc (validThickness -> t) = ThickArc t
 
 {-|
 Draw a thin curve passing through the provided points via a number of Bézier splices.
 -}
 curve :: [Point] -> Picture
-curve = PRec . Curve
+curve = Curve
 
 {-|
 Draw a curve with this line width passing through the provided points via a number of Bézier splices.
 Specifying a negative line width causes a runtime error (mirrors behaviour in CodeWorld editor).
 -}
 thickCurve :: Double -> [Point] -> Picture
-thickCurve (validThickness -> t) = PRec . ThickCurve t
+thickCurve (validThickness -> t) = ThickCurve t
 
 {-|
 Same as `curve` but adds another splice between the start and end points to close the shape.
 -}
 closedCurve :: [Point] -> Picture
-closedCurve = PRec . ClosedCurve
+closedCurve = ClosedCurve
 
 {-|
 Same as `thickCurve` but adds another splice between the start and end points to close the shape.
 -}
 thickClosedCurve :: Double -> [Point] -> Picture
-thickClosedCurve (validThickness -> t) = PRec . ThickClosedCurve t
+thickClosedCurve (validThickness -> t) = ThickClosedCurve t
 
 {-|
 Draw a curve passing through the provided points via a number of Bézier splices.
 Adds another splice between the start and end points to close the shape and completely fills the enclosed area.
 -}
 solidClosedCurve :: [Point] -> Picture
-solidClosedCurve = PRec . SolidClosedCurve
+solidClosedCurve = SolidClosedCurve
 
 {-|
 Draw a sequence of thin line segments passing through the provided points.
 -}
 polyline :: [Point] -> Picture
-polyline = PRec . Polyline
+polyline = Polyline
 
 {-|
 Draw a sequence of line segments with this line width passing through the provided points.
 Specifying a negative line width causes a runtime error (mirrors behaviour in CodeWorld editor).
 -}
 thickPolyline :: Double -> [Point] -> Picture
-thickPolyline (validThickness -> t) = PRec . ThickPolyline t
+thickPolyline (validThickness -> t) = ThickPolyline t
 
 {-|
 Same as `polyline` but adds another segment between the start and end points to close the shape.
 -}
 polygon :: [Point] -> Picture
-polygon = PRec . Polygon
+polygon = Polygon
 
 {-|
 Same as `thickPolyline` but adds another segment between the start and end points to close the shape.
 -}
 thickPolygon :: Double -> [Point] -> Picture
-thickPolygon (validThickness -> t) = PRec . ThickPolygon t
+thickPolygon (validThickness -> t) = ThickPolygon t
 
 {-|
 Draw a sequence of line segments with this line width passing through the provided points
 and completely fill the enclosed area.
 -}
 solidPolygon :: [Point] -> Picture
-solidPolygon = PRec . SolidPolygon
+solidPolygon = SolidPolygon
 
 {-|
 Render this text into an image.
 -}
 lettering :: Text -> Picture
-lettering = PRec . Lettering
+lettering = Lettering
 
 {-|
 Render this text into an image using the provided `TextStyle` and `Font`.
 -}
 styledLettering :: TextStyle -> Font -> Text -> Picture
-styledLettering ts f = PRec . StyledLettering ts f
+styledLettering = StyledLettering
 
 {-|
 Apply this `Color` to the image.
 -}
 colored :: Color -> Picture -> Picture
-colored c = PRec . Color c
+colored = Color
 
 {-|
 Alias for `colored`.
@@ -290,109 +470,97 @@ coloured = colored
 Move the image in x and y-direction.
 -}
 translated :: Double -> Double -> Picture -> Picture
-translated x y = PRec . Translate x y
+translated = Translate
 
 {-|
 Scale the image in x and y-directions using these modifiers.
 -}
 scaled :: Double -> Double -> Picture -> Picture
-scaled x y = PRec . Scale x y
+scaled= Scale
 
 {-|
 Scale the image in both directions using the same modifier.
 -}
 dilated :: Double -> Picture -> Picture
-dilated a = PRec . Dilate a
+dilated = Dilate
 
 {-|
 Rotate the image around the origin using this angle in radians.
 -}
 rotated :: Double -> Picture -> Picture
-rotated a = PRec . Rotate a
+rotated = Rotate
 
 {-|
 Reflect the image across a line through the origin with this angle to the x-axis.
 -}
 reflected :: Double -> Picture -> Picture
-reflected a = PRec . Reflect a
+reflected = Reflect
 
 {-|
 Clip the image in a rectangle with this length and height.
 -}
 clipped :: Double -> Double -> Picture -> Picture
-clipped x y = PRec . Clip x y
+clipped = Clip
 
 {-|
 Compose a list of `Picture`s.
 Equivalent to @foldr (&) blank@.
 -}
 pictures :: [Picture] -> Picture
-pictures = PRec . Pictures
+pictures = Pictures
 
 {-|
 Compose two `Picture`s.
 The left argument will be drawn on top of the right argument if they overlap.
 -}
 (&) :: Picture -> Picture -> Picture
-a & b = PRec $ And a b
+a & b = And a b
 
 {-|
 A static image of a coordinate plane extending 5 units in all directions.
 -}
 coordinatePlane :: Picture
-coordinatePlane = PRec CoordinatePlane
+coordinatePlane = CoordinatePlane
 
 {-|
 A static image of the CodeWorld logo.
 -}
 codeWorldLogo :: Picture
-codeWorldLogo = PRec Logo
+codeWorldLogo = Logo
 
 {-|
 An empty `Picture`.
 This is the identity element of `&`.
 -}
 blank :: Picture
-blank = PRec Blank
+blank = Blank
 
 
 instance MuRef Picture where
   type DeRef Picture = ReifyPicture
+  -- above pattern synonyms are not useable here.
+  -- ReifyPicture's type variable needs to be free.
   mapDeRef f (PRec body) = case body of
-    Color c p             -> Color c <$> f p
-    Translate x y p       -> Translate x y <$> f p
-    Scale x y p           -> Scale x y <$> f p
-    Dilate x p            -> Dilate x <$> f p
-    Rotate a p            -> Rotate a <$> f p
-    Reflect a p           -> Reflect a <$> f p
-    Clip x y p            -> Clip x y <$> f p
-    And a b               -> And <$> f a <*> f b
-    Pictures ps           -> Pictures <$> traverse f ps
+    T.Color c p             -> T.Color c <$> f p
+    T.Translate x y p       -> T.Translate x y <$> f p
+    T.Scale x y p           -> T.Scale x y <$> f p
+    T.Dilate x p            -> T.Dilate x <$> f p
+    T.Rotate a p            -> T.Rotate a <$> f p
+    T.Reflect a p           -> T.Reflect a <$> f p
+    T.Clip x y p            -> T.Clip x y <$> f p
+    T.And a b               -> T.And <$> f a <*> f b
+    T.Pictures ps           -> T.Pictures <$> traverse f ps
     p                     -> pure $ case p of
-      Rectangle x y         -> Rectangle x y
-      ThickRectangle t x y  -> ThickRectangle t x y
-      SolidRectangle x y    -> SolidRectangle x y
-      Circle r              -> Circle r
-      ThickCircle t r       -> ThickCircle t r
-      SolidCircle r         -> SolidCircle r
-      Lettering t           -> Lettering t
-      StyledLettering s w t -> StyledLettering s w t
-      Curve xs              -> Curve xs
-      ThickCurve t xs       -> ThickCurve t xs
-      ClosedCurve xs        -> ClosedCurve xs
-      SolidClosedCurve xs   -> SolidClosedCurve xs
-      ThickClosedCurve xs t -> ThickClosedCurve xs t
-      Polygon xs            -> Polygon xs
-      SolidPolygon xs       -> SolidPolygon xs
-      ThickPolygon xs t     -> ThickPolygon xs t
-      Polyline xs           -> Polyline xs
-      ThickPolyline xs t    -> ThickPolyline xs t
-      Sector a1 a2 r        -> Sector a1 a2 r
-      Arc a1 a2 r           -> Arc a1 a2 r
-      ThickArc t a1 a2 r    -> ThickArc t a1 a2 r
-      CoordinatePlane       -> CoordinatePlane
-      Logo                  -> Logo
-      Blank                 -> Blank
+      T.Rectangle s x y       -> T.Rectangle s x y
+      T.Circle s r              -> T.Circle s r
+      T.Lettering t           -> T.Lettering t
+      T.StyledLettering s w t -> T.StyledLettering s w t
+      T.Curve s xs              -> T.Curve s xs
+      T.Polyline s xs           -> T.Polyline s xs
+      T.Arc s a1 a2 r           -> T.Arc s a1 a2 r
+      T.CoordinatePlane       -> T.CoordinatePlane
+      T.Logo                  -> T.Logo
+      T.Blank                 -> T.Blank
 
 
 share :: Picture -> IO (IntMap (ReifyPicture Int), IntMap (ReifyPicture Int))
@@ -410,7 +578,7 @@ mapInsertWith b m = Prelude.foldr (\x acc-> IM.insertWith (+) x (1 :: Int) acc) 
 
 
 toInterface :: API.Drawable a => Picture -> a
-toInterface (PRec p) = case p of
+toInterface p = case p of
   Rectangle x y -> API.rectangle x y
   ThickRectangle t x y -> API.thickRectangle t x y
   SolidRectangle x y -> API.solidRectangle x y
@@ -461,9 +629,9 @@ __Warning: This is intended to be used on non-composite pictures only.__
 if used as an argument.
 -}
 innerPicture :: Picture -> Picture
-innerPicture p@(PRec (Pictures {})) = p
-innerPicture p@(PRec (And {}))      = p
-innerPicture p                      = headDef p $ children p
+innerPicture p@(Pictures {}) = p
+innerPicture p@(And {})      = p
+innerPicture p               = headDef p $ children p
 
 {- |
 Returns `True` if the argument is not a basic shape.
@@ -472,9 +640,9 @@ __Warning: This is intended to be used on non-composite pictures only.__
 `Pictures` and `And` will be treated as a basic picture (i.e. returning `False`) if used as an argument.
 -}
 hasInnerPicture :: Picture -> Bool
-hasInnerPicture (PRec (Pictures {})) = False
-hasInnerPicture (PRec (And {}))      = False
-hasInnerPicture p                    = not $ null $ children p
+hasInnerPicture (Pictures {}) = False
+hasInnerPicture (And {})      = False
+hasInnerPicture p             = not $ null $ children p
 
 
 {- |
@@ -489,7 +657,7 @@ isIn pic ((lowerX, upperX), (lowerY, upperY)) =
   handle pic ((lowerX,lowerY),(lowerX,upperY),(upperX,upperY),(upperX,lowerY))
 
 handle :: Picture -> (Point,Point,Point,Point) -> Bool
-handle (PRec p) corners@(a,b,c,d) = case p of
+handle p corners@(a,b,c,d) = case p of
   Rectangle x y -> rectangleCheck x y
   ThickRectangle t x y -> rectangleCheck (x+t/2) (y+t/2)
   SolidRectangle x y -> rectangleCheck x y

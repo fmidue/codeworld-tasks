@@ -1,4 +1,3 @@
-{-# language PatternSynonyms #-}
 
 {- |
 Module exporting all functionality needed for running tests on student submissions.
@@ -7,10 +6,9 @@ Module exporting all functionality needed for running tests on student submissio
 module CodeWorld.Test (
   -- * Normalized Pictures
   -- ** Data Type
-  NormalizedPicture,
-  Drawable(..),
+  AbstractPicture,
 
-  -- ** Helpers for defining NormalizedPictures
+  -- ** Helpers for defining AbstractPictures
   -- $Helpers
   someCircle,
   someSolidCircle,
@@ -24,6 +22,7 @@ module CodeWorld.Test (
   someWideSolidRectangle,
   someCurve,
   someSolidCurve,
+  withColor,
   someColor,
   rotatedHalf,
   rotatedQuarter,
@@ -35,8 +34,9 @@ module CodeWorld.Test (
   smaller,
   smallerX,
   smallerY,
+  (.&.),
 
-  -- ** Queries on NormalizedPictures
+  -- ** Queries on AbstractPictures
   -- $NormalizedQueries
   contains,
   count,
@@ -167,9 +167,9 @@ module CodeWorld.Test (
 
   -- ** Type Conversions
   normalize,
+  normalizeNoOrder,
+  normalizeAndAbstract,
   toConcretePicture,
-  reduce,
-  reduceNoOrder,
 
   -- ** Functions for Point-based Shapes
   -- $PointLists
@@ -185,6 +185,43 @@ module CodeWorld.Test (
   testCSE,
 
   -- * Re-exports of CodeWorld Interface
+
+  -- ** Pictures
+  rectangle,
+  thickRectangle,
+  solidRectangle,
+  circle,
+  thickCircle,
+  solidCircle,
+  arc,
+  sector,
+  thickArc,
+  curve,
+  thickCurve,
+  closedCurve,
+  thickClosedCurve,
+  solidClosedCurve,
+  polyline,
+  thickPolyline,
+  polygon,
+  thickPolygon,
+  solidPolygon,
+  lettering,
+  styledLettering,
+  colored,
+  coloured,
+  translated,
+  scaled,
+  dilated,
+  rotated,
+  reflected,
+  clipped,
+  pictures,
+  (&),
+  coordinatePlane,
+  codeWorldLogo,
+  blank,
+
   -- ** Math
   Point,
   Vector,
@@ -237,9 +274,6 @@ module CodeWorld.Test (
   ) where
 
 
-import Data.Text                        (Text)
-
-import CodeWorld.Tasks.API              (Drawable(..))
 import CodeWorld.Tasks.Color (
   Color,
   Colour,
@@ -272,7 +306,8 @@ import CodeWorld.Tasks.Color (
   alpha,
   )
 import CodeWorld.Tasks.Types            (Font(..), TextStyle(..))
-import CodeWorld.Test.Abstract (
+import CodeWorld.Test.AbstractHelpers (
+  (.&.),
   larger,
   largerX,
   largerY,
@@ -296,6 +331,7 @@ import CodeWorld.Test.Abstract (
   someTallSolidRectangle,
   someWideRectangle,
   someWideSolidRectangle,
+  withColor,
   )
 import CodeWorld.Test.AbsTypes (
   Position,
@@ -312,8 +348,8 @@ import CodeWorld.Test.Animation (
   samplesUntil,
   irregularSamples,
   )
-import CodeWorld.Test.Normalize (
-  NormalizedPicture,
+import CodeWorld.Test.Abstract (
+  AbstractPicture,
 
   contains,
   count,
@@ -353,6 +389,11 @@ import CodeWorld.Test.Relative as Relative (
   atSamePosition,
   )
 import CodeWorld.Sharing.Feedback       (testCSE)
+import CodeWorld.Test.Rewrite (
+  normalize,
+  normalizeAndAbstract,
+  normalizeNoOrder,
+  )
 import CodeWorld.Test.Solution (
   PicPredicate,
   containsElem,
@@ -402,24 +443,58 @@ import CodeWorld.Tasks.VectorSpace (
   )
 import CodeWorld.Tasks.Picture (
   Picture(..),
-  toInterface,
   hasInnerPicture,
   innerPicture,
   isIn,
+
+  rectangle,
+  thickRectangle,
+  solidRectangle,
+  circle,
+  thickCircle,
+  solidCircle,
+  arc,
+  sector,
+  thickArc,
+  curve,
+  thickCurve,
+  closedCurve,
+  thickClosedCurve,
+  solidClosedCurve,
+  polyline,
+  thickPolyline,
+  polygon,
+  thickPolygon,
+  solidPolygon,
+  lettering,
+  styledLettering,
+  colored,
+  coloured,
+  translated,
+  scaled,
+  dilated,
+  rotated,
+  reflected,
+  clipped,
+  pictures,
+  (&),
+  coordinatePlane,
+  codeWorldLogo,
+  blank,
   )
-import Data.List (sort)
-import qualified CodeWorld.Tasks.Picture as P
 
 
 
 {- $Helpers
-Using the `Drawable` API directly does not make much sense with t`CodeWorld.Test.NormalizedPicture`s,
-since concrete parameters are abstracted.
-The following functions can be used instead to build an image more generally.
+You'll want to compare something to or query for some abstract picture frequently in tests,
+e.g. ask if there's a *yellow circle* somewhere in the image (but the size of the circle is not important).
+
+The following functions can be used to build such a generalized image directly,
+instead of creating a normal picture, then abstracting it.
 -}
 
 {- $NormalizedQueries
-Functions for retrieving parameters of a t`CodeWorld.Test.NormalizedPicture`.
+Functions for retrieving parameters of an t`CodeWorld.Test.AbstractPicture`.
 For each parameter there is an abstract and a concrete version.
 The concrete version simply removes the abstract type wrapper and returns the contained value.
 
@@ -454,127 +529,3 @@ This is useful if specific attributes can be determined directly from the un-nor
 Primitives from [Uniplate](https://hackage.haskell.org/package/uniplate-1.6.13) can then be employed
 to generically traverse the structure.
 -}
-
-{- |
-Convert a `Picture` into a t`CodeWorld.Test.NormalizedPicture`.
-This applies a number of simplifications, abstractions and rearrangements on the syntax tree of the image.
-The result is a new tree in /canonical/ form.
--}
-normalize :: Picture -> NormalizedPicture
-normalize = toInterface
-
-{- |
-Apply `normalize`, then re-concretize the abstracted syntax tree.
-The result is a new syntax tree, which draws the same image,
-but was simplified and rearranged via `normalize`'s rules.
--}
-reduce :: Picture -> Picture
-reduce = toConcretePicture . toInterface
-
-{- |
-Same as `reduce`,
-but also erases information on which subpictures are drawn in front or behind others.
--}
-reduceNoOrder :: Picture -> Picture
-reduceNoOrder p = case reduce p of
-  PRec (P.Pictures ps) -> PRec $ P.Pictures $ sort ps
-  rp                 -> rp
-
-pattern Rectangle :: Double -> Double -> Picture
-pattern Rectangle x y <- PRec (P.Rectangle x y)
-
-pattern ThickRectangle :: Double -> Double -> Double -> Picture
-pattern ThickRectangle t x y <- PRec (P.ThickRectangle t x y)
-
-pattern SolidRectangle :: Double -> Double -> Picture
-pattern SolidRectangle x y <- PRec (P.SolidRectangle x y)
-
-pattern Circle :: Double -> Picture
-pattern Circle r <- PRec (P.Circle r)
-
-pattern ThickCircle :: Double -> Double -> Picture
-pattern ThickCircle t r <- PRec (P.ThickCircle t r)
-
-pattern SolidCircle :: Double -> Picture
-pattern SolidCircle r <- PRec (P.SolidCircle r)
-
-pattern Polygon :: [Point] -> Picture
-pattern Polygon ps <- PRec (P.Polygon ps)
-
-pattern SolidPolygon :: [Point] -> Picture
-pattern SolidPolygon ps <- PRec (P.SolidPolygon ps)
-
-pattern ThickPolygon :: Double -> [Point] -> Picture
-pattern ThickPolygon t ps <- PRec (P.ThickPolygon t ps)
-
-pattern Polyline :: [Point] -> Picture
-pattern Polyline ps <- PRec (P.Polyline ps)
-
-pattern ThickPolyline :: Double -> [Point] -> Picture
-pattern ThickPolyline t ps <- PRec (P.ThickPolyline t ps)
-
-pattern Sector :: Double -> Double -> Double -> Picture
-pattern Sector a1 a2 r <- PRec (P.Sector a1 a2 r)
-
-pattern Arc :: Double -> Double -> Double -> Picture
-pattern Arc a1 a2 r <- PRec (P.Arc a1 a2 r)
-
-pattern ThickArc :: Double -> Double -> Double -> Double -> Picture
-pattern ThickArc t a1 a2 r <- PRec (P.ThickArc t a1 a2 r)
-
-pattern Curve :: [Point] -> Picture
-pattern Curve ps <- PRec (P.Curve ps)
-
-pattern ThickCurve :: Double -> [Point] -> Picture
-pattern ThickCurve t ps <- PRec (P.ThickCurve t ps)
-
-pattern ClosedCurve :: [Point] -> Picture
-pattern ClosedCurve ps <- PRec (P.ClosedCurve ps)
-
-pattern SolidClosedCurve :: [Point] -> Picture
-pattern SolidClosedCurve ps <- PRec (P.SolidClosedCurve ps)
-
-pattern ThickClosedCurve :: Double -> [Point] -> Picture
-pattern ThickClosedCurve t ps <- PRec (P.ThickClosedCurve t ps)
-
-pattern Lettering :: Text -> Picture
-pattern Lettering t <- PRec (P.Lettering t)
-
-pattern StyledLettering :: TextStyle -> Font -> Text -> Picture
-pattern StyledLettering ts f t <- PRec (P.StyledLettering ts f t)
-
-pattern Color :: Color -> Picture -> Picture
-pattern Color c p <- PRec (P.Color c p)
-
-pattern Translate :: Double -> Double -> Picture -> Picture
-pattern Translate x y p <- PRec (P.Translate x y p)
-
-pattern Scale :: Double -> Double -> Picture -> Picture
-pattern Scale fac1 fac2 p <- PRec (P.Scale fac1 fac2 p)
-
-pattern Dilate :: Double -> Picture -> Picture
-pattern Dilate fac p <- PRec (P.Dilate fac p)
-
-pattern Rotate :: Double -> Picture -> Picture
-pattern Rotate a p <- PRec (P.Rotate a p)
-
-pattern Reflect :: Double -> Picture -> Picture
-pattern Reflect a p <- PRec (P.Reflect a p)
-
-pattern Clip :: Double -> Double -> Picture -> Picture
-pattern Clip x y p <- PRec (P.Clip x y p)
-
-pattern Pictures :: [Picture] -> Picture
-pattern Pictures ps <- PRec (P.Pictures ps)
-
-pattern And :: Picture -> Picture -> Picture
-pattern And p1 p2 <- PRec (P.And p1 p2)
-
-pattern CoordinatePlane :: Picture
-pattern CoordinatePlane <- PRec P.CoordinatePlane
-
-pattern Logo :: Picture
-pattern Logo <- PRec P.Logo
-
-pattern Blank :: Picture
-pattern Blank <- PRec P.Blank

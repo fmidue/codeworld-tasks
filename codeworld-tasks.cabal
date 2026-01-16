@@ -34,10 +34,11 @@ library
       CodeWorld.Tasks.Types
       CodeWorld.Tasks.VectorSpace
       CodeWorld.Test.Abstract
+      CodeWorld.Test.AbstractHelpers
       CodeWorld.Test.AbsTypes
       CodeWorld.Test.Animation
-      CodeWorld.Test.Normalize
       CodeWorld.Test.Relative
+      CodeWorld.Test.Rewrite
       CodeWorld.Test.Solution
       Paths_codeworld_tasks
   autogen-modules:

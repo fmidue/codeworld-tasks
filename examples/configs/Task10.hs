@@ -248,7 +248,6 @@ main = animationOf scene
 module Test (test) where
 import qualified Task10
 
-import qualified CodeWorld as API
 import Data.Text (pack)
 import CodeWorld.Test
 import Test.HUnit ((~:), (~?), Test(..), assertBool)
@@ -276,8 +275,8 @@ test =
     "animation1 was not altered and plays on its own for correct amount of time?"
 
   -- plays animation2 for 3 seconds
-  , all (playsAlone (\t -> API.dilated 2 $ Task10.animation2 (t-2))) [2.1,2.2..4.9] ||
-    all (playsAlone (\t -> API.scaled 2 2 $ Task10.animation2 (t-2))) [2.1,2.2..4.9] ~?
+  , all (playsAlone (\t -> dilated 2 $ Task10.animation2 (t-2))) [2.1,2.2..4.9] ||
+    all (playsAlone (\t -> scaled 2 2 $ Task10.animation2 (t-2))) [2.1,2.2..4.9] ~?
     "animation2 is scaled correctly and plays on its own for correct amount of time?"
 
   -- plays animation3 for 4 seconds
@@ -285,11 +284,11 @@ test =
     "animation3 plays at half speed on its own for correct amount of time?"
 
   -- displays ending message after 9 seconds
-  , playsAlone (const $ API.lettering (pack "The End")) 9.05 ~?
+  , playsAlone (const $ lettering (pack "The End")) 9.05 ~?
     "Ending message was not altered and starts at correct timing?"
 
   -- ending message is displayed forever
-  , all (playsAlone (const $ API.lettering (pack "The End"))) [10,11,20,50,100,1000] ~?
+  , all (playsAlone (const $ lettering (pack "The End"))) [10,11,20,50,100,1000] ~?
     "Ending message persists indefinitely?"
   ]
   where

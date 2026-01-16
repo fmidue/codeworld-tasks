@@ -190,8 +190,8 @@ module Test (test) where
 import qualified Task03
 import Test.HUnit ((~:), (~?), Test)
 import CodeWorld.Test (
-  (&),
-  colored,
+  (.&.),
+  withColor,
   gray,
   someCircle,
   someCurve,
@@ -227,7 +227,7 @@ test =
     "or might not be a continuous, round shape."
   , any (uncurry (<) . scalingFactor) [egg,solidGray] ||
     onScene (containsElem polyEgg) ~?
-    "The egg shell does not seem to have an oval shape."
+    (show $ findMaybe (`contains` egg) $ getComponents Task03.scene) -- "The egg shell does not seem to have an oval shape."
   , onScene ( oneOf (\p ->
       hasRelation (yolk `atSamePosition` p) <||>
       hasRelation (yolk `isBelow` p)) [egg, multiEgg, polyEgg]
@@ -238,10 +238,10 @@ test =
     scalingFactor p = maybe (1,1) getExactScalingFactors $
       findMaybe (`contains` p) $ getComponents Task03.scene
 
-    egg = colored gray someCircle
-    multiEgg = solidGray & solidWhite
-    polyEgg = colored gray (someCurve 4)
-    yolk = colored yellow someSolidCircle
-    solidWhite = colored white someSolidCircle
-    solidGray = colored gray someSolidCircle
+    egg = withColor gray someCircle
+    multiEgg = solidGray .&. solidWhite
+    polyEgg = withColor gray (someCurve 4)
+    yolk = withColor yellow someSolidCircle
+    solidWhite = withColor white someSolidCircle
+    solidGray = withColor gray someSolidCircle
 

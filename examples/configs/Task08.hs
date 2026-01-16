@@ -237,9 +237,9 @@ import qualified Task08
 import CodeWorld.Test (
   Picture (Rotate),
   hasInnerPicture,
-  normalize,
+  normalizeAndAbstract,
 
-  colored,
+  withColor,
   green,
   someSolidRectangle,
   white,
@@ -301,7 +301,7 @@ test =
 
   -- sun and moon don't pass under grass
   , all (\t -> not $ onSceneAt t (
-           oneOf (\p -> hasRelation (normalize p `isBelow` grass)) [Task08.sun, Task08.moon])
+           oneOf (\p -> hasRelation (normalizeAndAbstract p `isBelow` grass)) [Task08.sun, Task08.moon])
         ) sunMoonCheck ~?
     "Your sun and/or moon is moving under the grass!"
 
@@ -322,8 +322,8 @@ test =
   where
     movementCheck = samplesUntil 0.2 5
     sunMoonCheck = samplesUntil 0.2 50
-    grass = colored green someSolidRectangle
-    cheat = colored white someSolidRectangle
+    grass = withColor green someSolidRectangle
+    cheat = withColor white someSolidRectangle
     onSceneAt t = flip evaluatePred $ Task08.scene t
     sceneElemsAt = getComponents . Task08.scene
     getElementAt p = findMaybeActual (`contains` p) . Task08.scene
@@ -332,7 +332,7 @@ test =
     lengthUniques :: Eq a => [a] -> Int
     lengthUniques = length . nub
     xor a b = not $ a && b
-    pictureHas = containsElem . normalize
+    pictureHas = containsElem . normalizeAndAbstract
     sunMoonDetector t = onSceneAt t (pictureHas Task08.sun) `xor`
                         onSceneAt t (pictureHas Task08.moon)
 

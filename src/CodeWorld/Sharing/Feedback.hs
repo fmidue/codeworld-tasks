@@ -14,7 +14,8 @@ import qualified Data.IntMap            as IM
 
 import CodeWorld                        (Picture)
 import CodeWorld.Sharing.HashCons       (BiMap, Node(..), hashconsShare)
-import CodeWorld.Tasks.Picture          (ReifyPicture(..), share, toInterface)
+import CodeWorld.Tasks.Picture          (share, toInterface)
+import CodeWorld.Tasks.Types            (ReifyPicture(..), Shape(..), Style(..))
 
 
 
@@ -143,70 +144,51 @@ printOriginal bindings termLookup term = unwords $ case term of
     indentedList "pictures" $ map printNextAnd is
   And i1 i2             ->
     [printNextAnd i1 ++ " &\n" ++ printNextAnd i2]
-  Rectangle x y         ->
-    [ "rectangle"
-    , truncatedShow x
+  Rectangle s x y       -> case s of
+    Outline Nothing  -> "rectangle"
+    Outline (Just t) -> unwords
+      [ "thickRectangle"
+      , truncatedShow t
+      ]
+    Solid            -> "solidRectangle"
+    :
+    [ truncatedShow x
     , truncatedShow y
     ]
-  ThickRectangle t x y  ->
-    [ "thickRectangle"
-    , truncatedShow t
-    , truncatedShow x
-    , truncatedShow y
+  Circle s r            -> case s of
+    Outline Nothing  -> "circle"
+    Outline (Just t) -> unwords
+      [ "thickCircle"
+      , truncatedShow t
+      ]
+    Solid            -> "solidCircle"
+    :
+    [
+    truncatedShow r
     ]
-  SolidRectangle x y    ->
-    [ "solidRectangle"
-    , truncatedShow x
-    , truncatedShow y
-    ]
-  Circle r              ->
-    ["circle " ++ truncatedShow r]
-  ThickCircle t r       ->
-    [ "thickCircle"
-    , truncatedShow t
-    , truncatedShow r
-    ]
-  SolidCircle r         ->
-    ["solidCircle " ++ truncatedShow r]
-  Polygon ps            ->
-    indentedList "polygon" $ map show ps
-  ThickPolygon t ps     ->
-    indentedList ("thickPolygon " ++ truncatedShow t) $ map show ps
-  SolidPolygon ps       ->
-    indentedList "solidPolygon" $ map show ps
-  Polyline ps           ->
-    indentedList "polyline" $ map show ps
-  ThickPolyline t ps    ->
-    indentedList ("thickPolyline " ++ truncatedShow t) $ map show ps
-  Sector a1 a2 r        ->
-    [ "sector"
-    , truncatedShow a1
+  Polyline s ps           -> case s of
+    Open Nothing  -> indentedList "polyline" $ map show ps
+    Open (Just t) -> indentedList ("thickPolyline " ++ truncatedShow t) $ map show ps
+    Closed (Outline Nothing) -> indentedList "polygon" $ map show ps
+    Closed (Outline (Just t)) -> indentedList ("thickPolygon " ++ truncatedShow t) $ map show ps
+    Closed Solid -> indentedList "solidPolygon" $ map show ps
+  Arc s a1 a2 r           -> case s of
+    Outline Nothing -> "arc"
+    Outline (Just t) -> "thickArc " ++ truncatedShow t
+    Solid -> "sector"
+    :
+    [ truncatedShow a1
     , truncatedShow a2
     , truncatedShow r
     ]
-  Arc a1 a2 r           ->
-    [ "arc"
-    , truncatedShow a1
-    , truncatedShow a2
-    , truncatedShow r
-    ]
-  ThickArc t a1 a2 r    ->
-    [ "thickArc"
-    , truncatedShow t
-    , truncatedShow a1
-    , truncatedShow a2
-    , truncatedShow r
-    ]
-  Curve ps              ->
-    indentedList "curve" $ map show ps
-  ThickCurve t ps       ->
-    indentedList ("thickCurve " ++ truncatedShow t) $ map show ps
-  ClosedCurve ps        ->
-    indentedList "closedCurve" $ map show ps
-  ThickClosedCurve t ps ->
-    indentedList ("thickClosedCurve " ++ truncatedShow t) $ map show ps
-  SolidClosedCurve ps   ->
-    indentedList "solidClosedCurve" $ map show ps
+
+  Curve s ps              -> case s of
+    Open Nothing -> indentedList "curve" $ map show ps
+    Open (Just t) -> indentedList ("thickCurve " ++ truncatedShow t) $ map show ps
+    Closed (Outline Nothing) -> indentedList "closedCurve" $ map show ps
+    Closed (Outline (Just t)) ->  indentedList ("thickClosedCurve " ++ truncatedShow t) $ map show ps
+    Closed Solid -> indentedList "solidClosedCurve" $ map show ps
+
   Lettering t           ->
     ["lettering " ++ show t]
   StyledLettering s f t ->
@@ -289,25 +271,25 @@ toReify :: BiMap Node -> [(IM.Key, ReifyPicture Int)]
 toReify = map $ second toReifyPic
   where
     toReifyPic n = case n of
-      RectangleNode x y -> Rectangle x y
-      ThickRectangleNode t x y -> ThickRectangle t x y
-      SolidRectangleNode x y -> SolidRectangle x y
-      CircleNode r -> Circle r
-      ThickCircleNode t r -> ThickCircle t r
-      SolidCircleNode r -> SolidCircle r
-      PolygonNode ps -> Polygon ps
-      SolidPolygonNode ps -> SolidPolygon ps
-      ThickPolygonNode t ps -> ThickPolygon t ps
-      ClosedCurveNode ps -> ClosedCurve ps
-      SolidClosedCurveNode ps -> SolidClosedCurve ps
-      ThickClosedCurveNode t ps -> ThickClosedCurve t ps
-      PolylineNode ps -> Polyline ps
-      ThickPolylineNode t ps -> ThickPolyline t ps
-      CurveNode ps -> Curve ps
-      ThickCurveNode t ps -> ThickCurve t ps
-      SectorNode a1 a2 r -> Sector a1 a2 r
-      ArcNode a1 a2 r -> Arc a1 a2 r
-      ThickArcNode t a1 a2 r -> ThickArc t a1 a2 r
+      RectangleNode x y -> Rectangle (Outline Nothing) x y
+      ThickRectangleNode t x y -> Rectangle (Outline $ Just t) x y
+      SolidRectangleNode x y -> Rectangle Solid x y
+      CircleNode r -> Circle (Outline Nothing) r
+      ThickCircleNode t r -> Circle (Outline $ Just t) r
+      SolidCircleNode r -> Circle Solid r
+      PolygonNode ps -> Polyline (Closed $ Outline Nothing) ps
+      SolidPolygonNode ps -> Polyline (Closed Solid) ps
+      ThickPolygonNode t ps -> Polyline (Closed $ Outline $ Just t) ps
+      ClosedCurveNode ps -> Curve (Closed $ Outline Nothing) ps
+      SolidClosedCurveNode ps -> Curve (Closed Solid) ps
+      ThickClosedCurveNode t ps -> Curve (Closed $ Outline $ Just t) ps
+      PolylineNode ps -> Polyline (Open Nothing) ps
+      ThickPolylineNode t ps -> Polyline (Open $ Just t) ps
+      CurveNode ps -> Curve (Open Nothing) ps
+      ThickCurveNode t ps -> Curve (Open $ Just t) ps
+      SectorNode a1 a2 r -> Arc Solid a1 a2 r
+      ArcNode a1 a2 r -> Arc (Outline Nothing) a1 a2 r
+      ThickArcNode t a1 a2 r -> Arc (Outline $ Just t) a1 a2 r
       LetteringNode t -> Lettering t
       StyledLetteringNode ts f t -> StyledLettering ts f t
       ColorNode c p -> Color c p
