@@ -74,10 +74,8 @@ rewriting (AnyCircle s (abs -> r)) = AnyCircle s r
 
 rewriting (AnyRectangle _ 0 _) = Blank
 rewriting (AnyRectangle _ _ 0) = Blank
-
 rewriting (ThickRectangle t (abs -> l) (abs -> w))
   | t >= 2*l || t >= 2*w = SolidRectangle (l + t/2) (w + t/2)
-
 rewriting (AnyRectangle s (abs -> l) (abs -> w)) = toWideRectangle s l w
 
 rewriting (AnyArc s a1 a2 r) = checkArc s a1 a2 r
@@ -113,8 +111,8 @@ rewriting (Dilate d p) = Scale d d p
 rewriting (Scale 0 _ _) = Blank
 rewriting (Scale _ 0 _) = Blank
 rewriting (Scale 1 1 p) = p
-rewriting (Scale fac1 fac2 (AnyCircle s r)) | fac1 == fac2 =
-  AnyCircle s (r * fac1)
+rewriting (Scale fac1 fac2 (AnyCircle s r))
+  | fac1 == fac2 = AnyCircle s (r * fac1)
 rewriting (Scale fac1 fac2 (AnyRectangle s l w)) =
   AnyRectangle s (l * fac1) (w * fac2)
 rewriting (Scale fac1 fac2 p) = case p of
