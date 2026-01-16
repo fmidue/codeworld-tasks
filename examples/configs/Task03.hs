@@ -227,7 +227,7 @@ test =
     "or might not be a continuous, round shape."
   , any (uncurry (<) . scalingFactor) [egg,solidGray] ||
     onScene (containsElem polyEgg) ~?
-    (show $ findMaybe (`contains` egg) $ getComponents Task03.scene) -- "The egg shell does not seem to have an oval shape."
+    "The egg shell does not seem to have an oval shape."
   , onScene ( oneOf (\p ->
       hasRelation (yolk `atSamePosition` p) <||>
       hasRelation (yolk `isBelow` p)) [egg, multiEgg, polyEgg]
