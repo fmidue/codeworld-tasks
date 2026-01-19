@@ -313,9 +313,9 @@ compositeRelation g p q rs = all (`any` rs) allRelations
 
 toRelative :: AbstractPicture -> Components
 toRelative p = case p of
-  Pictures ps -> Components (Pictures $ map stripTranslation ps, sort $ relativePosition ps)
+  Pictures ps -> Components (Pictures ps, sort $ relativePosition ps)
   a           -> let noTranslation = stripTranslation a in
-    Components (noTranslation,[alone noTranslation])
+    Components (a,[alone noTranslation])
 
 
 relativePosition :: [AbstractPicture] -> [RelativePicSpec]

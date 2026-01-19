@@ -98,12 +98,13 @@ module CodeWorld.Test (
   inRangeOf,
   hasRelation,
   (<||>),
+  (<&&>),
   option,
   options,
   ifThen,
   oneOf,
-  evaluatePred,
-  evaluatePreds,
+  runTests,
+  testLabel,
   -- | #queries#
 
   -- ** Queries on Components
@@ -399,10 +400,12 @@ import CodeWorld.Test.Solution (
   containsElem,
   containsElems,
   containsExactElems,
-  evaluatePred,
-  evaluatePreds,
+  testLabel,
+  runTests,
+
   hasRelation,
   (<||>),
+  (<&&>),
   option,
   options,
   ifThen,
