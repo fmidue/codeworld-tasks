@@ -1,11 +1,12 @@
+{-# LANGUAGE FlexibleContexts #-}
 
 module CodeWorld.Test.Solution (
   PicPredicate,
+  complain,
+  testPicture,
   containsElem,
   containsElems,
   containsExactElems,
-  testLabel,
-  runTests,
   hasRelation,
   (<||>),
   (<&&>),
@@ -50,15 +51,11 @@ import CodeWorld.Test.Relative (
 import CodeWorld.Test.Rewrite (normalizeAndAbstract)
 
 
-{- |
-Alias for queries on `Components`.
--}
-type PicQuery a = Reader Components a
 
 {- |
 Alias for predicates on `Components`.
 -}
-type PicPredicate = PicQuery Bool
+type PicPredicate = Reader Components Bool
 
 
 {- |
@@ -105,56 +102,56 @@ specElems f (Components (ps,_)) = f ps
 {- |
 Returns the first picture element satisfying the predicate if it exists. (translation is removed)
 -}
-findMaybe :: (AbstractPicture -> Bool) -> PicQuery (Maybe AbstractPicture)
+findMaybe :: MonadReader Components m => (AbstractPicture -> Bool) -> m (Maybe AbstractPicture)
 findMaybe = fmap listToMaybe . findAll
 
 
 {- |
 Returns all picture elements satisfying the predicate. (translation is removed)
 -}
-findAll :: (AbstractPicture -> Bool) -> PicQuery [AbstractPicture]
+findAll :: MonadReader Components m => (AbstractPicture -> Bool) -> m [AbstractPicture]
 findAll f = asks $ filter f . specElems (map stripTranslation . getSubPictures)
 
 
 {- |
 Returns all subpictures satisfying the predicate. (includes translation)
 -}
-findAllActual :: (AbstractPicture -> Bool) -> PicQuery [AbstractPicture]
+findAllActual :: MonadReader Components m => (AbstractPicture -> Bool) -> m [AbstractPicture]
 findAllActual f = asks $ filter f . specElems getSubPictures
 
 
 {- |
 Returns the first subpicture satisfying the predicate if it exists. (includes translation)
 -}
-findMaybeActual :: (AbstractPicture -> Bool) -> PicQuery (Maybe AbstractPicture)
+findMaybeActual :: MonadReader Components m => (AbstractPicture -> Bool) -> m (Maybe AbstractPicture)
 findMaybeActual = fmap listToMaybe . findAllActual
 
 
 {- |
 Finds all subpictures satisfying a predicate, then applies a function. (includes translation)
 -}
-findAllActualAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> PicQuery [a]
+findAllActualAnd :: MonadReader Components m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m [a]
 findAllActualAnd p f = map f <$> findAllActual p
 
 
 {- |
 Finds the first subpicture satisfying a predicate, then applies a function if it exists. (includes translation)
 -}
-findMaybeActualAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> PicQuery (Maybe a)
+findMaybeActualAnd :: MonadReader Components m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m (Maybe a)
 findMaybeActualAnd p = fmap listToMaybe . findAllActualAnd p
 
 
 {- |
 Finds all picture elements satisfying a predicate, then applies a function. (translation is removed)
 -}
-findAllAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> PicQuery [a]
+findAllAnd :: MonadReader Components m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m [a]
 findAllAnd f g = map g <$> findAll f
 
 
 {- |
 Finds the first element satisfying a predicate, then applies a function if it exists. (translation is removed)
 -}
-findMaybeAnd :: (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> PicQuery (Maybe a)
+findMaybeAnd :: MonadReader Components m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m (Maybe a)
 findMaybeAnd f = fmap listToMaybe . findAllAnd f
 
 
@@ -236,8 +233,8 @@ hasRelation = asks . specPosition
 {- |
 Builds a fallible test given an error message and a predicate.
 -}
-testLabel :: String -> PicPredicate -> ReaderT Components (Except String) ()
-testLabel label r = do
+complain :: String -> PicPredicate -> ReaderT Components (Except String) ()
+complain label r = do
   c <- ask
   unless (runReader r c) $ throwError label
 
@@ -246,5 +243,5 @@ testLabel label r = do
 Executes the given test suite and returns the error message of the first failed test
 or the empty String if all tests passed.
 -}
-runTests :: Picture -> ReaderT Components (Except String) () -> String
-runTests p = fromLeft "" . runExcept . flip runReaderT (getComponents p)
+testPicture :: Picture -> ReaderT Components (Except String) () -> String
+testPicture p = fromLeft "" . runExcept . flip runReaderT (getComponents p)

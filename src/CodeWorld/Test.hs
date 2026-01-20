@@ -103,8 +103,9 @@ module CodeWorld.Test (
   options,
   ifThen,
   oneOf,
-  runTests,
-  testLabel,
+  complain,
+  testPicture,
+
   -- | #queries#
 
   -- ** Queries on Components
@@ -397,11 +398,12 @@ import CodeWorld.Test.Rewrite (
   )
 import CodeWorld.Test.Solution (
   PicPredicate,
+  complain,
+  testPicture,
+
   containsElem,
   containsElems,
   containsExactElems,
-  testLabel,
-  runTests,
 
   hasRelation,
   (<||>),
