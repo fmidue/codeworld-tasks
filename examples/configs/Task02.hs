@@ -185,7 +185,12 @@ scene = undefined
 ----------
 module Test (test) where
 import qualified Task02
-import Test.HUnit ((~:), (~?), Assertion, Test(..), assertBool, assertString)
+import Test.HUnit (
+  (~:),
+  Test(..),
+  assertBool,
+  assertString,
+  )
 import CodeWorld.Test (
   brown,
   green,
@@ -198,14 +203,15 @@ import CodeWorld.Test (
 
   atLeast,
   containsElem,
-  runTests,
-  testLabel,
   hasRelation,
   ifThen,
   isAbove,
   isLeftOf,
   isNorthOf,
   (<&&>),
+
+  complain,
+  testPicture,
 
   testCSE,
   )
@@ -216,15 +222,19 @@ import TestHelper (isDeeplyDefined)
 test :: [ Test ]
 test =
   [ "scene =/= undefined?" ~: isDeeplyDefined Task02.scene
-  , TestCase $ assertString $ runTests Task02.scene $ do
-      testLabel "Picture contains a trunk?" $ containsElem wood
-      testLabel "Tree has at least a trunk and two branches?" $ wood `atLeast` 3
-      testLabel "Tree has a green crown?" $ containsElem $ withColor green someSolidCircle
-      testLabel "The trunk stands upright and there is a tree crown above it?" $ hasRelation $ withColor green someSolidCircle `isNorthOf` uprightWood
-      testLabel "Branches are roughly symmetrical? (if they already are, make sure your branches share code as much as possible)" $
-        containsElem (rotatedQuarter uprightWood) `ifThen` containsElem (rotatedUpToFull uprightWood) <&&>
-        containsElem (rotatedUpToFull uprightWood) `ifThen` containsElem (rotatedQuarter uprightWood)
-      testLabel
+  , TestCase $ assertString $ testPicture Task02.scene $ do
+      complain "Picture contains a trunk?" $ containsElem wood
+      complain "Tree has at least a trunk and two branches?" $ wood `atLeast` 3
+      complain "Tree has a green crown?" $ containsElem $ withColor green someSolidCircle
+      complain "The trunk stands upright and there is a tree crown above it?"
+        $ hasRelation $ withColor green someSolidCircle `isNorthOf` uprightWood
+      complain
+        ( "Branches are roughly symmetrical? " ++
+          "(if they already are, make sure your branches share code as much as possible)"
+        )
+        $ containsElem (rotatedQuarter uprightWood) `ifThen` containsElem (rotatedUpToFull uprightWood) <&&>
+          containsElem (rotatedUpToFull uprightWood) `ifThen` containsElem (rotatedQuarter uprightWood)
+      complain
         ( "Branches are in the correct position? " ++
           "(They should neither cross, nor be detached from the trunk, nor be at level with the trunk)"
         )

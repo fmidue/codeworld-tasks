@@ -188,7 +188,7 @@ scene = undefined
 ----------
 module Test (test) where
 import qualified Task03
-import Test.HUnit ((~:), (~?), Test)
+import Test.HUnit ((~:), Test(..), assertString)
 import CodeWorld.Test (
   (.&.),
   withColor,
@@ -199,7 +199,7 @@ import CodeWorld.Test (
   white,
   yellow,
 
-  findMaybe,
+  findAllAnd,
   getComponents,
   getExactScalingFactors,
   contains,
@@ -207,37 +207,40 @@ import CodeWorld.Test (
   (<||>),
   atSamePosition,
   containsElem,
-  evaluatePred,
   hasRelation,
   isBelow,
   oneOf,
-  )
 
+  complain,
+  testPicture,
+  )
 import TestHelper (isDeeplyDefined)
 
 test :: [ Test ]
 test =
   [ "scene =/= undefined?" ~: isDeeplyDefined Task03.scene
-  , onScene (containsElem yolk) ~?
-    "The picture does not contain the yellow yolk."
-  , onScene (oneOf containsElem [someCircle, solidWhite, polyEgg]) ~?
-    "The picture does not contain the egg white."
-  , onScene (oneOf containsElem [egg, solidGray, multiEgg, polyEgg]) ~?
-    "The shell could not be found. It might have the wrong color (should be grey) " ++
-    "or might not be a continuous, round shape."
-  , any (uncurry (<) . scalingFactor) [egg,solidGray] ||
-    onScene (containsElem polyEgg) ~?
-    "The egg shell does not seem to have an oval shape."
-  , onScene ( oneOf (\p ->
-      hasRelation (yolk `atSamePosition` p) <||>
-      hasRelation (yolk `isBelow` p)) [egg, multiEgg, polyEgg]
-      ) ~?  "The yolk is not inside the egg or has not been positioned correctly inside it."
+  , TestCase $ assertString $ testPicture Task03.scene $ do
+      complain "The picture does not contain the yellow yolk."
+        $ containsElem yolk
+      complain "The picture does not contain the egg white."
+        $ oneOf containsElem [someCircle, solidWhite, polyEgg]
+      complain
+        ( "The shell could not be found. It might have the wrong color (should be grey) " ++
+          "or might not be a continuous, round shape."
+        )
+        $ oneOf containsElem [egg, solidGray, multiEgg, polyEgg]
+      complain "The egg shell does not seem to have an oval shape." $ do
+        circleEggs <- findAllAnd
+          ((||) <$> (`contains` egg) <*> (`contains` solidGray))
+          getExactScalingFactors
+        pure (any (uncurry (<)) circleEggs) <||> containsElem polyEgg
+      complain "The yolk is not inside the egg or has not been positioned correctly inside it."
+        $ oneOf (\p ->
+            hasRelation (yolk `atSamePosition` p) <||>
+            hasRelation (yolk `isBelow` p)
+            ) [egg, multiEgg, polyEgg]
   ]
   where
-    onScene = flip evaluatePred Task03.scene
-    scalingFactor p = maybe (1,1) getExactScalingFactors $
-      findMaybe (`contains` p) $ getComponents Task03.scene
-
     egg = withColor gray someCircle
     multiEgg = solidGray .&. solidWhite
     polyEgg = withColor gray (someCurve 4)

@@ -236,12 +236,14 @@ truncatedTime t =
   let (n,f) = properFraction t
   in show (n :: Int) ++ take 3 (tail (show f))
 ----------
+{-# language NoMonomorphismRestriction #-}
+
 module Test (test) where
 import qualified Task04
-
+import Data.Maybe (isNothing)
 import Data.List.Extra (nubOrd)
-import Data.Tuple.Extra (both)
-import Test.HUnit ((~:), (~?), Test(..), assertBool)
+import Data.Tuple.Extra ((&&&))
+import Test.HUnit ((~:), Test(..), assertBool, assertString)
 import CodeWorld.Test (
   withColor,
   green,
@@ -251,48 +253,68 @@ import CodeWorld.Test (
   yellow,
 
   contains,
-  findMaybeActual,
+  findMaybeActualAnd,
   getComponents,
   getExactTranslation,
   getRotation,
 
   containsElem,
-  evaluatePred,
   hasRelation,
   isBelow,
 
+  atTime,
+  noneAt,
+  imagesAt,
+  queryAt,
+
+  complain,
+  testAnimation,
+  testPicture,
+
   samplesUntil,
   )
-
+import Control.Monad.Reader
 import qualified TestHarness as TH
 import TestHelper (isDeeplyDefined)
 
 test :: [ Test ]
 test =
   [ "scene =/= undefined?" ~: isDeeplyDefined (Task04.scene 1.0)
-  , onSceneAt 0 (containsElem someSolidCircle) ~?
-    "This animation does not contain a solid circle."
-  , onSceneAt 0 (containsElem someSolidRectangle) ~?
-    "This animation does not contain a solid rectangle."
-  , onSceneAt 0 (containsElem sun) ~?
-    "The circle is not yellow."
-  , onSceneAt 0 (containsElem grass) ~?
-    "The rectangle is not green."
-  , grassRotations (100 : frames) == 1 &&
-    grassMovement (100 : frames)  == 1 ~?
-    "The grass seems to move or disappear at some point during this animation. " ++
-    "It should be stationary and the sun should move instead."
-  , not (onSceneAt 0 (containsElem cheat)) ~?
-    "The scene contains a solid white rectangle. " ++
-    "This suggests you are trying to conceal the movement of the sun at some point."
-  , differentFrames (map (+100) frames) == 1 ~?
-    "Your animation has changing frames after running for 100 seconds. " ++
-    "This suggests your sun is permanently moving instead of setting at some point."
-  , differentFrames frames > 1 ~?
-    "Cannot detect (reasonable) movement in this animation. Make sure parameter 't' is not ignored. " ++
-    "Your sun might be moving in a strange way if 't' is actually used for movement."
-  , all (\t -> not $ onSceneAt t (hasRelation (sun `isBelow` grass))) (samplesUntil 0.5 30) ~?
-    "Your sun is moving under the grass!"
+  , TestCase $ assertString $ testAnimation Task04.scene $ do
+      atTime 0 $ do
+        complain "This animation does not contain a solid circle."
+          $ containsElem someSolidCircle
+        complain "This animation does not contain a solid rectangle."
+          $ containsElem someSolidRectangle
+        complain "The circle is not yellow." $ containsElem sun
+        complain "The rectangle is not green." $ containsElem grass
+        complain
+          ( "The scene contains a solid white rectangle. " ++
+            "This suggests you are trying to conceal the movement of the sun at some point."
+          )
+          $ not <$> containsElem cheat
+
+      complain
+        ( "The grass seems to move or disappear at some point during this animation. " ++
+          "It should be stationary and the sun should move instead."
+        )
+        $ (==1) . uniques <$> queryAt (100 : frames) getGrassValues
+
+      complain
+        ( "Your animation has changing frames after running for 100 seconds. " ++
+          "This suggests your sun is permanently moving instead of setting at some point."
+        )
+        $ (==1) . uniques <$> imagesAt (map (+100) frames)
+
+      complain
+        ( "Cannot detect (reasonable) movement in this animation. Make sure parameter 't' is not ignored. " ++
+          "Your sun might be moving in a strange way if 't' is actually used for movement."
+        )
+        $ (>1) . uniques <$> imagesAt frames
+
+      complain "Your sun is moving under the grass!"
+        $ noneAt (samplesUntil 0.5 30) $ hasRelation $ sun `isBelow` grass
+
   , TestCase $ TH.syntaxCheckWithExts ["LambdaCase","NoTemplateHaskell","TupleSections"] $ \m -> assertBool
       ( "The sun is not exhibiting circular movement. " ++
         "Please make sure it is not following a parabola shape or other different motions."
@@ -303,13 +325,7 @@ test =
     frames = samplesUntil 0.2 5
     grass = withColor green someSolidRectangle
     cheat = withColor white someSolidRectangle
-    onSceneAt t = flip evaluatePred (Task04.scene t)
-    sceneAt = getComponents . Task04.scene
-    mapUniques f = length . nubOrd . map f
-    differentFrames = mapUniques Task04.scene
-    getElementAt p = findMaybeActual (`contains` p) . Task04.scene
-    rotationAt p t = getRotation <$> getElementAt p t
-    grassRotations = mapUniques $ rotationAt grass
-    grassMovement = mapUniques (fmap getExactTranslation . getElementAt grass)
+    uniques = length . nubOrd
+    getGrassValues = findMaybeActualAnd (`contains` grass)
+      $ getRotation &&& getExactTranslation
     sun = withColor yellow someSolidCircle
-
