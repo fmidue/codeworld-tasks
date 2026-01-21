@@ -4,6 +4,7 @@ module CodeWorld.Test.Solution (
   PicPredicate,
   complain,
   testPicture,
+  testAnimation,
   containsElem,
   containsElems,
   containsExactElems,
@@ -27,6 +28,12 @@ module CodeWorld.Test.Solution (
   findMaybeActualAnd,
   oneOf,
   getComponents,
+  atTime,
+  imagesAt,
+  allAt,
+  anyAt,
+  noneAt,
+  queryAt,
   ) where
 
 import Control.Monad (unless)
@@ -34,6 +41,7 @@ import Control.Monad.Except
 import Control.Monad.Reader
 import Data.Either (fromLeft)
 import Data.Maybe (listToMaybe)
+import Data.Traversable (for)
 
 import CodeWorld.Tasks.Picture (Picture)
 import CodeWorld.Test.Abstract (
@@ -231,17 +239,75 @@ hasRelation = asks . specPosition
 
 
 {- |
+Samples the animation at the given time point and applies a predicate or query to it.
+-}
+atTime :: Double -> ReaderT Components m a -> ReaderT (Double -> Components) m a
+atTime time = withReaderT ($ time)
+
+
+{- |
+Samples the animation at multiple time points and applies a predicate or query to each image,
+then returns a list of results.
+-}
+queryAt
+  :: Applicative m
+  => [Double]
+  -> ReaderT Components m a
+  -> ReaderT (Double -> Components) m [a]
+queryAt frames = for frames . flip atTime
+
+
+{- |
+Samples the animation at multiple time points and applies a predicate to each image.
+Returns 'True' if all samples satisfied the predicate.
+-}
+allAt :: [Double] -> Reader Components Bool -> Reader (Double -> Components) Bool
+allAt frames = fmap and . queryAt frames
+
+
+{- |
+Samples the animation at multiple time points and applies a predicate to each image.
+Returns 'True' if any sample satisfied the predicate.
+-}
+anyAt :: [Double] -> Reader Components Bool -> Reader (Double -> Components) Bool
+anyAt frames = fmap or . queryAt frames
+
+
+{- |
+Samples the animation at multiple time points and applies a predicate to each image.
+Returns 'True' if none of the samples satisfied the predicate.
+-}
+noneAt :: [Double] -> Reader Components Bool -> Reader (Double -> Components) Bool
+noneAt frames = fmap not . anyAt frames
+
+
+{- |
+Samples the animation at multiple time points and returns a list of results.
+-}
+imagesAt :: Monad m => [Double] -> ReaderT (Double -> Components) m [Components]
+imagesAt frames = queryAt frames ask
+
+
+{- |
 Builds a fallible test given an error message and a predicate.
 -}
-complain :: String -> PicPredicate -> ReaderT Components (Except String) ()
+complain :: String -> Reader a Bool -> ReaderT a (Except String) ()
 complain label r = do
   c <- ask
   unless (runReader r c) $ throwError label
 
 
 {- |
-Executes the given test suite and returns the error message of the first failed test
+Executes the given test suite on a static image and returns the error message of the first failed test
 or the empty String if all tests passed.
 -}
 testPicture :: Picture -> ReaderT Components (Except String) () -> String
 testPicture p = fromLeft "" . runExcept . flip runReaderT (getComponents p)
+
+
+{- |
+Executes the given test suite on an animation and returns the error message of the first failed test
+or the empty String if all tests passed.
+-}
+testAnimation :: (Double -> Picture) -> ReaderT (Double -> Components) (Except String) () -> String
+testAnimation p = fromLeft "" . runExcept . flip runReaderT (getComponents . p)

@@ -103,8 +103,6 @@ module CodeWorld.Test (
   options,
   ifThen,
   oneOf,
-  complain,
-  testPicture,
 
   -- | #queries#
 
@@ -118,6 +116,19 @@ module CodeWorld.Test (
   findAllAnd,
   findAllActual,
   findAllActualAnd,
+
+  -- ** Helpers for Animations
+  atTime,
+  imagesAt,
+  anyAt,
+  allAt,
+  noneAt,
+  queryAt,
+
+  -- ** Running Tests
+  complain,
+  testPicture,
+  testAnimation,
 
   -- * Strict Pictures
   -- $StrictPictures
@@ -400,6 +411,7 @@ import CodeWorld.Test.Solution (
   PicPredicate,
   complain,
   testPicture,
+  testAnimation,
 
   containsElem,
   containsElems,
@@ -426,6 +438,13 @@ import CodeWorld.Test.Solution (
   findAllActualAnd,
   findMaybeActualAnd,
   getComponents,
+
+  anyAt,
+  allAt,
+  atTime,
+  imagesAt,
+  noneAt,
+  queryAt,
   )
 import CodeWorld.Tasks.VectorSpace (
   Point,
