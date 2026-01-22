@@ -217,8 +217,9 @@ module Test (test) where
 import qualified Task11
 
 import Data.Generics.Uniplate.Data (para, universe)
-import Data.List.Extra (notNull, nubBy, nub)
+import Data.List.Extra (notNull, nubBy, nubOrd)
 import Data.Maybe (fromMaybe, mapMaybe)
+import Data.Tuple.Extra ((&&&))
 import CodeWorld.Test (
   Picture(Rotate, Translate),
   normalizeAndAbstract,
@@ -234,10 +235,9 @@ import CodeWorld.Test (
 
   contains,
   findAll,
-  findAllActual,
-  findMaybeActual,
+  findAllActualAnd,
+  findMaybeActualAnd,
   getColor,
-  getComponents,
   getExactCircleRadius,
   getExactRotation,
   getExactScalingFactors,
@@ -248,17 +248,23 @@ import CodeWorld.Test (
   atSamePosition,
   atLeast,
   containsElem,
-  evaluatePred,
   hasRelation,
   isAbove,
   isLeftOf,
   isRightOf,
   oneOf,
 
+  atTime,
+  imagesAt,
+  queryAt,
+
+  complain,
+  testAnimation,
+
   samplesUntil,
   )
 import Language.Haskell.Exts (Exp(..), SrcSpanInfo)
-import Test.HUnit ((~:), (~?), Test(..), assertBool)
+import Test.HUnit ((~:), Test(..), assertBool, assertString)
 
 import qualified TestHarness as TH
 import TestHelper (isDeeplyDefined)
@@ -266,53 +272,63 @@ import TestHelper (isDeeplyDefined)
 test :: [ Test ]
 test =
   [ "scene =/= undefined?" ~: isDeeplyDefined (Task11.scene 1.0)
-  , atStart (containsElem grass) ~? "There's grass?"
-  , atStart (oneOf containsElem eggChoices) ~? "There's at least one egg?"
-  , atStart (oneOf (`atLeast` 6) eggChoices) ~? "There are at least 6 eggs?"
-  , length (nubBy isSameColor usedColors) >= 6 ~? "Each egg has a unique color?"
-  , lengthUniques (map getExactScalingFactors sceneEggs) >= 2 ||
-    lengthUniques (map getExactCircleRadius sceneEggs) >= 2 ||
-    atStart (oneOf containsElem curveEggs)  ~? "There are eggs of different sizes?"
-  , atStart (oneOf (\p -> hasRelation (p `isLeftOf` p)) eggChoices <||>
-             oneOf (\p -> hasRelation (p `isRightOf` p)) eggChoices
-            ) ~? "Eggs are spread out? Maybe you have drawn too many rectangles if they are."
+  , TestCase $ assertString $ testAnimation Task11.scene $ do
+      atTime 0 $ do
+        complain "There's grass?" $ containsElem grass
+        complain "There's at least one egg?" $ oneOf containsElem eggChoices
+        complain "There are at least 6 eggs?" $ oneOf (`atLeast` 6) eggChoices
+        eggs <- findAll isEgg
+        let usedColors = mapMaybe getColor eggs
+        complain "Each egg has a unique color?" $ pure $ length (nubBy isSameColor usedColors) >= 6
+        complain "There are eggs of different sizes?" $
+          pure (lengthUniques (map getExactScalingFactors eggs) >= 2) <||>
+          pure (lengthUniques (map getExactCircleRadius eggs) >= 2) <||>
+          oneOf containsElem curveEggs
+        complain "Eggs are spread out? Maybe you have drawn too many rectangles if they are." $
+          oneOf (\p -> hasRelation (p `isLeftOf` p)) eggChoices <||>
+          oneOf (\p -> hasRelation (p `isRightOf` p)) eggChoices
+        complain "Eggs are above the grass?" $
+          oneOf (\p -> hasRelation (p `isAbove` grass)) (take 3 eggChoices) <||>
+          hasRelation (polyEggThick `atSamePosition` grass)
 
-  , atStart (oneOf (\p -> hasRelation (p `isAbove` grass)) (take 3 eggChoices) <||>
-             hasRelation (polyEggThick `atSamePosition` grass)
-            ) ~? "Eggs are above the grass?"
+      complain "Cannot detect movement. Make sure you are not ignoring parameter 't'."
+        $ (>1) . lengthUniques <$> imagesAt movementCheck
 
-  , lengthUniques (map Task11.scene movementCheck) > 1 ~?
-    "Cannot detect movement. Make sure you are not ignoring parameter 't'."
+      -- grass is not moving
+      complain (
+        "The grass seems to move or disappear at some point during this animation. " ++
+        "It should be stationary and not move at all."
+        ) $ (==1) . lengthUniques <$> queryAt (100 : movementCheck) getGrassValues
 
-  -- grass is not moving
-  , lengthUniques (grassRotations $ 100 : movementCheck) == 1 &&
-    lengthUniques (grassMovement $ 100 : movementCheck)  == 1 ~?
-    "The grass seems to move or disappear at some point during this animation. " ++
-    "It should be stationary and not move at all."
+      eggRotations <- queryAt widerCheck $ findAllActualAnd isEgg getExactRotation
+      -- eggs rotation changes
+      complain "Eggs are swaying?" $
+        pure (lengthUniques (concat eggRotations) >= 6) <||>
+        atTime 0 (oneOf containsElem curveEggs)
 
-  -- eggs rotation changes
-  , lengthUniques (eggRotations widerCheck) >= 6 ||
-    atStart (oneOf containsElem curveEggs) ~? "Eggs are swaying?"
+      -- animation continues after 100 seconds
+      complain "The animation seems to stop at some point. Make sure it runs indefinitely." $
+        (>1) . lengthUniques <$> imagesAt (map (+100) movementCheck)
 
-  -- animation continues after 100 seconds
-  , length (nub (map Task11.scene $ map (+100) movementCheck)) > 1 ~?
-    "The animation seems to stop at some point. Make sure it runs indefinitely."
+      -- eggs don't rotate more than ~90 degrees
+      complain (
+        "The eggs seem to sway in an unreasonable fashion. Please make sure they do not clip into the grass completely " ++
+        "or 'sway' under the grass."
+        ) $ pure $ all (\a -> a <= pi/2 || a >= 3*pi/2) $ concat eggRotations
 
-  -- eggs don't rotate more than ~90 degrees
-  , all (\a -> a <= pi/2 || a >= 3*pi/2) (eggRotations widerCheck) ~?
-    "The eggs seem to sway in an unreasonable fashion. Please make sure they do not clip into the grass completely " ++
-    "or 'sway' under the grass."
+      -- egg rotation is synchronized
+      complain "The eggs do not sway in unison. Make sure their movement is synchronized."
+        $ pure (all ((==1) . lengthUniques) eggRotations) <||>
+          atTime 0 (oneOf containsElem curveEggs)
 
-  -- egg rotation is synchronized
-  , all (\t -> lengthUniques (eggRotations [t]) == 1) widerCheck ||
-    atStart (oneOf containsElem curveEggs) ~?
-    "The eggs do not sway in unison. Make sure their movement is synchronized."
+      -- eggs do not rotate around their center
+      -- Don't have anything to access non-abstract Pictures yet, changes needed here!
+      complain (
+        "The swaying motion of your eggs seems wrong. Make sure they do not rotate around their center point. " ++
+        "They should be pivoting on the center of their bottom side instead."
+        ) $ pure (correctSwaying (Task11.scene 1)) <||>
+            pure (lengthUniques (map (gatherTranslations . Task11.scene) movementCheck) > 1)
 
-  -- eggs do not rotate around their center
-  , correctSwaying (Task11.scene 1) ||
-    length (nub (map (gatherTranslations . Task11.scene) movementCheck)) > 1 ~?
-    "The swaying motion of your eggs seems wrong. Make sure they do not rotate around their center point. " ++
-    "They should be pivoting on the center of their bottom side instead."
   , TestCase $ TH.syntaxCheckWithExts ["LambdaCase","NoTemplateHaskell","TupleSections"] $ assertBool
       "You are manually placing the eggs. Consider a different approach!"
       . TH.contains TH.listComprehension
@@ -320,11 +336,7 @@ test =
   where
     movementCheck = samplesUntil 0.2 3
     widerCheck = samplesUntil 1 50
-    sceneAt t = getComponents (Task11.scene t)
-    atStart = flip evaluatePred (Task11.scene 0)
     grass = withColor green someSolidRectangle
-    sceneEggs = findAll isEgg $ getComponents $ Task11.scene 0
-    usedColors = mapMaybe getColor sceneEggs
     eggChoices = [singleEgg, doubleEgg, polyEggSolid, polyEggThick]
     curveEggs = [polyEggSolid, polyEggThick]
     singleEgg = someCircle
@@ -335,13 +347,11 @@ test =
     isEgg p = p `contains` singleEgg || p `contains` doubleEgg ||
               p `contains` polyEggSolid || p `contains` polyEggThick
 
-    getElementAt p = findMaybeActual (`contains` p) . Task11.scene
-    grassRotations = mapMaybe (fmap getExactRotation . getElementAt grass)
-    grassMovement = mapMaybe (fmap getExactTranslation . getElementAt grass)
-    eggRotations = concatMap (map getExactRotation . findAllActual isEgg . Task11.scene)
+    getGrassValues = findMaybeActualAnd (`contains` grass)
+      $ getExactRotation &&& getExactTranslation
 
-    lengthUniques :: Eq a => [a] -> Int
-    lengthUniques = length . nub
+    lengthUniques :: Ord a => [a] -> Int
+    lengthUniques = length . nubOrd
 
     correctSwaying :: Picture -> Bool
     correctSwaying pic = notNull
