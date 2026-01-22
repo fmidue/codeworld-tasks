@@ -70,35 +70,35 @@ type PicPredicate = Reader Components Bool
 {- |
 At least one of many predicates evaluates to True.
 -}
-options :: [PicPredicate] -> PicPredicate
+options :: MonadReader env m => [m Bool] -> m Bool
 options = foldr (<||>) (pure False)
 
 
 {- |
 At least one of two predicates evaluates to True.
 -}
-(<||>) :: PicPredicate -> PicPredicate -> PicPredicate
+(<||>) :: MonadReader env m => m Bool -> m Bool -> m Bool
 (<||>) p q = (||) <$> p <*> q
 
 
 {- |
 Both predicates evaluate to True.
 -}
-(<&&>) :: PicPredicate -> PicPredicate -> PicPredicate
+(<&&>) :: MonadReader env m => m Bool -> m Bool -> m Bool
 (<&&>) p q = (&&) <$> p <*> q
 
 
 {- |
 Only one of two predicates evaluate to True (XOR).
 -}
-(<^^>) :: PicPredicate -> PicPredicate -> PicPredicate
+(<^^>) :: MonadReader env m => m Bool -> m Bool -> m Bool
 (<^^>) a b = not <$> a <&&> b
 
 
 {- |
 Alias for (`<||>`)
 -}
-option :: PicPredicate -> PicPredicate -> PicPredicate
+option :: MonadReader env m => m Bool -> m Bool -> m Bool
 option = (<||>)
 
 
