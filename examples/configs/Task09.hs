@@ -219,64 +219,68 @@ balloon t = solidCircle (0.5 * t)
 main :: IO ()
 main = animationOf balloon
 ----------
+{-# language NoMonomorphismRestriction #-}
+
 module Test (test) where
 import qualified Task09
 
 import Data.Maybe (fromJust, mapMaybe)
-import Data.List (nub)
+import Data.List.Extra (nubOrd)
 import Control.Monad (join)
 import CodeWorld.Test
-import Test.HUnit ((~:), (~?), Test)
+import Test.HUnit ((~:), Test(..), assertString)
 import TestHelper (isDeeplyDefined)
-
+import Control.Monad.Reader (ask)
 test :: [ Test ]
 test =
   [ "balloon =/= undefined?" ~: isDeeplyDefined (Task09.balloon 1.0)
-  -- Balloon exists in all samples
-  , all (`onSceneAt` containsElem balloon) framesToCheck ~?
-    "Balloon is present at all times?"
+  , TestCase $ assertString $ testAnimation Task09.balloon $ do
+      -- Balloon exists in all samples after t = 0
+      complain "Balloon is present at all times?"
+        $ allAt framesToCheck $ containsElem balloon
 
-  -- animation stops at some point
-  , lengthUniques (map (Task09.balloon . (+100)) $ samplesUntil 0.2 5) == 1 ~?
-    "Balloon stops growing or shrinking at some point?"
+      -- animation stops at some point
+      complain "Balloon stops growing or shrinking at some point?"
+        $ (==1) . lengthUniques <$> imagesAt (map (+100) $ samplesUntil 0.2 5)
 
-  -- animation includes three different colors
-  , lengthUniques (map balloonColorAt framesToCheck) == 3 ~?
-    "Balloon has three different colors (each for a few seconds) during animation?"
+      -- animation includes three different colors
+      complain "Balloon has three different colors (each for a few seconds) during animation?"
+        $ (==3) . lengthUniques <$> queryAt framesToCheck (getBalloonAnd getColor)
 
-  -- size of the balloon changes
-  , checkBalloonSizes (mapMaybe balloonSizeAt framesToCheck) ~?
-    "Balloon starts out growing, then shrinks and finally stops changing at all?"
+      -- size of the balloon changes
+      complain "Balloon starts out growing, then shrinks and finally stops changing at all?"
+        $ checkBalloonSizes . mapMaybe join <$> queryAt framesToCheck getBalloonSize
 
-   -- no jumps in animation
-  , testContinuous (<= 0) (fromJust . balloonSizeAt) ~?
-    "Transition from growing to shrinking is continuous and instant?"
-  , testContinuous (== 0) (fromJust . balloonSizeAt) ~?
-    "Transition from shrinking to stable size is continuous?"
+      -- no jumps in animation
+      -- (not satisfied with this yet, should be easier to incorporate)
+      animation <- ask
+      let continuousAt = testContinuous $ fromJust . join . getBalloonSize . animation
+      complain "Transition from growing to shrinking is continuous and instant?"
+        $ pure $ continuousAt (<= 0)
+
+      complain "Transition from shrinking to stable size is continuous?"
+        $ pure $ continuousAt (== 0)
   ]
   where
-    onSceneAt t = flip evaluatePred $ Task09.balloon t
-    sceneElemsAt = getComponents . Task09.balloon
     framesToCheck = drop 1 $ samplesUntil 0.2 100 -- no balloon at 't = 0'
     balloon = someSolidCircle
     coloredBalloon = someColor balloon
-    getBalloonAt = findMaybe (`contains` balloon) . sceneElemsAt
-    balloonColorAt = fmap getColor . getBalloonAt
-    balloonSizeAt = join . fmap getExactCircleRadius . getBalloonAt
+    getBalloonAnd = findMaybeAnd (`contains` balloon)
+    -- This doubles as a plain predicate thanks to 'MonadReader r ((->),r)'
+    getBalloonSize = getBalloonAnd getExactCircleRadius
 
     checkBalloonSizes (x:y:xs)
       | x < y = checkBalloonSizes (y:xs)
       | otherwise = shrinks (y:xs)
     shrinks l@(x:y:xs)
       | x > y = shrinks (y:xs)
-      | otherwise = length (nub l) == 1
+      | otherwise = lengthUniques l == 1
 
-    lengthUniques :: Eq a => [a] -> Int
-    lengthUniques = length . nub
+    lengthUniques = length . nubOrd
 
 
-testContinuous :: (Double -> Bool) -> (Double -> Double) -> Bool
-testContinuous condition f =
+testContinuous :: (Double -> Double) -> (Double -> Bool) -> Bool
+testContinuous f condition =
     let
       (a,b) = findTransition (0,100) f
     in
