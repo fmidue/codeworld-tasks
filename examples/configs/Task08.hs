@@ -231,6 +231,8 @@ moon = curve [(0,-1),(-0.9,0),(0,1)] & curve [(0,-1),(-0.4,0),(0,1)]
 main :: IO ()
 main = animationOf scene
 ----------
+{-# language NoMonomorphismRestriction #-}
+
 module Test (test) where
 import qualified Task08
 
@@ -245,24 +247,33 @@ import CodeWorld.Test (
   white,
 
   contains,
-  findMaybeActual,
-  getComponents,
+  findMaybeActualAnd,
   getExactRotation,
   getExactTranslation,
 
+  (<^^>),
   containsElem,
-  evaluatePred,
   hasRelation,
   isBelow,
   oneOf,
+
+  atTime,
+  allAt,
+  imagesAt,
+  noneAt,
+  queryAt,
+
+  complain,
+  testAnimation,
 
   samplesUntil,
   )
 import Data.Fixed (mod')
 import Data.Generics.Uniplate.Data (para)
-import Data.List (nub)
-import Data.Maybe (fromMaybe, mapMaybe)
-import Test.HUnit ((~:), (~?), Test(..), assertBool)
+import Data.List.Extra (nubOrd)
+import Data.Maybe (fromMaybe)
+import Data.Tuple.Extra ((&&&))
+import Test.HUnit ((~:), (~?), Test(..), assertBool, assertString)
 
 import qualified TestHarness as TH
 import TestHelper (isDeeplyDefined)
@@ -270,40 +281,44 @@ import TestHelper (isDeeplyDefined)
 test :: [ Test ]
 test =
   [ "scene =/= undefined?" ~: isDeeplyDefined (Task08.scene 1.0)
-  , onSceneAt 1 (containsElem someSolidRectangle) ~?
-    "This animation does not contain a solid rectangle."
-  , onSceneAt 1 (containsElem grass) ~?
-    "The rectangle is not green."
-    -- t is not ignored
-  , lengthUniques (map Task08.scene movementCheck) > 1 ~?
-    "Could not detect any movement. Make sure you are not ignoring parameter 't'."
+  , TestCase $ assertString $ testAnimation Task08.scene $ do
+      atTime 1 $ do
+        complain "This animation does not contain a solid rectangle." $ containsElem someSolidRectangle
+        complain "The rectangle is not green." $ containsElem grass
+      -- t is not ignored
+      complain "Could not detect any movement. Make sure you are not ignoring parameter 't'."
+        $ (>1) . lengthUniques <$> imagesAt movementCheck
 
-    -- grass does not move or rotate
-  , lengthUniques (grassRotations $ 100 : movementCheck) == 1 &&
-    lengthUniques (grassMovement $ 100 : movementCheck)  == 1 ~?
-    "The grass seems to move or disappear at some point during this animation. " ++
-    "It should be stationary and not move at all."
+      -- grass does not move or rotate
+      complain
+        ( "The grass seems to move or disappear at some point during this animation. " ++
+          "It should be stationary and not move at all."
+        ) $ (==1) . lengthUniques <$> queryAt (100 : movementCheck) getGrassValues
 
-  -- animation keeps going
-  , lengthUniques (map (Task08.scene . (+100)) movementCheck) > 1 ~?
-    "Movement could not be detected after some time has passed. " ++
-    "The animation seems to stop at some point. Make sure it runs forever."
+      -- animation keeps going
+      complain
+        ( "Movement could not be detected after some time has passed. " ++
+          "The animation seems to stop at some point. Make sure it runs forever."
+        ) $ (>1) . lengthUniques <$> imagesAt (map (+100) movementCheck)
 
-  -- there's no white rectangle
-  , not (onSceneAt 0 (containsElem cheat)) ~?
-    "The scene contains a solid white rectangle. " ++
-    "This suggests you are trying to conceal the movement of the sun and/or moon at some point."
+      -- there's no white rectangle
+      atTime 0 $ do
+        complain
+          ( "The scene contains a solid white rectangle. " ++
+            "This suggests you are trying to conceal the movement of the sun and/or moon at some point."
+          ) $ not <$> containsElem cheat
 
-  -- samples contain either sun or moon
-  , all sunMoonDetector sunMoonCheck ~?
-    "Detected animation frames with both a sun and a moon. " ++
-    "It seems like your sun and moon are moving at the same time."
+      -- samples contain either sun or moon
+      complain
+        ( "Detected animation frames with both a sun and a moon. " ++
+          "It seems like your sun and moon are moving at the same time."
+        ) $ allAt sunMoonCheck sunMoonDetector
 
-  -- sun and moon don't pass under grass
-  , all (\t -> not $ onSceneAt t (
-           oneOf (\p -> hasRelation (normalizeAndAbstract p `isBelow` grass)) [Task08.sun, Task08.moon])
-        ) sunMoonCheck ~?
-    "Your sun and/or moon is moving under the grass!"
+      -- sun and moon don't pass under grass
+      complain "Your sun and/or moon is moving under the grass!" $
+        noneAt sunMoonCheck $ oneOf
+          (\p -> hasRelation (normalizeAndAbstract p `isBelow` grass))
+          [Task08.sun, Task08.moon]
 
   -- Submission contains any of 'sin', 'cos' and 'rotated'
   , TestCase $ TH.syntaxCheckWithExts ["LambdaCase","NoTemplateHaskell","TupleSections"] $ \m -> assertBool
@@ -315,6 +330,7 @@ test =
         ["sin","cos","rotated"]
 
   -- moon is upright throughout animation
+  -- TODO: make this slot in more nicely with the above
   , all (\t -> let value = fromMaybe 0 (para moonRotation $ Task08.scene t) `mod'` (2*pi) in
             min value (2*pi - value) < 0.001) sunMoonCheck ~?
     "Your moon spins while moving. It should stay upright during its movement."
@@ -324,17 +340,13 @@ test =
     sunMoonCheck = samplesUntil 0.2 50
     grass = withColor green someSolidRectangle
     cheat = withColor white someSolidRectangle
-    onSceneAt t = flip evaluatePred $ Task08.scene t
-    sceneElemsAt = getComponents . Task08.scene
-    getElementAt p = findMaybeActual (`contains` p) . Task08.scene
-    grassRotations = mapMaybe (fmap getExactRotation . getElementAt grass)
-    grassMovement = mapMaybe (fmap getExactTranslation . getElementAt grass)
-    lengthUniques :: Eq a => [a] -> Int
-    lengthUniques = length . nub
-    xor a b = not $ a && b
+    getGrassValues = findMaybeActualAnd (`contains` grass)
+      $ getExactRotation &&& getExactTranslation
+    lengthUniques = length . nubOrd
     pictureHas = containsElem . normalizeAndAbstract
-    sunMoonDetector t = onSceneAt t (pictureHas Task08.sun) `xor`
-                        onSceneAt t (pictureHas Task08.moon)
+    sunMoonDetector =
+      pictureHas Task08.sun <^^>
+      pictureHas Task08.moon
 
 
 moonRotation :: Picture -> [Maybe Double] -> Maybe Double
