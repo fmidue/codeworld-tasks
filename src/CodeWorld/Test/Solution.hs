@@ -11,6 +11,7 @@ module CodeWorld.Test.Solution (
   hasRelation,
   (<||>),
   (<&&>),
+  (<^^>),
   option,
   options,
   ifThen,
@@ -85,6 +86,13 @@ Both predicates evaluate to True.
 -}
 (<&&>) :: PicPredicate -> PicPredicate -> PicPredicate
 (<&&>) p q = (&&) <$> p <*> q
+
+
+{- |
+Only one of two predicates evaluate to True (XOR).
+-}
+(<^^>) :: PicPredicate -> PicPredicate -> PicPredicate
+(<^^>) a b = not <$> a <&&> b
 
 
 {- |
