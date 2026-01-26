@@ -253,7 +253,7 @@ import CodeWorld.Test (
   yellow,
 
   contains,
-  findMaybeActualAnd,
+  findFirstTranslatedThen,
   getExactTranslation,
   getRotation,
 
@@ -325,6 +325,6 @@ test =
     grass = withColor green someSolidRectangle
     cheat = withColor white someSolidRectangle
     uniques = length . nubOrd
-    getGrassValues = findMaybeActualAnd (`contains` grass)
+    getGrassValues = findFirstTranslatedThen (`contains` grass)
       $ getRotation &&& getExactTranslation
     sun = withColor yellow someSolidCircle

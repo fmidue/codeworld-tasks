@@ -22,14 +22,14 @@ module CodeWorld.Test.Solution (
   inRangeOf,
   rawImage,
   normalizedImage,
-  findMaybe,
   findAll,
-  findAllAnd,
-  findMaybeAnd,
-  findAllActual,
-  findMaybeActual,
-  findAllActualAnd,
-  findMaybeActualAnd,
+  findAllThen,
+  findAllTranslated,
+  findAllTranslatedThen,
+  findFirst,
+  findFirstThen,
+  findFirstTranslated,
+  findFirstTranslatedThen,
   oneOf,
   mapAnimation,
   atTime,
@@ -138,17 +138,17 @@ specElems f (Components (ps,_)) = f ps
 
 
 {- |
-Returns the first picture element satisfying the predicate if it exists. (translation is removed)
+Returns the first subpictures satisfying the predicate if it exists. (translation is removed)
 -}
-findMaybe
+findFirst
   :: MonadReader StaticImage m
   => (AbstractPicture -> Bool)
   -> m (Maybe AbstractPicture)
-findMaybe = fmap listToMaybe . findAll
+findFirst = fmap listToMaybe . findAll
 
 
 {- |
-Returns all picture elements satisfying the predicate. (translation is removed)
+Returns all subpictures satisfying the predicate. (translation is removed)
 -}
 findAll
   :: MonadReader StaticImage m
@@ -160,65 +160,65 @@ findAll f = asks $ filter f . specElems (map stripTranslation . getSubPictures) 
 {- |
 Returns all subpictures satisfying the predicate. (includes translation)
 -}
-findAllActual
+findAllTranslated
   :: MonadReader StaticImage m
   => (AbstractPicture -> Bool)
   -> m [AbstractPicture]
-findAllActual f = asks $ filter f . specElems getSubPictures . snd
+findAllTranslated f = asks $ filter f . specElems getSubPictures . snd
 
 
 {- |
 Returns the first subpicture satisfying the predicate if it exists. (includes translation)
 -}
-findMaybeActual
+findFirstTranslated
   :: MonadReader StaticImage m
   => (AbstractPicture -> Bool)
   -> m (Maybe AbstractPicture)
-findMaybeActual = fmap listToMaybe . findAllActual
+findFirstTranslated = fmap listToMaybe . findAllTranslated
 
 
 {- |
 Finds all subpictures satisfying a predicate, then applies a function. (includes translation)
 -}
-findAllActualAnd
+findAllTranslatedThen
   :: MonadReader StaticImage m
   => (AbstractPicture -> Bool)
   -> (AbstractPicture -> a)
   -> m [a]
-findAllActualAnd p f = map f <$> findAllActual p
+findAllTranslatedThen p f = map f <$> findAllTranslated p
 
 
 {- |
 Finds the first subpicture satisfying a predicate, then applies a function if it exists. (includes translation)
 -}
-findMaybeActualAnd
+findFirstTranslatedThen
   :: MonadReader StaticImage m
   => (AbstractPicture -> Bool)
   -> (AbstractPicture -> a)
   -> m (Maybe a)
-findMaybeActualAnd p = fmap listToMaybe . findAllActualAnd p
+findFirstTranslatedThen p = fmap listToMaybe . findAllTranslatedThen p
 
 
 {- |
-Finds all picture elements satisfying a predicate, then applies a function. (translation is removed)
+Finds all subpictures satisfying a predicate, then applies a function. (translation is removed)
 -}
-findAllAnd
+findAllThen
   :: MonadReader StaticImage m
   => (AbstractPicture -> Bool)
   -> (AbstractPicture -> a)
   -> m [a]
-findAllAnd f g = map g <$> findAll f
+findAllThen f g = map g <$> findAll f
 
 
 {- |
-Finds the first element satisfying a predicate, then applies a function if it exists. (translation is removed)
+Finds the first subpictures satisfying a predicate, then applies a function if it exists. (translation is removed)
 -}
-findMaybeAnd
+findFirstThen
   :: MonadReader StaticImage m
   => (AbstractPicture -> Bool)
   -> (AbstractPicture -> a)
   -> m (Maybe a)
-findMaybeAnd f = fmap listToMaybe . findAllAnd f
+findFirstThen f = fmap listToMaybe . findAllThen f
 
 
 {- |

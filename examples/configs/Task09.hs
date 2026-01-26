@@ -245,7 +245,7 @@ test =
 
       -- animation includes three different colors
       complain "Balloon has three different colors (each for a few seconds) during animation?"
-        $ (==3) . lengthUniques <$> queryAt framesToCheck (getBalloonAnd getColor)
+        $ (==3) . lengthUniques <$> queryAt framesToCheck (getBalloonThen getColor)
 
       -- size of the balloon changes
       complain "Balloon starts out growing, then shrinks and finally stops changing at all?"
@@ -263,9 +263,9 @@ test =
     framesToCheck = drop 1 $ samplesUntil 0.2 100 -- no balloon at 't = 0'
     balloon = someSolidCircle
     coloredBalloon = someColor balloon
-    getBalloonAnd = findMaybeAnd (`contains` balloon)
+    getBalloonThen = findFirstThen (`contains` balloon)
     -- This doubles as a plain predicate thanks to 'MonadReader r ((->),r)'
-    getBalloonSize = getBalloonAnd getExactCircleRadius
+    getBalloonSize = getBalloonThen getExactCircleRadius
 
     checkBalloonSizes (x:y:xs)
       | x < y = checkBalloonSizes (y:xs)
