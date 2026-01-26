@@ -19,6 +19,8 @@ module CodeWorld.Test.Solution (
   atLeast,
   atMost,
   inRangeOf,
+  rawImage,
+  normalizedImage,
   findMaybe,
   findAll,
   findAllAnd,
@@ -28,10 +30,12 @@ module CodeWorld.Test.Solution (
   findAllActualAnd,
   findMaybeActualAnd,
   oneOf,
-  getComponents,
+  abstractedAnimation,
   atTime,
-  imagesAt,
+  rawImagesAt,
+  normalizedImagesAt,
   allAt,
+  allAtWithTime,
   anyAt,
   noneAt,
   queryAt,
@@ -57,14 +61,17 @@ import CodeWorld.Test.Relative (
   SpatialQuery,
   toRelative,
   )
-import CodeWorld.Test.Rewrite (normalizeAndAbstract)
+import CodeWorld.Test.Rewrite (
+  normalize,
+  normalizeAndAbstract
+  )
 
 
 
 {- |
 Alias for predicates on `Components`.
 -}
-type PicPredicate = Reader Components Bool
+type PicPredicate = Reader (Picture,Components) Bool
 
 
 {- |
@@ -118,104 +125,121 @@ specElems f (Components (ps,_)) = f ps
 {- |
 Returns the first picture element satisfying the predicate if it exists. (translation is removed)
 -}
-findMaybe :: MonadReader Components m => (AbstractPicture -> Bool) -> m (Maybe AbstractPicture)
+findMaybe :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> m (Maybe AbstractPicture)
 findMaybe = fmap listToMaybe . findAll
 
 
 {- |
 Returns all picture elements satisfying the predicate. (translation is removed)
 -}
-findAll :: MonadReader Components m => (AbstractPicture -> Bool) -> m [AbstractPicture]
-findAll f = asks $ filter f . specElems (map stripTranslation . getSubPictures)
+findAll :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> m [AbstractPicture]
+findAll f = asks $ filter f . specElems (map stripTranslation . getSubPictures) . snd
 
 
 {- |
 Returns all subpictures satisfying the predicate. (includes translation)
 -}
-findAllActual :: MonadReader Components m => (AbstractPicture -> Bool) -> m [AbstractPicture]
-findAllActual f = asks $ filter f . specElems getSubPictures
+findAllActual :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> m [AbstractPicture]
+findAllActual f = asks $ filter f . specElems getSubPictures . snd
 
 
 {- |
 Returns the first subpicture satisfying the predicate if it exists. (includes translation)
 -}
-findMaybeActual :: MonadReader Components m => (AbstractPicture -> Bool) -> m (Maybe AbstractPicture)
+findMaybeActual :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> m (Maybe AbstractPicture)
 findMaybeActual = fmap listToMaybe . findAllActual
 
 
 {- |
 Finds all subpictures satisfying a predicate, then applies a function. (includes translation)
 -}
-findAllActualAnd :: MonadReader Components m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m [a]
+findAllActualAnd :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m [a]
 findAllActualAnd p f = map f <$> findAllActual p
 
 
 {- |
 Finds the first subpicture satisfying a predicate, then applies a function if it exists. (includes translation)
 -}
-findMaybeActualAnd :: MonadReader Components m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m (Maybe a)
+findMaybeActualAnd :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m (Maybe a)
 findMaybeActualAnd p = fmap listToMaybe . findAllActualAnd p
 
 
 {- |
 Finds all picture elements satisfying a predicate, then applies a function. (translation is removed)
 -}
-findAllAnd :: MonadReader Components m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m [a]
+findAllAnd :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m [a]
 findAllAnd f g = map g <$> findAll f
 
 
 {- |
 Finds the first element satisfying a predicate, then applies a function if it exists. (translation is removed)
 -}
-findMaybeAnd :: MonadReader Components m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m (Maybe a)
+findMaybeAnd :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m (Maybe a)
 findMaybeAnd f = fmap listToMaybe . findAllAnd f
+
+
+{- |
+Returns the unmodified Picture.
+-}
+rawImage :: MonadReader (Picture,Components) m => m Picture
+rawImage = asks fst
+
+
+{- |
+Returns the normalized Picture.
+-}
+normalizedImage :: MonadReader (Picture,Components) m => m Picture
+normalizedImage = asks (normalize . fst)
 
 
 {- |
 True if image contains exactly these subpictures and nothing else.
 -}
 containsExactElems :: [AbstractPicture] -> PicPredicate
-containsExactElems ps = asks $ specElems (all (\tp -> Pictures ps `contains` tp) . getSubPictures)
+containsExactElems ps = asks $ specElems
+  (all (\tp -> Pictures ps `contains` tp) . getSubPictures) . snd
+
 
 {- |
 True if image contains at least this subpicture and optionally something else.
 -}
 containsElem :: AbstractPicture -> PicPredicate
-containsElem p = asks $ specElems (`contains` p)
+containsElem p = asks $ specElems (`contains` p) . snd
 
 {- |
 True if image contains at least these subpictures and optionally something else.
 -}
 containsElems :: [AbstractPicture] -> PicPredicate
-containsElems ps = asks $ specElems (\t -> all (\p -> t `contains` p) ps)
+containsElems ps = asks $ specElems (\t -> all (\p -> t `contains` p) ps) . snd
 
 
 {- |
 True if image contains this subpicture exactly this many times.
 -}
 thisOften :: AbstractPicture -> Int -> PicPredicate
-thisOften p amount = asks $ specElems (\ps -> count p ps == amount)
+thisOften p amount = asks $ specElems (\ps -> count p ps == amount) . snd
 
 
 {- |
 True if image contains this subpicture at least this many times.
 -}
 atLeast :: AbstractPicture -> Int -> PicPredicate
-atLeast p amount = asks $ specElems (\ps -> count p ps >= amount)
+atLeast p amount = asks $ specElems (\ps -> count p ps >= amount) . snd
 
 
 {- |
 True if image contains this subpicture at most many times.
 -}
 atMost :: AbstractPicture -> Int -> PicPredicate
-atMost p amount = asks $ specElems (\ps -> count p ps <= amount)
+atMost p amount = asks $ specElems (\ps -> count p ps <= amount) . snd
 
 
 {- |
 True if amount of times this subpicture is contained in the image lies in the specified range.
 -}
 inRangeOf :: AbstractPicture -> (Int,Int) -> PicPredicate
-inRangeOf p (lower,upper) = asks $ specElems (\ps -> let occurs = count p ps in occurs >= lower && occurs <= upper)
+inRangeOf p (lower,upper) = asks $
+  specElems (\ps -> let occurs = count p ps in occurs >= lower && occurs <= upper) . snd
 
 
 {- |
@@ -243,13 +267,20 @@ True if image contains the specified spatial relations.
 Used with corresponding functions like `CodeWorld.Test.isNorthOf`, `CodeWorld.Test.isLeftOf`, etc.
 -}
 hasRelation :: SpatialQuery -> PicPredicate
-hasRelation = asks . specPosition
+hasRelation q = asks $ specPosition q . snd
+
+
+{- |
+Returns the abstracted animation.
+-}
+abstractedAnimation :: Monad m => ReaderT (Double -> (Picture,Components)) m (Double -> Components)
+abstractedAnimation = asks (snd .)
 
 
 {- |
 Samples the animation at the given time point and applies a predicate or query to it.
 -}
-atTime :: Double -> ReaderT Components m a -> ReaderT (Double -> Components) m a
+atTime :: Double -> ReaderT (Picture,Components) m a -> ReaderT (Double -> (Picture,Components)) m a
 atTime time = withReaderT ($ time)
 
 
@@ -260,24 +291,49 @@ then returns a list of results.
 queryAt
   :: Applicative m
   => [Double]
-  -> ReaderT Components m a
-  -> ReaderT (Double -> Components) m [a]
+  -> ReaderT (Picture,Components) m a
+  -> ReaderT (Double -> (Picture,Components)) m [a]
 queryAt frames = for frames . flip atTime
+
+
+{- |
+Samples the animation at multiple time points
+and applies a predicate dependent on the current time point to each image.
+Returns 'True' if all samples satisfied the predicate.
+-}
+queryAtWithTime
+  :: Applicative m
+  => [Double]
+  -> (Double -> ReaderT (Picture,Components) m a)
+  -> ReaderT (Double -> (Picture,Components)) m [a]
+queryAtWithTime frames action = for frames $ \t -> atTime t (action t)
 
 
 {- |
 Samples the animation at multiple time points and applies a predicate to each image.
 Returns 'True' if all samples satisfied the predicate.
 -}
-allAt :: [Double] -> Reader Components Bool -> Reader (Double -> Components) Bool
+allAt :: [Double] -> Reader (Picture,Components) Bool -> Reader (Double -> (Picture,Components)) Bool
 allAt frames = fmap and . queryAt frames
+
+
+{- |
+Samples the animation at multiple time points
+and applies a predicate dependent on the current time point to each image.
+Returns 'True' if all samples satisfied the predicate.
+-}
+allAtWithTime
+  :: [Double]
+  -> (Double -> Reader (Picture,Components) Bool)
+  -> Reader (Double -> (Picture,Components)) Bool
+allAtWithTime frames = fmap and . queryAtWithTime frames
 
 
 {- |
 Samples the animation at multiple time points and applies a predicate to each image.
 Returns 'True' if any sample satisfied the predicate.
 -}
-anyAt :: [Double] -> Reader Components Bool -> Reader (Double -> Components) Bool
+anyAt :: [Double] -> Reader (Picture,Components) Bool -> Reader (Double -> (Picture,Components)) Bool
 anyAt frames = fmap or . queryAt frames
 
 
@@ -285,15 +341,23 @@ anyAt frames = fmap or . queryAt frames
 Samples the animation at multiple time points and applies a predicate to each image.
 Returns 'True' if none of the samples satisfied the predicate.
 -}
-noneAt :: [Double] -> Reader Components Bool -> Reader (Double -> Components) Bool
+noneAt :: [Double] -> Reader (Picture,Components) Bool -> Reader (Double -> (Picture,Components)) Bool
 noneAt frames = fmap not . anyAt frames
 
 
+
 {- |
-Samples the animation at multiple time points and returns a list of results.
+Samples the animation at multiple time points and returns a list of unmodified results.
 -}
-imagesAt :: Monad m => [Double] -> ReaderT (Double -> Components) m [Components]
-imagesAt frames = queryAt frames ask
+rawImagesAt :: Monad m => [Double] -> ReaderT (Double -> (Picture,Components)) m [Picture]
+rawImagesAt frames = queryAt frames rawImage
+
+
+{- |
+Samples the animation at multiple time points and returns a list of normalized results.
+-}
+normalizedImagesAt :: Monad m => [Double] -> ReaderT (Double -> (Picture,Components)) m [Picture]
+normalizedImagesAt frames = queryAt frames normalizedImage
 
 
 {- |
@@ -309,13 +373,13 @@ complain label r = do
 Executes the given test suite on a static image and returns the error message of the first failed test
 or the empty String if all tests passed.
 -}
-testPicture :: Picture -> ReaderT Components (Except String) () -> String
-testPicture p = fromLeft "" . runExcept . flip runReaderT (getComponents p)
+testPicture :: Picture -> ReaderT (Picture, Components) (Except String) () -> String
+testPicture p = fromLeft "" . runExcept . flip runReaderT (p, getComponents p)
 
 
 {- |
 Executes the given test suite on an animation and returns the error message of the first failed test
 or the empty String if all tests passed.
 -}
-testAnimation :: (Double -> Picture) -> ReaderT (Double -> Components) (Except String) () -> String
-testAnimation p = fromLeft "" . runExcept . flip runReaderT (getComponents . p)
+testAnimation :: (Double -> Picture) -> ReaderT (Double -> (Picture,Components)) (Except String) () -> String
+testAnimation p = fromLeft "" . runExcept . flip runReaderT (\t -> (p t, getComponents $ p t))

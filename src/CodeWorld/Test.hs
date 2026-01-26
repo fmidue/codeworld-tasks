@@ -108,7 +108,8 @@ module CodeWorld.Test (
   -- | #queries#
 
   -- ** Queries on Components
-  getComponents,
+  rawImage,
+  normalizedImage,
   findMaybe,
   findMaybeAnd,
   findMaybeActual,
@@ -119,10 +120,13 @@ module CodeWorld.Test (
   findAllActualAnd,
 
   -- ** Helpers for Animations
+  abstractedAnimation,
   atTime,
-  imagesAt,
+  rawImagesAt,
+  normalizedImagesAt,
   anyAt,
   allAt,
+  allAtWithTime,
   noneAt,
   queryAt,
 
@@ -439,12 +443,16 @@ import CodeWorld.Test.Solution (
   findMaybeActual,
   findAllActualAnd,
   findMaybeActualAnd,
-  getComponents,
+  rawImage,
+  normalizedImage,
 
+  abstractedAnimation,
   anyAt,
   allAt,
+  allAtWithTime,
   atTime,
-  imagesAt,
+  rawImagesAt,
+  normalizedImagesAt,
   noneAt,
   queryAt,
   )
