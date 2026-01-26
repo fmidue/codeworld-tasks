@@ -216,7 +216,7 @@ module Test (test) where
 import qualified Task07
 import Data.Maybe (fromJust, isNothing, mapMaybe)
 import Data.List.Extra (nubBy, nubOrd)
-import Test.HUnit ((~:), (~?), Test(..), assertBool)
+import Test.HUnit ((~:), Test(..), assertBool, assertString)
 import CodeWorld.Test (
   (.&.),
   withColor,
@@ -230,20 +230,20 @@ import CodeWorld.Test (
 
   findAll,
   getColor,
-  getComponents,
   getExactCircleRadius,
   getExactScalingFactors,
   isSameColor,
 
   (<||>),
-  atLeast,
   containsElem,
-  evaluatePred,
   hasRelation,
   isAbove,
   isLeftOf,
   isRightOf,
   oneOf,
+
+  complain,
+  testPicture,
 
   testCSE,
   )
@@ -254,31 +254,35 @@ import TestHelper (isDeeplyDefined)
 test :: [ Test ]
 test =
   [ "scene =/= undefined?" ~: isDeeplyDefined Task07.scene
-  , onScene (containsElem grass) ~? "There's grass?"
-  , onScene (oneOf containsElem eggChoices) ~? "There's at least one egg?"
-  , onScene (oneOf (`atLeast` 6) eggChoices) ~? "There are at least 6 eggs?"
-  , length (nubBy isSameColor usedColors) >= 6 ~? "Each egg has a unique color?"
-  , lengthUniques (map getExactScalingFactors sceneEggs) >= 2 ||
-    lengthUniques (map getExactCircleRadius sceneEggs) >= 2 ||
-    onScene (oneOf containsElem $ drop 2 eggChoices)
-    ~? "There are eggs of different sizes?"
-  , onScene (oneOf (\p -> hasRelation (p `isLeftOf` p)) eggChoices <||>
-             oneOf (\p -> hasRelation (p `isRightOf` p)) eggChoices
-            ) ~? "Eggs are spread out? Maybe you have drawn too many rectangles if they are."
-  , onScene (oneOf (\p -> hasRelation (p `isAbove` grass)) eggChoices)
-    ~? "Eggs are above the grass?"
+  , TestCase $ assertString $ testPicture Task07.scene $ do
+      complain "There's grass?" $ containsElem grass
+      sceneEggs <- findAll isEgg
+      let eggAmount = length sceneEggs
+      complain "There's at least one egg?" $ pure $ eggAmount >= 1
+      complain "There are at least 6 eggs?" $ pure $ eggAmount >= 6
+      complain "Each egg has a unique color?" $
+        pure $ length (usedColors sceneEggs) >= 6
+      complain "There are eggs of different sizes?" $
+        pure (lengthUniques (map getExactScalingFactors sceneEggs) >= 2) <||>
+        pure (lengthUniques (map getExactCircleRadius sceneEggs) >= 2) <||>
+        oneOf containsElem (drop 2 eggChoices)
+      complain "Eggs are spread out? Maybe you have drawn too many rectangles if they are." $
+        oneOf (\p -> hasRelation (p `isLeftOf` p)) eggChoices <||>
+        oneOf (\p -> hasRelation (p `isRightOf` p)) eggChoices
+      complain "Eggs are above the grass?" $
+        oneOf (\p -> hasRelation (p `isAbove` grass)) eggChoices
+
   , TestCase $ TH.syntaxCheckWithExts ["LambdaCase","NoTemplateHaskell","TupleSections"] $ \m -> assertBool
       "You are manually placing the eggs. Consider a different approach!"
       $ TH.contains TH.listComprehension $ TH.findTopLevelDeclsOf "scene" m
+
   , TestCase $ do
       result <- testCSE Task07.scene
       assertBool (fromJust result) (isNothing result)
   ]
   where
-    onScene = flip evaluatePred Task07.scene
     grass = withColor green someSolidRectangle
-    sceneEggs = findAll isEgg $ getComponents Task07.scene
-    usedColors = mapMaybe getColor sceneEggs
+    usedColors = nubBy isSameColor . mapMaybe getColor
     eggChoices = [singleEgg, doubleEgg, polyEggSolid, polyEggThick]
     singleEgg = someCircle
     doubleEgg = someSolidCircle .&. someSolidCircle

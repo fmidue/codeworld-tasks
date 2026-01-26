@@ -250,7 +250,7 @@ import qualified Task10
 
 import Data.Text (pack)
 import CodeWorld.Test
-import Test.HUnit ((~:), (~?), Test(..), assertBool)
+import Test.HUnit ((~:), Test(..), assertBool, assertString)
 import qualified TestHarness as TH
 import TestHelper (isDeeplyDefined)
 
@@ -270,31 +270,32 @@ test =
       )
       $ any (checkForName m) ["dilated","scaled"]
 
-  -- plays animation1 for 2 seconds
-  , all (playsAlone Task10.animation1) [0.1,0.2..1.9] ~?
-    "animation1 was not altered and plays on its own for correct amount of time?"
+  , TestCase $ assertString $ testAnimation Task10.scene $ do
+      -- plays animation1 for 2 seconds
+      complain "animation1 was not altered and plays on its own for correct amount of time?"
+        $ allAtWithTime [0.1,0.2..1.9] $ playsAlone Task10.animation1
 
-  -- plays animation2 for 3 seconds
-  , all (playsAlone (\t -> dilated 2 $ Task10.animation2 (t-2))) [2.1,2.2..4.9] ||
-    all (playsAlone (\t -> scaled 2 2 $ Task10.animation2 (t-2))) [2.1,2.2..4.9] ~?
-    "animation2 is scaled correctly and plays on its own for correct amount of time?"
+      -- plays animation2 for 3 seconds
+      complain "animation2 is scaled correctly and plays on its own for correct amount of time?" $
+        allAtWithTime [2.1,2.2..4.9] $ (<||>) <$>
+          playsAlone (dilated 2 . Task10.animation2 . subtract 2) <*>
+          playsAlone (scaled 2 2 . Task10.animation2 . subtract 2)
 
-  -- plays animation3 for 4 seconds
-  , all (playsAlone (\t -> Task10.animation3 ((t - 5) / 2))) [5.1,5.2..8.9] ~?
-    "animation3 plays at half speed on its own for correct amount of time?"
+      -- plays animation3 for 4 seconds
+      complain "animation3 plays at half speed on its own for correct amount of time?"
+        $ allAtWithTime [5.1,5.2..8.9] $ playsAlone (\t -> Task10.animation3 ((t - 5) / 2))
 
-  -- displays ending message after 9 seconds
-  , playsAlone (const $ lettering (pack "The End")) 9.05 ~?
-    "Ending message was not altered and starts at correct timing?"
+      -- displays ending message after 9 seconds
+      complain "Ending message was not altered and starts at correct timing?"
+        $ atTime 9.05 $ (== lettering (pack "The End")) <$> rawImage
 
-  -- ending message is displayed forever
-  , all (playsAlone (const $ lettering (pack "The End"))) [10,11,20,50,100,1000] ~?
-    "Ending message persists indefinitely?"
+      -- ending message is displayed forever
+      complain "Ending message persists indefinitely?"
+        $ allAtWithTime [10,11,20,50,100,1000] $ playsAlone
+          $ const $ lettering $ pack "The End"
   ]
   where
-    sceneElemsAt = getComponents . Task10.scene
-    playsAlone p t = Task10.scene t == p t &&
-                     length (findAll (const True) (sceneElemsAt t)) == 1
+    playsAlone p t = (== p t) <$> rawImage
 
     checkForName m name = TH.contains (TH.callTo name m) $ TH.findTopLevelDeclsOf "scene" m
     scanSyntax = TH.syntaxCheckWithExts ["LambdaCase","NoTemplateHaskell","TupleSections"]

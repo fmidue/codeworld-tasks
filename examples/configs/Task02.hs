@@ -185,7 +185,12 @@ scene = undefined
 ----------
 module Test (test) where
 import qualified Task02
-import Test.HUnit ((~:), (~?), Assertion, Test(..), assertBool)
+import Test.HUnit (
+  (~:),
+  Test(..),
+  assertBool,
+  assertString,
+  )
 import CodeWorld.Test (
   brown,
   green,
@@ -198,13 +203,15 @@ import CodeWorld.Test (
 
   atLeast,
   containsElem,
-  evaluatePred,
-  evaluatePreds,
   hasRelation,
   ifThen,
   isAbove,
   isLeftOf,
   isNorthOf,
+  (<&&>),
+
+  complain,
+  testPicture,
 
   testCSE,
   )
@@ -215,32 +222,30 @@ import TestHelper (isDeeplyDefined)
 test :: [ Test ]
 test =
   [ "scene =/= undefined?" ~: isDeeplyDefined Task02.scene
-  , onScene (containsElem wood) ~?
-    "Picture contains a trunk?"
-  , onScene (wood `atLeast` 3) ~?
-    "Tree has at least a trunk and two branches?"
-  , onScene (containsElem $ withColor green someSolidCircle) ~?
-    "Tree has a green crown?"
-  , onScene (hasRelation $ withColor green someSolidCircle `isNorthOf` uprightWood) ~?
-    "The trunk stands upright and there is a tree crown above it?"
-  , onSceneMulti
-      [ containsElem (rotatedQuarter uprightWood) `ifThen` containsElem (rotatedUpToFull uprightWood)
-      , containsElem (rotatedUpToFull uprightWood) `ifThen` containsElem (rotatedQuarter uprightWood)
-      ] ~?
-    "Branches are roughly symmetrical? (if they already are, make sure your branches share code as much as possible)"
-  , onSceneMulti
-      [ hasRelation $ rotatedQuarter uprightWood `isAbove` uprightWood
-      , hasRelation $ rotatedUpToFull uprightWood `isAbove` uprightWood
-      , hasRelation $ rotatedQuarter uprightWood `isLeftOf` rotatedUpToFull uprightWood
-      ] ~?
-    "Branches are in the correct position? " ++
-    "(They should neither cross, nor be detached from the trunk, nor be at level with the trunk)"
+  , TestCase $ assertString $ testPicture Task02.scene $ do
+      complain "Picture contains a trunk?" $ containsElem wood
+      complain "Tree has at least a trunk and two branches?" $ wood `atLeast` 3
+      complain "Tree has a green crown?" $ containsElem $ withColor green someSolidCircle
+      complain "The trunk stands upright and there is a tree crown above it?"
+        $ hasRelation $ withColor green someSolidCircle `isNorthOf` uprightWood
+      complain
+        ( "Branches are roughly symmetrical? " ++
+          "(if they already are, make sure your branches share code as much as possible)"
+        )
+        $ containsElem (rotatedQuarter uprightWood) `ifThen` containsElem (rotatedUpToFull uprightWood) <&&>
+          containsElem (rotatedUpToFull uprightWood) `ifThen` containsElem (rotatedQuarter uprightWood)
+      complain
+        ( "Branches are in the correct position? " ++
+          "(They should neither cross, nor be detached from the trunk, nor be at level with the trunk)"
+        )
+        $ hasRelation (rotatedQuarter uprightWood `isAbove` uprightWood) <&&>
+          hasRelation (rotatedUpToFull uprightWood `isAbove` uprightWood) <&&>
+          hasRelation (rotatedQuarter uprightWood `isLeftOf` rotatedUpToFull uprightWood)
+
   , TestCase $ do
       result <- testCSE Task02.scene
       assertBool (fromJust result) (isNothing result)
   ]
   where
-    onScene = flip evaluatePred Task02.scene
-    onSceneMulti = flip evaluatePreds Task02.scene
     wood = withColor brown someSolidRectangle
     uprightWood = withColor brown someTallSolidRectangle

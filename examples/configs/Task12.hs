@@ -276,7 +276,7 @@ module Test (test) where
 import qualified Task12
 import CodeWorld.Test
 import Data.List (nub)
-import Test.HUnit ((~:), (~?), Test(..), assertBool)
+import Test.HUnit ((~:), (~?), Test(..), assertBool, assertString)
 
 import TestHelper (isDefined, isDeeplyDefined)
 import qualified TestHarness as TH
@@ -291,13 +291,14 @@ test =
   , TestCase $ TH.syntaxCheckWithExts ["LambdaCase","NoTemplateHaskell","TupleSections"] $ \m -> assertBool
       "scene uses predefined functions?"
       $ all (\name -> TH.contains (TH.ident name) $ TH.findTopLevelDeclsOf "scene" m) ["aTile", "level"]
-  , length (nub translations) == length translations ~? "Each tile is moved to a unique coordinate?"
-  , normalize Task12.scene ==
-    normalize (pictures
-      [translated (fromIntegral x) (fromIntegral y) $ Task12.aTile $ Task12.level (x,y)
-      | x <- [-10..10], y <- [-10..10]]) ~?
-    "scene draws the level correctly?"
+  , TestCase $ assertString $ testPicture Task12.scene $ do
+      complain "Each tile is moved to a unique coordinate?" $ do
+        translations <- findAllActualAnd (`contains` someSolidRectangle) getExactTranslation
+        pure $ length (nub translations) == length translations
+      complain "scene draws the level correctly?" $ do
+        image <- normalizedImage
+        pure $ image == normalize (pictures
+          [translated (fromIntegral x) (fromIntegral y) $ Task12.aTile $ Task12.level (x,y)
+          | x <- [-10..10], y <- [-10..10]
+          ])
   ]
-  where
-    translations = map getExactTranslation $ findAllActual (`contains` someSolidRectangle) Task12.scene
-

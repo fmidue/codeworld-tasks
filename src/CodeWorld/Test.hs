@@ -88,7 +88,8 @@ module CodeWorld.Test (
 
   -- ** Predicates on Components
   Components,
-  PicPredicate,
+  StaticImage,
+  Animation,
   containsElem,
   containsElems,
   containsExactElems,
@@ -98,16 +99,18 @@ module CodeWorld.Test (
   inRangeOf,
   hasRelation,
   (<||>),
+  (<&&>),
+  (<^^>),
   option,
   options,
   ifThen,
   oneOf,
-  evaluatePred,
-  evaluatePreds,
+
   -- | #queries#
 
   -- ** Queries on Components
-  getComponents,
+  rawImage,
+  normalizedImage,
   findMaybe,
   findMaybeAnd,
   findMaybeActual,
@@ -116,6 +119,22 @@ module CodeWorld.Test (
   findAllAnd,
   findAllActual,
   findAllActualAnd,
+
+  -- ** Helpers for Animations
+  mapAnimation,
+  atTime,
+  rawImagesAt,
+  normalizedImagesAt,
+  anyAt,
+  allAt,
+  allAtWithTime,
+  noneAt,
+  queryAt,
+
+  -- ** Running Tests
+  complain,
+  testPicture,
+  testAnimation,
 
   -- * Strict Pictures
   -- $StrictPictures
@@ -395,14 +414,21 @@ import CodeWorld.Test.Rewrite (
   normalizeNoOrder,
   )
 import CodeWorld.Test.Solution (
-  PicPredicate,
+  StaticImage,
+  Animation,
+
+  complain,
+  testPicture,
+  testAnimation,
+
   containsElem,
   containsElems,
   containsExactElems,
-  evaluatePred,
-  evaluatePreds,
+
   hasRelation,
   (<||>),
+  (<&&>),
+  (<^^>),
   option,
   options,
   ifThen,
@@ -420,7 +446,18 @@ import CodeWorld.Test.Solution (
   findMaybeActual,
   findAllActualAnd,
   findMaybeActualAnd,
-  getComponents,
+  rawImage,
+  normalizedImage,
+
+  mapAnimation,
+  anyAt,
+  allAt,
+  allAtWithTime,
+  atTime,
+  rawImagesAt,
+  normalizedImagesAt,
+  noneAt,
+  queryAt,
   )
 import CodeWorld.Tasks.VectorSpace (
   Point,

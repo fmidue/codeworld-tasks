@@ -185,7 +185,7 @@ main = drawingOf scene
 ----------
 module Test (test) where
 import qualified Task01
-import Test.HUnit ((~:), (~?), Test)
+import Test.HUnit ((~:), Test(..), assertString)
 import CodeWorld.Test (
   withColor,
   green,
@@ -194,9 +194,11 @@ import CodeWorld.Test (
   yellow,
 
   containsElem,
-  evaluatePred,
   hasRelation,
   isAbove,
+
+  complain,
+  testPicture,
   )
 
 import TestHelper (isDeeplyDefined)
@@ -204,17 +206,17 @@ import TestHelper (isDeeplyDefined)
 test :: [ Test ]
 test =
   [ "scene =/= undefined?" ~: isDeeplyDefined Task01.scene
-  , onScene (containsElem someSolidCircle) ~?
-    "This picture does not contain a solid circle."
-  , onScene (containsElem someSolidRectangle) ~?
-    "This picture does not contain a solid rectangle."
-  , onScene (containsElem $ withColor yellow someSolidCircle) ~?
-    "The circle is not yellow."
-  , onScene (containsElem $ withColor green someSolidRectangle) ~?
-    "The rectangle is not green."
-  , onScene (hasRelation $ withColor yellow someSolidCircle `isAbove` withColor green someSolidRectangle) ~?
-    "the sun should be positioned above the grass."
+  , TestCase $ assertString $ testPicture Task01.scene $ do
+      complain "This picture does not contain a solid circle."
+        $ containsElem someSolidCircle
+      complain "This picture does not contain a solid rectangle."
+        $ containsElem someSolidRectangle
+      complain "The circle is not yellow."
+        $ containsElem $ withColor yellow someSolidCircle
+      complain "The rectangle is not green."
+        $ containsElem $ withColor green someSolidRectangle
+      complain "the sun should be positioned above the grass."
+        $ hasRelation $ withColor yellow someSolidCircle `isAbove` withColor green someSolidRectangle
   ]
-  where
-    onScene = flip evaluatePred Task01.scene
+
 

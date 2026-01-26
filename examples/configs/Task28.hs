@@ -288,7 +288,7 @@ import CodeWorld.Test
 import Data.Data (Data)
 import Data.List (nub)
 import Data.Maybe (isJust, maybe)
-import Test.HUnit ((~:), (~?), Test(..), assertBool)
+import Test.HUnit ((~:), (~?), Test(..), assertBool, assertString)
 
 import GHC.Generics (Generic)
 import Control.DeepSeq (NFData)
@@ -316,8 +316,13 @@ test =
   , TestCase $ scanSyntax $ \m -> assertBool
       "Submission contains do-notation. This was explicitly forbidden by the task description!"
       $ not $ TH.contains TH.doNotation m
-  , length translations == numberOfTiles ~? "All and only tiles of the level are drawn to the screen?"
-  , length translations == length (nub translations) ~? "Each tile is moved to a unique position?"
+  , TestCase $ assertString $ testPicture (Task28.visualize Task28.level) $ do
+      translations <- findAllActualAnd (`contains` someSolidRectangle) getExactTranslation
+      let tileAmount = length translations
+      complain "All and only tiles of the level are drawn to the screen?"
+        $ pure $ tileAmount == numberOfTiles
+      complain "Each tile is moved to a unique position?"
+        $ pure $ tileAmount == length (nub translations)
   , checkDrawnLevel Task28.level ~?
     "The provided level is drawn by 'visualize' according to its definition?"
   , checkDrawnLevel testLevel ~?
@@ -325,7 +330,6 @@ test =
   ]
   where
     scanSyntax = TH.syntaxCheckWithExts ["NoTemplateHaskell","TupleSections"]
-    translations = map getExactTranslation $ findAllActual (`contains` someSolidRectangle) (Task28.visualize Task28.level)
     coords = [(x,y) | x <- [-10..10], y <- [-10..10]]
     numberOfTiles = length $ filter isJust $ map Task28.level coords
 
