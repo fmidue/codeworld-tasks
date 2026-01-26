@@ -293,7 +293,7 @@ test =
       $ all (\name -> TH.contains (TH.ident name) $ TH.findTopLevelDeclsOf "scene" m) ["aTile", "level"]
   , TestCase $ assertString $ testPicture Task12.scene $ do
       complain "Each tile is moved to a unique coordinate?" $ do
-        translations <- findAllActualAnd (`contains` someSolidRectangle) getExactTranslation
+        translations <- findAllTranslatedThen (`contains` someSolidRectangle) getExactTranslation
         pure $ length (nub translations) == length translations
       complain "scene draws the level correctly?" $ do
         image <- normalizedImage

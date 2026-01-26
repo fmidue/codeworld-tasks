@@ -199,7 +199,7 @@ import CodeWorld.Test (
   white,
   yellow,
 
-  findAllAnd,
+  findAllThen,
   getExactScalingFactors,
   contains,
 
@@ -229,7 +229,7 @@ test =
         )
         $ oneOf containsElem [egg, solidGray, multiEgg, polyEgg]
       complain "The egg shell does not seem to have an oval shape." $ do
-        circleEggs <- findAllAnd
+        circleEggs <- findAllThen
           ((||) <$> (`contains` egg) <*> (`contains` solidGray))
           getExactScalingFactors
         pure (any (uncurry (<)) circleEggs) <||> containsElem polyEgg

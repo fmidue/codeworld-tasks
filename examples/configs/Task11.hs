@@ -235,8 +235,8 @@ import CodeWorld.Test (
 
   contains,
   findAll,
-  findAllActualAnd,
-  findMaybeActualAnd,
+  findAllTranslatedThen,
+  findFirstTranslatedThen,
   getColor,
   getExactCircleRadius,
   getExactRotation,
@@ -300,7 +300,7 @@ test =
         "It should be stationary and not move at all."
         ) $ (==1) . lengthUniques <$> queryAt (100 : movementCheck) getGrassValues
 
-      eggRotations <- queryAt widerCheck $ findAllActualAnd isEgg getExactRotation
+      eggRotations <- queryAt widerCheck $ findAllTranslatedThen isEgg getExactRotation
       -- eggs rotation changes
       complain "Eggs are swaying?" $
         pure (lengthUniques (concat eggRotations) >= 6) <||>
@@ -347,7 +347,7 @@ test =
     isEgg p = p `contains` singleEgg || p `contains` doubleEgg ||
               p `contains` polyEggSolid || p `contains` polyEggThick
 
-    getGrassValues = findMaybeActualAnd (`contains` grass)
+    getGrassValues = findFirstTranslatedThen (`contains` grass)
       $ getExactRotation &&& getExactTranslation
 
     lengthUniques :: Ord a => [a] -> Int

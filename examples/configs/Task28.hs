@@ -317,7 +317,7 @@ test =
       "Submission contains do-notation. This was explicitly forbidden by the task description!"
       $ not $ TH.contains TH.doNotation m
   , TestCase $ assertString $ testPicture (Task28.visualize Task28.level) $ do
-      translations <- findAllActualAnd (`contains` someSolidRectangle) getExactTranslation
+      translations <- findAllTranslatedThen (`contains` someSolidRectangle) getExactTranslation
       let tileAmount = length translations
       complain "All and only tiles of the level are drawn to the screen?"
         $ pure $ tileAmount == numberOfTiles

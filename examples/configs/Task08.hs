@@ -247,7 +247,7 @@ import CodeWorld.Test (
   white,
 
   contains,
-  findMaybeActualAnd,
+  findFirstTranslatedThen,
   getExactRotation,
   getExactTranslation,
 
@@ -340,7 +340,7 @@ test =
     sunMoonCheck = samplesUntil 0.2 50
     grass = withColor green someSolidRectangle
     cheat = withColor white someSolidRectangle
-    getGrassValues = findMaybeActualAnd (`contains` grass)
+    getGrassValues = findFirstTranslatedThen (`contains` grass)
       $ getExactRotation &&& getExactTranslation
     lengthUniques = length . nubOrd
     pictureHas = containsElem . normalizeAndAbstract
