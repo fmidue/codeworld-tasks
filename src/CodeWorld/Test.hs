@@ -120,7 +120,6 @@ module CodeWorld.Test (
   findAllActualAnd,
 
   -- ** Helpers for Animations
-  abstractedAnimation,
   mapAnimation,
   atTime,
   rawImagesAt,
@@ -447,7 +446,6 @@ import CodeWorld.Test.Solution (
   rawImage,
   normalizedImage,
 
-  abstractedAnimation,
   mapAnimation,
   anyAt,
   allAt,
