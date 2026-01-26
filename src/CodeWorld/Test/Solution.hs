@@ -31,6 +31,7 @@ module CodeWorld.Test.Solution (
   findMaybeActualAnd,
   oneOf,
   abstractedAnimation,
+  mapAnimation,
   atTime,
   rawImagesAt,
   normalizedImagesAt,
@@ -303,6 +304,16 @@ Returns the abstracted animation.
 -}
 abstractedAnimation :: Monad m => ReaderT (Double -> (Picture,Components)) m (Double -> Components)
 abstractedAnimation = asks (snd .)
+
+
+{- |
+Returns the animation environment with its output mapped over by the argument.
+-}
+mapAnimation
+  :: Monad m
+  => ((Picture,Components) -> a)
+  -> ReaderT (Double -> (Picture,Components)) m (Double -> a)
+mapAnimation query = asks (fmap query)
 
 
 {- |

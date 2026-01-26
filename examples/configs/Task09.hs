@@ -230,7 +230,6 @@ import Control.Monad (join)
 import CodeWorld.Test
 import Test.HUnit ((~:), Test(..), assertString)
 import TestHelper (isDeeplyDefined)
-import Control.Monad.Reader
 
 test :: [ Test ]
 test =
@@ -252,7 +251,7 @@ test =
       complain "Balloon starts out growing, then shrinks and finally stops changing at all?"
         $ checkBalloonSizes . mapMaybe join <$> queryAt framesToCheck getBalloonSize
 
-      animation <- asks (getBalloonSize .)
+      animation <- mapAnimation getBalloonSize
       let continuousAt = testContinuous $ fromJust . join . animation
       complain "Transition from growing to shrinking is continuous and instant?"
         $ pure $ continuousAt (<= 0)

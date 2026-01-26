@@ -121,6 +121,7 @@ module CodeWorld.Test (
 
   -- ** Helpers for Animations
   abstractedAnimation,
+  mapAnimation,
   atTime,
   rawImagesAt,
   normalizedImagesAt,
@@ -447,6 +448,7 @@ import CodeWorld.Test.Solution (
   normalizedImage,
 
   abstractedAnimation,
+  mapAnimation,
   anyAt,
   allAt,
   allAtWithTime,
