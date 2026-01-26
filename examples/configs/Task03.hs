@@ -200,7 +200,6 @@ import CodeWorld.Test (
   yellow,
 
   findAllAnd,
-  getComponents,
   getExactScalingFactors,
   contains,
 

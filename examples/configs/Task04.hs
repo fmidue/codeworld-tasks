@@ -254,7 +254,6 @@ import CodeWorld.Test (
 
   contains,
   findMaybeActualAnd,
-  getComponents,
   getExactTranslation,
   getRotation,
 
@@ -264,7 +263,7 @@ import CodeWorld.Test (
 
   atTime,
   noneAt,
-  imagesAt,
+  rawImagesAt,
   queryAt,
 
   complain,
@@ -304,13 +303,13 @@ test =
         ( "Your animation has changing frames after running for 100 seconds. " ++
           "This suggests your sun is permanently moving instead of setting at some point."
         )
-        $ (==1) . uniques <$> imagesAt (map (+100) frames)
+        $ (==1) . uniques <$> rawImagesAt (map (+100) frames)
 
       complain
         ( "Cannot detect (reasonable) movement in this animation. Make sure parameter 't' is not ignored. " ++
           "Your sun might be moving in a strange way if 't' is actually used for movement."
         )
-        $ (>1) . uniques <$> imagesAt frames
+        $ (>1) . uniques <$> rawImagesAt frames
 
       complain "Your sun is moving under the grass!"
         $ noneAt (samplesUntil 0.5 30) $ hasRelation $ sun `isBelow` grass

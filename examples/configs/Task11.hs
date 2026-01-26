@@ -255,8 +255,8 @@ import CodeWorld.Test (
   oneOf,
 
   atTime,
-  imagesAt,
   queryAt,
+  rawImagesAt,
 
   complain,
   testAnimation,
@@ -292,7 +292,7 @@ test =
           hasRelation (polyEggThick `atSamePosition` grass)
 
       complain "Cannot detect movement. Make sure you are not ignoring parameter 't'."
-        $ (>1) . lengthUniques <$> imagesAt movementCheck
+        $ (>1) . lengthUniques <$> rawImagesAt movementCheck
 
       -- grass is not moving
       complain (
@@ -308,7 +308,7 @@ test =
 
       -- animation continues after 100 seconds
       complain "The animation seems to stop at some point. Make sure it runs indefinitely." $
-        (>1) . lengthUniques <$> imagesAt (map (+100) movementCheck)
+        (>1) . lengthUniques <$> rawImagesAt (map (+100) movementCheck)
 
       -- eggs don't rotate more than ~90 degrees
       complain (

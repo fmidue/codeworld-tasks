@@ -259,7 +259,7 @@ import CodeWorld.Test (
 
   atTime,
   allAt,
-  imagesAt,
+  rawImagesAt,
   noneAt,
   queryAt,
 
@@ -287,7 +287,7 @@ test =
         complain "The rectangle is not green." $ containsElem grass
       -- t is not ignored
       complain "Could not detect any movement. Make sure you are not ignoring parameter 't'."
-        $ (>1) . lengthUniques <$> imagesAt movementCheck
+        $ (>1) . lengthUniques <$> rawImagesAt movementCheck
 
       -- grass does not move or rotate
       complain
@@ -299,7 +299,7 @@ test =
       complain
         ( "Movement could not be detected after some time has passed. " ++
           "The animation seems to stop at some point. Make sure it runs forever."
-        ) $ (>1) . lengthUniques <$> imagesAt (map (+100) movementCheck)
+        ) $ (>1) . lengthUniques <$> rawImagesAt (map (+100) movementCheck)
 
       -- there's no white rectangle
       atTime 0 $ do

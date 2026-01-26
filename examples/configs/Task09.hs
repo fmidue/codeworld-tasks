@@ -241,7 +241,7 @@ test =
 
       -- animation stops at some point
       complain "Balloon stops growing or shrinking at some point?"
-        $ (==1) . lengthUniques <$> imagesAt (map (+100) $ samplesUntil 0.2 5)
+        $ (==1) . lengthUniques <$> rawImagesAt (map (+100) $ samplesUntil 0.2 5)
 
       -- animation includes three different colors
       complain "Balloon has three different colors (each for a few seconds) during animation?"
