@@ -230,7 +230,8 @@ import Control.Monad (join)
 import CodeWorld.Test
 import Test.HUnit ((~:), Test(..), assertString)
 import TestHelper (isDeeplyDefined)
-import Control.Monad.Reader (ask)
+import Control.Monad.Reader
+
 test :: [ Test ]
 test =
   [ "balloon =/= undefined?" ~: isDeeplyDefined (Task09.balloon 1.0)
@@ -251,10 +252,8 @@ test =
       complain "Balloon starts out growing, then shrinks and finally stops changing at all?"
         $ checkBalloonSizes . mapMaybe join <$> queryAt framesToCheck getBalloonSize
 
-      -- no jumps in animation
-      -- (not satisfied with this yet, should be easier to incorporate)
-      animation <- ask
-      let continuousAt = testContinuous $ fromJust . join . getBalloonSize . animation
+      animation <- asks (getBalloonSize .)
+      let continuousAt = testContinuous $ fromJust . join . animation
       complain "Transition from growing to shrinking is continuous and instant?"
         $ pure $ continuousAt (<= 0)
 
