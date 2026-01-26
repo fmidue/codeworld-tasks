@@ -325,9 +325,9 @@ hasRelation q = asks $ specPosition q . snd
 Returns the animation environment with its output mapped over by the argument.
 -}
 mapAnimation
-  :: Monad m
+  :: MonadReader Animation m
   => (StaticImage -> a)
-  -> ReaderT Animation m (Double -> a)
+  -> m (Double -> a)
 mapAnimation = asks . fmap
 
 
