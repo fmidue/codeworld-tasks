@@ -42,8 +42,17 @@ module CodeWorld.Test.Solution (
   ) where
 
 import Control.Monad (unless)
-import Control.Monad.Except
-import Control.Monad.Reader
+import Control.Monad.Except             (Except, runExcept, throwError)
+import Control.Monad.Reader (
+  MonadReader,
+  Reader,
+  ReaderT,
+  ask,
+  asks,
+  runReader,
+  runReaderT,
+  withReaderT
+  )
 import Data.Either (fromLeft)
 import Data.Maybe (listToMaybe)
 import Data.Traversable (for)
