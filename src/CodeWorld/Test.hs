@@ -88,7 +88,8 @@ module CodeWorld.Test (
 
   -- ** Predicates on Components
   Components,
-  PicPredicate,
+  StaticImage,
+  Animation,
   containsElem,
   containsElems,
   containsExactElems,
@@ -413,7 +414,9 @@ import CodeWorld.Test.Rewrite (
   normalizeNoOrder,
   )
 import CodeWorld.Test.Solution (
-  PicPredicate,
+  StaticImage,
+  Animation,
+
   complain,
   testPicture,
   testAnimation,
