@@ -125,56 +125,84 @@ specElems f (Components (ps,_)) = f ps
 {- |
 Returns the first picture element satisfying the predicate if it exists. (translation is removed)
 -}
-findMaybe :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> m (Maybe AbstractPicture)
+findMaybe
+  :: MonadReader (Picture,Components) m
+  => (AbstractPicture -> Bool)
+  -> m (Maybe AbstractPicture)
 findMaybe = fmap listToMaybe . findAll
 
 
 {- |
 Returns all picture elements satisfying the predicate. (translation is removed)
 -}
-findAll :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> m [AbstractPicture]
+findAll
+  :: MonadReader (Picture,Components) m
+  => (AbstractPicture -> Bool)
+  -> m [AbstractPicture]
 findAll f = asks $ filter f . specElems (map stripTranslation . getSubPictures) . snd
 
 
 {- |
 Returns all subpictures satisfying the predicate. (includes translation)
 -}
-findAllActual :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> m [AbstractPicture]
+findAllActual
+  :: MonadReader (Picture,Components) m
+  => (AbstractPicture -> Bool)
+  -> m [AbstractPicture]
 findAllActual f = asks $ filter f . specElems getSubPictures . snd
 
 
 {- |
 Returns the first subpicture satisfying the predicate if it exists. (includes translation)
 -}
-findMaybeActual :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> m (Maybe AbstractPicture)
+findMaybeActual
+  :: MonadReader (Picture,Components) m
+  => (AbstractPicture -> Bool)
+  -> m (Maybe AbstractPicture)
 findMaybeActual = fmap listToMaybe . findAllActual
 
 
 {- |
 Finds all subpictures satisfying a predicate, then applies a function. (includes translation)
 -}
-findAllActualAnd :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m [a]
+findAllActualAnd
+  :: MonadReader (Picture,Components) m
+  => (AbstractPicture -> Bool)
+  -> (AbstractPicture -> a)
+  -> m [a]
 findAllActualAnd p f = map f <$> findAllActual p
 
 
 {- |
 Finds the first subpicture satisfying a predicate, then applies a function if it exists. (includes translation)
 -}
-findMaybeActualAnd :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m (Maybe a)
+findMaybeActualAnd
+  :: MonadReader (Picture,Components) m
+  => (AbstractPicture -> Bool)
+  -> (AbstractPicture -> a)
+  -> m (Maybe a)
 findMaybeActualAnd p = fmap listToMaybe . findAllActualAnd p
 
 
 {- |
 Finds all picture elements satisfying a predicate, then applies a function. (translation is removed)
 -}
-findAllAnd :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m [a]
+findAllAnd
+  :: MonadReader (Picture,Components) m
+  => (AbstractPicture -> Bool)
+  -> (AbstractPicture -> a)
+  -> m [a]
 findAllAnd f g = map g <$> findAll f
 
 
 {- |
 Finds the first element satisfying a predicate, then applies a function if it exists. (translation is removed)
 -}
-findMaybeAnd :: MonadReader (Picture,Components) m => (AbstractPicture -> Bool) -> (AbstractPicture -> a) -> m (Maybe a)
+findMaybeAnd
+  :: MonadReader (Picture,Components) m
+  => (AbstractPicture -> Bool)
+  -> (AbstractPicture -> a)
+  -> m (Maybe a)
 findMaybeAnd f = fmap listToMaybe . findAllAnd f
 
 
