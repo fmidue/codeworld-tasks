@@ -417,10 +417,10 @@ normalizedImagesAt frames = queryAt frames normalizedImage
 {- |
 Builds a fallible test given an error message and a predicate.
 -}
-complain :: String -> Reader a Bool -> ReaderT a (Except String) ()
-complain label r = do
-  c <- ask
-  unless (runReader r c) $ throwError label
+complain :: String -> Reader env Bool -> ReaderT env (Except String) ()
+complain label action = do
+  environment <- ask
+  unless (runReader action environment) $ throwError label
 
 
 {- |
