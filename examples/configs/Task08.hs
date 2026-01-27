@@ -259,6 +259,7 @@ import CodeWorld.Test (
 
   atTime,
   allAt,
+  rawImage,
   rawImagesAt,
   noneAt,
   queryAt,
@@ -320,6 +321,13 @@ test =
           (\p -> hasRelation (normalizeAndAbstract p `isBelow` grass))
           [Task08.sun, Task08.moon]
 
+      -- moon is upright throughout animation
+      complain "Your moon spins while moving. It should stay upright during its movement." $
+        allAt sunMoonCheck $ do
+          image <- rawImage
+          let value = fromMaybe 0 (para moonRotation image) `mod'` (2*pi)
+          pure (min value (2*pi - value) < 0.001)
+
   -- Submission contains any of 'sin', 'cos' and 'rotated'
   , TestCase $ TH.syntaxCheckWithExts ["LambdaCase","NoTemplateHaskell","TupleSections"] $ \m -> assertBool
       ( "The sun and moon are not exhibiting circular movement. " ++
@@ -328,12 +336,6 @@ test =
       any
         (\name -> TH.contains (TH.callTo name m) $ TH.findTopLevelDeclsOf "scene" m)
         ["sin","cos","rotated"]
-
-  -- moon is upright throughout animation
-  -- TODO: make this slot in more nicely with the above
-  , all (\t -> let value = fromMaybe 0 (para moonRotation $ Task08.scene t) `mod'` (2*pi) in
-            min value (2*pi - value) < 0.001) sunMoonCheck ~?
-    "Your moon spins while moving. It should stay upright during its movement."
   ]
   where
     movementCheck = samplesUntil 0.2 5
