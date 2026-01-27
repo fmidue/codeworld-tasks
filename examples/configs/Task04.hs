@@ -240,7 +240,6 @@ truncatedTime t =
 
 module Test (test) where
 import qualified Task04
-import Data.Maybe (isNothing)
 import Data.List.Extra (nubOrd)
 import Data.Tuple.Extra ((&&&))
 import Test.HUnit ((~:), Test(..), assertBool, assertString)
@@ -272,7 +271,7 @@ import CodeWorld.Test (
 
   samplesUntil,
   )
-import Control.Monad.Reader
+
 import qualified TestHarness as TH
 import TestHelper (isDeeplyDefined)
 
