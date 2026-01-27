@@ -206,12 +206,12 @@ module Task12 where
 import CodeWorld
 import Prelude hiding (($), (!!), head, tail, last, init, take, drop, splitAt, truncate, round, ceiling, floor, foldl, foldr, foldMap, fromInteger, mconcat)
 
--- Suppose we want to implement a jump & run game. First off, we 
--- should care for level design. In a conceptually tiled world, a 
--- level can be thought of as a function assigning to each (x,y) 
+-- Suppose we want to implement a jump & run game. First off, we
+-- should care for level design. In a conceptually tiled world, a
+-- level can be thought of as a function assigning to each (x,y)
 -- position of the (assumed infinite) screen some number representing
--- what occupies that tile space. 
--- 
+-- what occupies that tile space.
+--
 -- For example (note that this takes a pair as input, not two
 -- individual coordinate values):
 
@@ -225,9 +225,9 @@ level (x, y)
   | x < -4 && y < 2                    = 3
   | otherwise                          = 4  -- for air
 
--- We want to produce an actual screen drawing from such a purely 
--- mathematical level description. Fortunately, our graphics designers 
--- have already done some work: 
+-- We want to produce an actual screen drawing from such a purely
+-- mathematical level description. Fortunately, our graphics designers
+-- have already done some work:
 
 block, water, pearl, air :: Picture
 
@@ -240,28 +240,28 @@ pearl = colored purple (solidCircle 0.3) & air
 air = colored (translucent blue) (solidRectangle 1 1)
 
 -- But the remaining work rests with us. The first step is to turn
--- number codes 1, 2, ... used above into the corresponding 
--- pictures. That should not be too hard, right? But make sure that 
+-- number codes 1, 2, ... used above into the corresponding
+-- pictures. That should not be too hard, right? But make sure that
 -- your implementation of the following function is total, i.e., gives
 -- no non-exhaustiveness warning:
 
 aTile :: Integer -> Picture
 aTile = undefined
 
--- Then, we can use that function to produce the overall drawing of 
--- the level. Our visible screen has x-coordinates from -10 to 10, and 
--- likewise for y. And we should really call the 'aTile' function for 
+-- Then, we can use that function to produce the overall drawing of
+-- the level. Our visible screen has x-coordinates from -10 to 10, and
+-- likewise for y. And we should really call the 'aTile' function for
 -- all (x,y) combinations in that range, not just some smaller part of
--- the screen, because somebody on the team might still change the 
--- 'level' function to cover more of the visible screen with 
+-- the screen, because somebody on the team might still change the
+-- 'level' function to cover more of the visible screen with
 -- interesting stuff, and then we do not want to produce only a part
 -- of the drawing.
--- 
--- So we would have to produce 21 * 21 = 441 individual calls to cover 
--- all (x,y) combinations. Surely you can do this more succinctly? 
 --
--- If you are thinking of using recursion: don't! We have arts people 
--- on our game development team and don't want to blow their mind. 
+-- So we would have to produce 21 * 21 = 441 individual calls to cover
+-- all (x,y) combinations. Surely you can do this more succinctly?
+--
+-- If you are thinking of using recursion: don't! We have arts people
+-- on our game development team and don't want to blow their mind.
 
 scene :: Picture
 scene = undefined

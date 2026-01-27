@@ -193,9 +193,9 @@ import Prelude hiding (($), (!!))
  - numbers readily at hand, from a previous project of our company:
  -}
 
--- To convince yourself that this definition is working, you might 
--- want to copy it into a different file, load that file into ghci, 
--- and run something like 'take 100 primes'. 
+-- To convince yourself that this definition is working, you might
+-- want to copy it into a different file, load that file into ghci,
+-- and run something like 'take 100 primes'.
 primes :: [Integer]
 primes = sieve [2..]
   where sieve cs =
