@@ -1,6 +1,5 @@
 {-# language DeriveDataTypeable #-}
 {-# language FlexibleInstances #-}
-{-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module CodeWorld.Test.Abstract (
   AbstractPicture(..),
@@ -29,22 +28,15 @@ module CodeWorld.Test.Abstract (
 
 import Data.Data                        (Data)
 import Data.Text                        (Text)
-import Data.List.Extra                  (headDef, takeEnd)
+import Data.List.Extra                  (headDef)
 import Data.Maybe                       (listToMaybe)
 import Data.Tuple.Extra                 (both)
-import Data.Generics.Uniplate.Data      (transform, universe)
+import Data.Generics.Uniplate.Data      (universe)
 
 import CodeWorld.Tasks.API              (Drawable(..))
 import CodeWorld.Tasks.VectorSpace (
   Point,
-  vectorSum,
   atOriginWithOffset,
-  isRectangle,
-  reflectedPoint,
-  rotationAngle,
-  scaledVector,
-  sideLengths,
-  rotatedVector,
   )
 import CodeWorld.Test.AbsTypes
 
