@@ -139,7 +139,10 @@ newtype Picture = PRec (ReifyPicture Picture)
   The recursive structure of the type is necessary
   for [Reify CSE detection](https://hackage.haskell.org/package/data-reify).
   -}
-  deriving (Show,Eq,Ord,Generic,NFData,Data)
+  deriving (Eq,Ord,Generic,NFData,Data)
+
+instance Show Picture where
+  show (PRec p) = show p
 
 
 pattern Rectangle :: Double -> Double -> Picture
