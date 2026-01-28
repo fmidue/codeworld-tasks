@@ -1,7 +1,5 @@
 {-# language DeriveDataTypeable #-}
 {-# language FlexibleInstances #-}
-{-# language OverloadedStrings #-}
-{-# language ViewPatterns #-}
 {-# OPTIONS_GHC -Wno-unused-imports #-}
 
 module CodeWorld.Test.Abstract (
