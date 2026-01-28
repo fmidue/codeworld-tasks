@@ -51,6 +51,7 @@ import CodeWorld.Tasks.VectorSpace (
 import CodeWorld.Test.AbsTypes
 
 import qualified CodeWorld.Tasks.Picture as P
+import qualified CodeWorld.Tasks.Types as PT
 
 
 {- |
@@ -121,7 +122,7 @@ instance Drawable AbstractPicture where
   solidPolygon    = Polyline Solid . map toAbsPoint . toOpenShape
 
   polygon        = polyline . toOpenShape
-  thickPolygon (validThickness -> t) = thickPolyline t . toOpenShape
+  thickPolygon t = thickPolyline t . toOpenShape
 
   lettering = Lettering
 
@@ -339,14 +340,8 @@ This only makes sense if there's exactly one way to solve the given task.
 -}
 toConcretePicture :: AbstractPicture -> P.Picture
 toConcretePicture p = case p of
-  Rectangle sk sx sy -> (case sk of
-    Hollow Normal -> P.Rectangle
-    Hollow Thick  -> P.ThickRectangle 1
-    _             -> P.SolidRectangle) (fromSize sx) (fromSize sy)
-  Circle sk s -> (case sk of
-    Hollow Normal -> P.Circle
-    Hollow Thick  -> P.ThickCircle 1
-    _             -> P.SolidCircle) (fromSize s)
+  Rectangle sk sx sy -> P.AnyRectangle (toStyle sk) (fromSize sx) (fromSize sy)
+  Circle sk s -> P.AnyCircle (toStyle sk) (fromSize s)
   Lettering t -> P.Lettering t
   Color c q -> P.Color (fromAbsColor c) $ toConcretePicture q
   Translate x y q -> P.Translate (fromPosition x) (fromPosition y) $ toConcretePicture q
@@ -356,25 +351,16 @@ toConcretePicture p = case p of
   CoordinatePlane -> P.CoordinatePlane
   Logo -> P.Logo
   Blank -> P.Blank
-  Polyline sk ps -> case sk of
-    Hollow Normal -> P.Polyline $ map fromAbsPoint ps
-    Hollow Thick  -> P.ThickPolyline 1 $ map fromAbsPoint ps
-    _             -> P.SolidPolygon $ init $ map fromAbsPoint ps
-  Curve sk ps -> case sk of
-    Hollow Normal -> P.Curve $ map fromAbsPoint ps
-    Hollow Thick  -> P.ThickCurve 1 $ map fromAbsPoint ps
-    _             -> P.SolidClosedCurve $ init $ map fromAbsPoint ps
-  Arc sk a1 a2 s -> (case sk of
-    Hollow Normal -> P.Arc
-    Hollow Thick  -> P.ThickArc 1
-    _             -> P.Sector) (fromAngle a1) (fromAngle a2) (fromSize s)
+  Polyline sk ps -> uncurry P.AnyPolyline $ toShape sk $ map fromAbsPoint ps
+  Curve sk ps -> uncurry P.AnyCurve $ toShape sk $ map fromAbsPoint ps
+  Arc sk a1 a2 s -> P.AnyArc (toStyle sk) (fromAngle a1) (fromAngle a2) (fromSize s)
   Reflect a q -> P.Reflect (fromAngle a) $ toConcretePicture q
   Clip sx sy q -> P.Clip (fromSize sx) (fromSize sy) $ toConcretePicture q
+  where
+    toStyle (Hollow Normal) = PT.Outline Nothing
+    toStyle (Hollow Thick) = PT.Outline $ Just 1
+    toStyle Solid = PT.Solid
 
-
-validThickness :: Double -> Double
-validThickness t
-  | t < 0     = error $
-      "The line width must be non-negative. " ++
-      "(This error was thrown inside the test suite)"
-  | otherwise = t
+    toShape (Hollow Normal) ps = (PT.Open Nothing, ps)
+    toShape (Hollow Thick) ps = (PT.Open $ Just 1, ps)
+    toShape Solid ps = (PT.Closed PT.Solid, init ps)
