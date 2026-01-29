@@ -65,7 +65,6 @@ module CodeWorld.Test (
   AbsPoint,
   AbsColor,
   isSameColor,
-  equalColorCustom,
 
   -- * Spatial View
   -- $SpatialView
@@ -361,7 +360,6 @@ import CodeWorld.Test.AbsTypes (
   ShapeKind,
   AbsPoint,
   isSameColor,
-  equalColorCustom,
   )
 import CodeWorld.Test.Animation (
   samplesUntil,

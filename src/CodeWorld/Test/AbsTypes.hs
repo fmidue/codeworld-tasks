@@ -23,7 +23,6 @@ module CodeWorld.Test.AbsTypes (
   toAbsColor,
   fromAbsColor,
   isSameColor,
-  equalColorCustom,
   applyToAbsPoint,
   thickness,
 ) where
@@ -183,31 +182,6 @@ isSameColor (Translucent a1 c1) (Translucent a2 c2) =
 isSameColor AnyColor            _                   = True
 isSameColor _                   AnyColor            = True
 isSameColor _                   _                   = False
-
-
-{- |
-Allows for custom thresholds on color similarity detection.
-This is exported to be able to correct unexpected complications in live tests.
--}
-equalColorCustom :: Double -> Double -> Double -> Double -> AbsColor -> AbsColor -> Bool
-equalColorCustom hRange sRange lRange _ (Tone h1 s1 l1) (Tone h2 s2 l2)
-    | (l2 >= 0.98 && l1 >= 0.98) ||
-      (l2 <= 0.05 && l1 <= 0.05) = True
-    | s1 <= 0.05 && s2 <= 0.05    = lDiff <= lRange
-    | otherwise                   =
-      hDiff <= hRange && sDiff <= sRange && lDiff <= lRange
-    where
-      lDiff = abs (l1 - l2)
-      sDiff = abs (s1 - s2)
-      hDiff = abs (h1 - h2)
-equalColorCustom h s l aRange (Translucent a1 c1) (Translucent a2 c2) =
-  abs (a1 - a2) <= aRange && equalColorCustom h s l aRange c1 c2
-equalColorCustom h s l aRange (Translucent a c1)  c                   =
-  a <= aRange && equalColorCustom h s l aRange c1 c
-equalColorCustom h s l aRange c                   (Translucent a c1)  =
-  a <= aRange && equalColorCustom h s l aRange c1 c
-equalColorCustom _ _ _ _      AnyColor            _                   = True
-equalColorCustom _ _ _ _      _                   AnyColor            = True
 
 
 instance Eq AbsPoint where
