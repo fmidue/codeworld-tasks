@@ -141,9 +141,9 @@ instance Eq AbsColor where
       hDiff = abs (h1 - h2)
       hueMod = 1 - min s1 s2 - sDiff
 
-  Translucent a1 c1 == Translucent a2 c2 = abs (a1 - a2) <= 0.151 && c1 == c2
-  Translucent a c1  == c                 = a <= 0.151 && c1 == c
-  c                 == Translucent a c1  = a <= 0.151 && c1 == c
+  Translucent a1 c1 == Translucent a2 c2 = abs (a1 - a2) <= 0.751 && c1 == c2
+  Translucent a c1  == c                 = a >= 0.249 && c1 == c
+  c                 == t@Translucent {}  = t == c
   AnyColor          == _                 = True
   _                 == AnyColor          = True
 
