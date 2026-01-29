@@ -16,12 +16,15 @@ import CodeWorld.Tasks.Color            (black)
 import CodeWorld.Tasks.VectorSpace (
   Point,
   atOriginWithOffset,
+  crossProduct,
+  dotProduct,
   isRectangle,
   reflectedPoint,
   rotatedVector,
   rotationAngle,
   scaledVector,
   sideLengths,
+  vectorDifference,
   vectorSum,
   )
 import CodeWorld.Tasks.Picture          (Picture(..), toInterface)
@@ -81,10 +84,10 @@ rewriting (AnyRectangle s (abs -> l) (abs -> w)) = toWideRectangle s l w
 rewriting (AnyArc s a1 a2 r) = checkArc s a1 a2 r
 
 rewriting (AnyPolyline (Closed (Outline mOutline)) ps) = AnyPolyline (Open mOutline) $ toOpenShape ps
-rewriting (AnyPolyline s ps) = checkForRectangle s ps
+rewriting (AnyPolyline s (removeSurplus -> ps)) = checkForRectangle s $ toOpenShape ps
 
 rewriting (AnyCurve (Closed (Outline mOutline)) ps) = AnyCurve (Open mOutline) $ toOpenShape ps
-rewriting (AnyCurve s ps) = handlePointList (AnyCurve s) ps
+rewriting (AnyCurve s ps) = handlePointList (AnyCurve s) $ toOpenShape ps
 
 rewriting (Lettering "") = Blank
 rewriting (StyledLettering _ _ "") = Blank
@@ -201,7 +204,9 @@ lowerPrecedence (Curve {}) (ThickCurve {}) = True
 lowerPrecedence _ _ = False
 
 toOpenShape :: [Point] -> [Point]
-toOpenShape ps = ps ++ take 1 ps
+toOpenShape ps
+  | start <- take 1 ps, start /= takeEnd 1 ps = ps ++ start
+  | otherwise = ps
 
 toWideRectangle :: Style -> Double -> Double -> Picture
 toWideRectangle style l w
@@ -227,6 +232,16 @@ handlePointList shape ps
 removeDupes :: Eq a => [a] -> [a]
 removeDupes []       = []
 removeDupes xs@(x:_) = x : [ a | (a,b) <- zip (drop 1 xs) xs, a /= b]
+
+-- remove all points that lie on line segments between neighbours
+removeSurplus :: [Point] -> [Point]
+removeSurplus (a:p:b:xs)
+  | pSubA <- vectorDifference p a,
+    abs (crossProduct (vectorDifference b a) pSubA) <= 0.01 &&
+    dotProduct pSubA (vectorDifference p b) <= 0
+    = removeSurplus $ a:b:xs
+  | otherwise = a : removeSurplus (p:b:xs)
+removeSurplus xs = xs
 
 handleLikeFreeShapes
   :: ([Point] -> Picture)
