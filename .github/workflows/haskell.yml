@@ -41,7 +41,7 @@ jobs:
       - name: Install dependencies
         run: |
           set -ex
-          stack --no-terminal --install-ghc build --test --bench --only-dependencies --stack-yaml run.yaml
+          stack --no-terminal --install-ghc build --test --bench --only-dependencies -w run.yaml
           set +ex
         env:
           BUILD: ${{ matrix.plan.build }}
@@ -49,7 +49,17 @@ jobs:
       - name: Build and test
         run: |
           set -ex
-          stack --no-terminal test --coverage --bench --no-run-benchmarks --haddock --no-haddock-deps --stack-yaml run.yaml
+          stack --no-terminal test --coverage --bench --no-run-benchmarks --haddock --no-haddock-deps -w run.yaml
+          set +ex
+        env:
+          BUILD: ${{ matrix.plan.build }}
+
+      - name: Validate examples
+        run: |
+          set -ex
+          while IFS= read -r -d '' f; do
+            stack run -w run.yaml "$f" "examples/solutions/$(basename "$f")"
+          done < <(find examples/configs -type f -name '*.hs' -print0)
           set +ex
         env:
           BUILD: ${{ matrix.plan.build }}
