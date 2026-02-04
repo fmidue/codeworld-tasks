@@ -5,7 +5,7 @@ hashcons
 Leijen
 lhs
 libz
-olusion
+olution
 OSX
 Preds
 rhs
