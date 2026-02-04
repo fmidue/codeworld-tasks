@@ -5,10 +5,12 @@ hashcons
 Leijen
 lhs
 libz
+olusion
 OSX
 Preds
 rhs
 SChar
 SEmpty
 SText
+ubmission
 Uniplate
