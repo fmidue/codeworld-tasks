@@ -58,7 +58,7 @@ jobs:
         run: |
           set -ex
           while IFS= read -r -d '' f; do
-            stack run -w run.yaml "$f" "examples/solutions/$(basename "$f")"
+            stack run -w run.yaml "$(basename "$f")" solution
           done < <(find examples/configs -type f -name '*.hs' -print0)
           set +ex
         env:
