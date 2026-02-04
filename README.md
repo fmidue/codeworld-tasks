@@ -21,7 +21,7 @@ Now to simulate the grading process:
 1. Install the z3 theorem prover (`sudo apt-get install libz3-dev` or similar)
 1. Install [Haskell Stack](https://docs.haskellstack.org/en/stable/#__tabbed_2_1)
 1. Optionally set an alias for `stack run -w run.yaml`
-1. Execute `stack run -w run.yaml examples/configs/<Task> <examples/tasks/<Task>`
+1. Execute `stack run -w run.yaml <task name> <[submission|solution]>` (`solution` loads a sample solution)
 
 The submission will either be rejected or accepted and feedback be printed directly into the console.
 Running the stack command may take a while the first time, since a lot of dependencies will have to be installed.

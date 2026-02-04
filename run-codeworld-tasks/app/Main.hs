@@ -6,6 +6,7 @@ module Main where
 import qualified Data.Text              as T
 import qualified Data.Text.Lazy         as LT
 
+import Control.Monad                    (void)
 import Data.Text                        (Text)
 import Data.Text.Lazy.Builder           (toLazyText)
 import Haskell.Template.Task            (grade)
@@ -29,9 +30,12 @@ import Rainbow (
 import System.Directory                 (getTemporaryDirectory)
 import System.Exit                      (die, exitFailure, exitSuccess)
 import System.Environment               (getArgs)
-import System.FilePath                  ((-<.>))
+import System.FilePath                  ((</>), (-<.>))
 import System.IO                        (readFile')
+import Text.ParserCombinators.ReadP     ((+++), char, choice, string)
+import Text.ParserCombinators.ReadPrec  (lift)
 import Text.PrettyPrint.Leijen.Text     (Doc, SimpleDoc(..), renderPretty)
+import Text.Read                        (Read(..), readMaybe)
 
 
 
@@ -53,16 +57,32 @@ suggestionStyle :: Text -> Chunk
 suggestionStyle = bold . fore brightYellow . chunk
 
 
+data Mode = Submission | Solution
+
+
+instance Read Mode where
+  readPrec = lift $ do
+    void $ char 's' +++ char 'S'
+    choice [
+      string "ubmission" >> pure Submission,
+      string "olution" >> pure Solution
+      ]
+
+
 main :: IO ()
 main = do
   args <- getArgs
   case args of
-    [task,submission] -> do
-        taskContents <- openDotHs task
-        submissionContents <- openDotHs submission
-        runTemplateTask taskContents submissionContents
-        exitSuccess
-    _                 -> die usage
+    [task,subMode] -> do
+      let openFileInDir dir = openDotHs $ "examples" </> dir </> task
+      taskContents <- openFileInDir "configs"
+      submissionContents <- maybe
+        modeHelp
+        (openFileInDir . modeToDir)
+        $ readMaybe subMode
+      runTemplateTask taskContents submissionContents
+      exitSuccess
+    _              -> usage
 
 
 runTemplateTask :: String -> String -> IO ()
@@ -80,12 +100,21 @@ runTemplateTask task submission = do
   putChunkLn $ statusLabel green "SUCCESS"
 
 
+modeToDir :: Mode -> FilePath
+modeToDir Submission = "tasks"
+modeToDir Solution   = "solutions"
+
+
 openDotHs :: FilePath -> IO String
 openDotHs path = readFile' $ path -<.> "hs"
 
 
-usage :: String
-usage = "usage: test-task <config path> <solution path>"
+modeHelp :: IO a
+modeHelp = die "Parse error on submission mode. Try 'submission' or 'solution'"
+
+
+usage :: IO a
+usage = die "usage: test-task <task name> <[submission|solution]>"
 
 
 styleRejections :: Text -> Chunk
