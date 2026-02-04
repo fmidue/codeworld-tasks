@@ -360,5 +360,6 @@ toRGBA (clampColor -> HSL h s l) = (r, g, b, 1)
       | h' * 2 < 1 = m2'
       | h' * 3 < 2 = m1' + (m2' - m1') * (2 / 3 - h') * 6
       | otherwise = m1'
+toRGBA (Mixed cs) = toRGBA $ mix cs
 toRGBA (Translucent c) = let (r, g, b, a) = toRGBA c in (r, g, b, a/2)
 toRGBA c = toRGBA $ HSL (hue c) (saturation c) (luminosity c)
