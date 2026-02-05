@@ -64,8 +64,8 @@ instance Read Mode where
   readPrec = lift $ do
     void $ char 's' +++ char 'S'
     choice [
-      string "ubmission" >> pure Submission,
-      string "olution" >> pure Solution
+      string "ubmission" >> pure Submission, -- no-spell-check
+      string "olution" >> pure Solution -- no-spell-check
       ]
 
 
