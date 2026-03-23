@@ -91,10 +91,11 @@ module CodeWorld.Tasks.Picture (
 
 
 import Control.DeepSeq                  (NFData)
+import Data.Char                        (toUpper)
 import Data.Data                        (Data)
 import Data.Foldable                    (toList)
 import Data.IntMap                      (IntMap, Key)
-import Data.List.Extra                  (headDef)
+import Data.List.Extra                  (headDef, singleton)
 import Data.Reify                       (Graph(..), MuRef(..), reifyGraph)
 import Data.Text                        (Text)
 import Data.Tuple.Extra                 (both)
@@ -141,8 +142,123 @@ newtype Picture = PRec (ReifyPicture Picture)
   -}
   deriving (Eq,Ord,Generic,NFData,Data)
 
+
 instance Show Picture where
-  show (PRec p) = show p
+  show Logo = "codeWorldLogo"
+  show CoordinatePlane = "coordinatePlane"
+  show Blank = "blank"
+  show pic = unwords $ case pic of
+    AnyRectangle s x y ->
+      [ showAPIFunction "rectangle" $ formatStyle s
+      , show x
+      , show y
+      ]
+    AnyCircle s r ->
+      [ showAPIFunction "circle" $ formatStyle s
+      , show r
+      ]
+    AnyArc Solid r1 r2 a -> ["sector", show r1, show r2, show a]
+    AnyArc s r1 r2 a ->
+      [ showAPIFunction "arc" $ formatStyle s
+      , show r1
+      , show r2
+      , show a
+      ]
+    AnyPolyline s@(Closed _) ps ->
+      [ showAPIFunction "polygon" $ formatShape s
+      , show ps
+      ]
+    AnyPolyline s@(Open _) ps ->
+      [ showAPIFunction "polyline" $ formatShape s
+      , show ps
+      ]
+    AnyCurve s@(Closed _) ps ->
+      [ showAPIFunction "closedCurve" $ formatShape s
+      , show ps
+      ]
+    AnyCurve s@(Open _) ps ->
+      [ showAPIFunction "curve" $ formatShape s
+      , show ps
+      ]
+    Dilate fac p ->
+      [ "dilated"
+      , show fac
+      , showArgument p
+      ]
+    Scale fac1 fac2 p ->
+      [ "scaled"
+      , show fac1
+      , show fac2
+      , showArgument p
+      ]
+    Color c p ->
+      [ "colored"
+      , show c
+      , showArgument p
+      ]
+    Rotate a p ->
+      [ "rotated"
+      , show a
+      , showArgument p
+      ]
+    Reflect a p ->
+      [ "reflected"
+      , show a
+      , showArgument p
+      ]
+    Translate x y p ->
+      [ "translated"
+      , show x
+      , show y
+      , showArgument p
+      ]
+    Clip x y p ->
+      [ "clipped"
+      , show x
+      , show y
+      , showArgument p
+      ]
+    Lettering t ->
+      [ "lettering"
+      , show t
+      ]
+    StyledLettering tStyle font t ->
+      [ "styledLettering"
+      , show tStyle
+      , show font
+      , show t
+      ]
+    Pictures ps ->
+      [ "pictures"
+      , show ps
+      ]
+    And p q ->
+      [ show p
+      , "&"
+      , show q
+      ]
+
+
+showArgument :: Picture -> String
+showArgument p
+  | p `elem` [Logo, CoordinatePlane, Blank] = show p
+  | otherwise = '(' : show p ++ ")"
+
+
+showAPIFunction :: String -> Maybe (String, Maybe String) -> String
+showAPIFunction (f:s) (Just (pre,param)) = unwords $ (pre ++ toUpper f : s) : maybe [] singleton param
+showAPIFunction s _ = s
+
+
+formatStyle :: Style -> Maybe (String, Maybe String)
+formatStyle Solid = Just ("solid", Nothing)
+formatStyle (Outline Nothing) = Nothing
+formatStyle (Outline (Just t)) = Just ("thick", Just $ show t)
+
+
+formatShape :: Shape -> Maybe (String, Maybe String)
+formatShape (Closed s) = formatStyle s
+formatShape (Open mDouble) = formatStyle $ Outline mDouble
 
 
 pattern Rectangle :: Double -> Double -> Picture
