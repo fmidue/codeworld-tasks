@@ -157,7 +157,7 @@ instance Show Picture where
       [ showAPIFunction "circle" $ formatStyle s
       , show r
       ]
-    AnyArc Solid r1 r2 a -> ["sector", show r1, show r2, show a]
+    Sector r1 r2 a -> ["sector", show r1, show r2, show a]
     AnyArc s r1 r2 a ->
       [ showAPIFunction "arc" $ formatStyle s
       , show r1
