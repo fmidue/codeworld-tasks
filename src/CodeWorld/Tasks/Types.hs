@@ -48,11 +48,11 @@ data ReifyPicture a
   | CoordinatePlane
   | Logo
   | Blank
-  deriving (Show, Foldable, Eq, Ord, Generic, NFData, Data)
+  deriving (Foldable, Eq, Ord, Generic, NFData, Data)
 
 
-data Style = Outline (Maybe Double) | Solid deriving (Show, Eq, Ord, Generic, NFData, Data)
-data Shape = Closed Style | Open (Maybe Double) deriving (Show, Eq, Ord, Generic, NFData, Data)
+data Style = Outline (Maybe Double) | Solid deriving (Eq, Ord, Generic, NFData, Data)
+data Shape = Closed Style | Open (Maybe Double) deriving (Eq, Ord, Generic, NFData, Data)
 
 {-|
 Font modifier type used for stylized message rendering.

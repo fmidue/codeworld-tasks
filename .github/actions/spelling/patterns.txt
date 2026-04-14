@@ -34,3 +34,6 @@
 
 # ignore urls
 https?://[-+0-9a-zA-Z?&=_\/%.]*
+
+# ignore lines with this code comment
+^.*-- no-spell-check$
