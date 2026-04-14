@@ -45,4 +45,3 @@ executables:
       # used for run-time compilation dependencies
       - haskell-template-task-raw
       - codeworld-tasks
-      - IOTasks
