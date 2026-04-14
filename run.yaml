@@ -7,7 +7,7 @@ packages:
 
 extra-deps:
   - git: https://github.com/fmidue/haskell-template-task
-    commit: c04b00d681b4fc364eb073f21c51c2b075fc0065
+    commit: d2f18e228d90f5828aa55d6649448c7eda12c2b7
     subdirs:
       - .
       - raw

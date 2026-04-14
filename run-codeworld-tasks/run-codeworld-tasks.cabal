@@ -29,8 +29,7 @@ executable test-task
       app
   ghc-options: -Wall -Werror -Wcompat -Widentities -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      IOTasks
-    , QuickCheck
+      QuickCheck
     , base >=4.11 && <5
     , codeworld-tasks
     , directory

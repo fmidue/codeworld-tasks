@@ -70,6 +70,7 @@ runTemplateTask task submission = do
   tmp <- getTemporaryDirectory
   grade
     id
+    id
     rejection
     suggestion
     tmp
