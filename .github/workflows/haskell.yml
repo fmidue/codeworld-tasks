@@ -25,6 +25,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - uses: awalsh128/cache-apt-pkgs-action@v1.6.0
+        with:
+          packages: libpcre3-dev
+
       - name: Cache Stack
         id: cache-stack-unix
         uses: actions/cache@v4
