@@ -57,10 +57,35 @@ library
     , uniplate
   default-language: Haskell2010
 
+executable derive-laws
+  main-is: DeriveLaws.hs
+  other-modules:
+      Paths_codeworld_tasks
+  autogen-modules:
+      Paths_codeworld_tasks
+  hs-source-dirs:
+      app
+  ghc-options: -Wall -Werror -Wcompat -Widentities -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N -main-is DeriveLaws
+  build-depends:
+      QuickCheck
+    , base >=4.11 && <5
+    , codeworld-tasks
+    , containers
+    , data-reify
+    , deepseq
+    , extra
+    , generic-arbitrary
+    , mtl
+    , quickspec
+    , text
+    , uniplate
+  default-language: GHC2024
+
 test-suite codeworld-tasks-test
   type: exitcode-stdio-1.0
   main-is: Spec.hs
   other-modules:
+      CodeWorld.Spec
       Paths_codeworld_tasks
   autogen-modules:
       Paths_codeworld_tasks
@@ -68,13 +93,16 @@ test-suite codeworld-tasks-test
       test
   ghc-options: -Wall -Werror -Wcompat -Widentities -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
-      base >=4.11 && <5
+      QuickCheck
+    , base >=4.11 && <5
     , codeworld-tasks
     , containers
     , data-reify
     , deepseq
     , extra
+    , hspec
     , mtl
+    , quickspec
     , text
     , uniplate
   default-language: Haskell2010

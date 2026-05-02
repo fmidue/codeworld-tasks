@@ -5,3 +5,7 @@ packages:
   - .
 
 extra-deps:
+  # the newest version uploaded to Hackage is very outdated
+  - git: https://github.com/nick8325/quickspec.git
+    commit: dc011cd737f98b8a67f6051560d9fce553385905
+  - twee-lib-2.5
