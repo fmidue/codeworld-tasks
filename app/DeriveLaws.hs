@@ -3,12 +3,39 @@
 module DeriveLaws where
 
 
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import QuickSpec
 import Test.QuickCheck
 import Test.QuickCheck.Arbitrary ()
-import CodeWorld
-import CodeWorld.Test (normalize)
+import CodeWorld hiding (ReifyPicture(..))
+
+import CodeWorld.Test
+
+
+type MockImage = Point -> Maybe Color
+
+
+mockImage :: Picture -> MockImage
+mockImage Blank _ = Nothing
+mockImage (Circle r) (x,y) = if abs (sqrt (x^2 + y^2) - r) <= 0.01 then Just black else Nothing
+mockImage _ _ = Nothing
+
+
+rasterizeMock :: Int -> Int -> MockImage -> [Color]
+rasterizeMock width height f = [ fromMaybe white $ f  (x, y) | x <- [-fromIntegral width/2.. fromIntegral width/2], y <- [-fromIntegral height/2.. fromIntegral height/2]]
+
+display :: [[Color]] -> IO ()
+display [] = pure ()
+display (row:xs) = do
+  putStrLn $ concatMap colToChar row
+  display xs
+  where
+    colToChar c
+      | c == black = "#"
+      | c == white = " "
+      | otherwise = "?"
+
 
 sig :: Sig
 sig = signature
