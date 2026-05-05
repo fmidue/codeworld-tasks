@@ -3,6 +3,7 @@
 module DeriveLaws where
 
 
+import Control.Monad (guard)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import QuickSpec
@@ -18,12 +19,28 @@ type MockImage = Point -> Maybe Color
 
 mockImage :: Picture -> MockImage
 mockImage Blank _ = Nothing
-mockImage (Circle r) (x,y) = if abs (sqrt (x^2 + y^2) - r) <= 0.01 then Just black else Nothing
+mockImage (Circle r) (x,y) = do
+  guard $ abs (sqrt (x^2 + y^2) - r) <= 0.045
+  pure black
+mockImage (Rectangle w h) (x,y) = do
+  guard $
+    (abs x <= abs w/2 && abs (abs y - abs h/2) <= 0.05) ||
+    (abs y <= abs h/2 && abs (abs x - abs w/2) <= 0.05)
+  pure black
+mockImage (Color c p) pt = pure c <* mockImage p pt
+mockImage (Translate x y p) (a,b) = mockImage p (a-x,b-y)
+-- i/0 = Infinity => empty image checks out!?
+mockImage (Scale fac1 fac2 p) (x,y) = mockImage p (x/fac1,y/fac2)
 mockImage _ _ = Nothing
 
 
-rasterizeMock :: Int -> Int -> MockImage -> [Color]
-rasterizeMock width height f = [ fromMaybe white $ f  (x, y) | x <- [-fromIntegral width/2.. fromIntegral width/2], y <- [-fromIntegral height/2.. fromIntegral height/2]]
+-- Doesn't actually enforce dimensions right now...
+rasterizeMock :: Int -> Int -> MockImage -> [[Color]]
+rasterizeMock width height f = [ [fromMaybe white $ f (x, y) | y <- interval height] | x <- interval width]
+  where
+    interval dim = let half = fromIntegral dim / 2 in
+      [-half, -half+0.1 .. half]
+
 
 display :: [[Color]] -> IO ()
 display [] = pure ()
@@ -33,7 +50,7 @@ display (row:xs) = do
   where
     colToChar c
       | c == black = "#"
-      | c == white = " "
+      | c == white = "."
       | otherwise = "?"
 
 
