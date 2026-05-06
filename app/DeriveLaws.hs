@@ -1,5 +1,6 @@
 {-# OPTIONS_GHC -Wno-orphans #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ViewPatterns #-}
 module DeriveLaws where
 
 
@@ -17,25 +18,60 @@ import CodeWorld.Test
 type MockImage = Point -> Maybe Color
 
 
+eta :: Double
+eta = 0.05
+
+
+mockCircle :: Double -> Double -> MockImage
+mockCircle (abs -> radius) (abs -> threshold) (x,y) = do
+  guard $ abs (sqrt (x^(2 :: Int) + y^(2 :: Int)) - radius) <= threshold + eta
+  pure black
+
+
+mockRectangle :: Bool -> Double -> Double -> Double -> MockImage
+mockRectangle filled (abs -> w) (abs -> h) (abs -> threshold) (abs ->x, abs -> y) = do
+  guard $ preventInnerPoints
+    && x <= w/2 + threshold/2 + eta && y <= h/2 + threshold/2 + eta
+  pure black
+  where
+    preventInnerPoints =
+      filled ||
+      abs (y - h/2) <= threshold/2 + eta ||
+      abs (x - w/2) <= threshold/2 + eta
+
+
+
 mockImage :: Picture -> MockImage
-mockImage Blank _ = Nothing
-mockImage (Circle r) (x,y) = do
-  guard $ abs (sqrt (x^(2 :: Int) + y^(2 :: Int)) - r) <= 0.045
-  pure black
-mockImage (Rectangle w h) (x,y) = do
-  guard $
-    (abs x <= abs w/2 && abs (abs y - abs h/2) <= 0.05) ||
-    (abs y <= abs h/2 && abs (abs x - abs w/2) <= 0.05)
-  pure black
-mockImage (Polyline ps) (x,y) = do
-  guard $ any (\(px,py) -> abs (px - x) <= 0.05 && abs (py - y) <= 0.05) ps
+mockImage Blank = const Nothing
+-- don't care about these for testing,
+-- but what should I use here to avoid spurious laws?
+mockImage Logo = const Nothing
+mockImage CoordinatePlane = const Nothing
+mockImage (Circle r) = mockCircle r 0
+mockImage (ThickCircle t r) = mockCircle r t
+mockImage (SolidCircle r) = mockCircle 0 r
+mockImage (Rectangle w h) = mockRectangle False w h 0
+mockImage (ThickRectangle t w h) = mockRectangle False w h t
+mockImage (SolidRectangle w h) = mockRectangle True w h 0
+mockImage (Polyline ps) = \(x,y) -> do
+  guard $ any (\(px,py) -> abs (px - x) <= eta && abs (py - y) <= eta) ps
   -- TODO: lines between points
   pure black
-mockImage (Color c p) pt = c <$ mockImage p pt
-mockImage (Translate x y p) (a,b) = mockImage p (a-x,b-y)
+mockImage (Color c p) = (c <$) . mockImage p
+mockImage (Translate x y p) = mockImage p . translatedPoint (-x) (-y)
+mockImage (Rotate a p) = mockImage p . rotatedPoint (-a)
+mockImage (Reflect a p) = mockImage p . reflectedPoint (-a)
+mockImage (Clip x y p) = \pt@(a,b) -> do
+  guard $ abs a <= abs x/2 + eta && abs b <= abs y/2 + eta
+  mockImage p pt
 -- i/0 = Infinity => empty image checks out!?
-mockImage (Scale fac1 fac2 p) (x,y) = mockImage p (x/fac1,y/fac2)
-mockImage _ _ = Nothing
+mockImage (Scale fac1 fac2 p) = mockImage p . scaledPoint (1/fac1) (1/fac2)
+mockImage (Dilate fac p) = mockImage p . dilatedPoint fac
+mockImage (And p q) = \pt -> case mockImage p pt of
+  Nothing -> mockImage q pt
+  color   -> color
+mockImage (Pictures ps) = mockImage (foldr And Blank ps)
+mockImage _ = const Nothing
 
 
 {-
