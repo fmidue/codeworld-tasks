@@ -45,11 +45,16 @@ mockRectangle filled (abs -> w) (abs -> h) (abs -> threshold) (abs -> x, abs -> 
       abs (x - w/2) <= threshold/2 + eta
 
 
--- TODO: blend colors if foreground is transparent
 composeImages :: MockImage -> MockImage -> MockImage
 composeImages f g pt = case f pt of
-  Nothing -> g pt
-  color   -> color
+  Nothing    -> g pt
+  first@(Just color) -> case alpha color of
+    1 -> first
+    0 -> g pt
+    _ -> do
+      case g pt of
+        Nothing -> pure color
+        Just color2 -> pure $ mixed [color, color2]
 
 
 pointDistance :: Point -> Point -> Double
@@ -74,11 +79,11 @@ mockImage (SolidCircle r) = mockCircle 0 r
 mockImage (Rectangle w h) = mockRectangle False w h 0
 mockImage (ThickRectangle t w h) = mockRectangle False w h t
 mockImage (SolidRectangle w h) = mockRectangle True w h 0
-mockImage (Polyline ps@(_:xs)) = blackIf . flip any (zip ps xs) . isOnLineFromTo 0
-mockImage (ThickPolyline t ps@(_:xs)) = blackIf . flip any (zip ps xs) . isOnLineFromTo t
-mockImage (Polygon ps@(x:xs)) = blackIf . flip any (zip ps (xs ++ [x])) . isOnLineFromTo 0
-mockImage (ThickPolygon t ps@(x:xs)) = blackIf . flip any (zip ps (xs ++ [x])) . isOnLineFromTo t
-mockImage (SolidPolygon ps@(x:xs)) = blackIf . flip any (zip ps (xs ++ [x])) . isOnLineFromTo 0
+mockImage (Polyline ps) = blackIf . flip any (zip ps $ drop 1 ps) . isOnLineFromTo 0
+mockImage (ThickPolyline t ps) = blackIf . flip any (zip ps $ drop 1 ps) . isOnLineFromTo t
+mockImage (Polygon ps) = blackIf . flip any (zip ps $ drop 1 ps ++ take 1 ps) . isOnLineFromTo 0
+mockImage (ThickPolygon t ps) = blackIf . flip any (zip ps $ drop 1 ps ++ take 1 ps) . isOnLineFromTo t
+mockImage (SolidPolygon ps) = blackIf . flip isInsidePolygon ps
 mockImage (Color c p) = (c <$) . mockImage p
 mockImage (Translate x y p) = mockImage p . translatedPoint (-x) (-y)
 mockImage (Rotate a p) = mockImage p . rotatedPoint (-a)
@@ -88,7 +93,7 @@ mockImage (Clip x y p) = \pt@(a,b) -> do
   mockImage p pt
 -- i/0 = Infinity => empty image checks out!?
 mockImage (Scale fac1 fac2 p) = mockImage p . scaledPoint (1/fac1) (1/fac2)
-mockImage (Dilate fac p) = mockImage p . dilatedPoint fac
+mockImage (Dilate fac p) = mockImage p . dilatedPoint (1/fac)
 mockImage (And p q) = composeImages (mockImage p) (mockImage q)
 mockImage (Pictures xs) = foldr (composeImages . mockImage) (const Nothing) xs
 mockImage _ = const Nothing
@@ -133,7 +138,7 @@ consoleTest p = do
   putStr "use defaults? (y for yes, anything else for no):"
   answer <- getChar
   (a,b,c,d) <- case answer of
-    'y' -> pure (10, 10, 200, 200)
+    'y' -> putStrLn " " >> pure (10, 10, 200, 200)
     _   -> do
       putStrLn ""
       putStr "canvas height:"
@@ -168,7 +173,7 @@ sig = signature
   , con "thickPolyline" thickPolyline
   , con "polygon" polygon
   , con "thickPolygon" thickPolygon
-  --, con "solidPolygon" solidPolygon
+  , con "solidPolygon" solidPolygon
   --, con "curve" curve
   --, con "thickCurve" thickCurve
   --, con "closedCurve" closedCurve
@@ -188,7 +193,7 @@ sig = signature
 sigTypes :: Sig
 sigTypes = signature
   [ monoObserve @Picture
-  , monoObserve @[Picture]
+  , mono @[Picture]
   , mono @Color
   , mono @Text
   , mono @TextStyle
@@ -215,7 +220,7 @@ sigBg = background
 
 instance Observe () [[Color]] Picture where
   -- this takes forever, should probably optimize the rasterizer a bit
-  observe () = rasterizeMock 10 10 50 50 . mockImage
+  observe () = rasterizeMock 10 10 10 10 . mockImage
 
 
 instance Arbitrary Color where
@@ -280,7 +285,7 @@ basic = frequency
   , (2, thickPolyline <$> positiveDouble <*> arbitrary)
   , (2, polygon <$> arbitrary)
   , (2, thickPolygon <$> positiveDouble <*> arbitrary)
-  --, (2, solidPolygon <$> arbitrary)
+  , (2, solidPolygon <$> arbitrary)
   --, (2, curve <$> arbitrary)
   --, (2, thickCurve <$> positiveDouble <*> arbitrary)
   --, (2, closedCurve <$> arbitrary)
@@ -308,6 +313,22 @@ validThicknessRatio = do
   size <- arbitrary
   thickness <- choose (0,abs size*2)
   pure (thickness, size)
+
+
+isLeftOfLine :: Point -> (Point,Point) -> Bool
+isLeftOfLine (xP,yP) ((x1,y1),(x2,y2)) =
+  ((x2 - x1) * (yP - y1)) - ((xP - x1) * (y2 - y1)) > 0
+
+isInsidePolygon :: Point -> [Point] -> Bool
+isInsidePolygon p@(_,y) ps =
+    foldr windingNumber 0 (zip ps $ drop 1 ps ++ take 1 ps) > 0
+  where
+    windingNumber :: (Point, Point) -> Int -> Int
+    windingNumber line@((_,y1),(_,y2)) acc
+      | y1 <= y && (y2 > y) && isLeftOfLine p line = acc + 1
+      | y2 <= y && not (isLeftOfLine p line) = acc - 1
+      | otherwise = acc
+
 
 
 main :: IO ()
