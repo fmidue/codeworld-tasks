@@ -5,6 +5,7 @@ module DeriveLaws where
 
 
 import Control.Monad (guard)
+import Data.Functor (($>))
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import QuickSpec
@@ -22,23 +23,32 @@ eta :: Double
 eta = 0.05
 
 
+blackIf :: Bool -> Maybe Color
+blackIf condition = guard condition $> black
+
+
 mockCircle :: Double -> Double -> MockImage
-mockCircle (abs -> radius) (abs -> threshold) (x,y) = do
-  guard $ abs (sqrt (x^(2 :: Int) + y^(2 :: Int)) - radius) <= threshold + eta
-  pure black
+mockCircle (abs -> radius) (abs -> threshold) (x,y) = blackIf $
+  abs (sqrt (x^(2 :: Int) + y^(2 :: Int)) - radius) <= threshold + eta
+
 
 
 mockRectangle :: Bool -> Double -> Double -> Double -> MockImage
-mockRectangle filled (abs -> w) (abs -> h) (abs -> threshold) (abs ->x, abs -> y) = do
-  guard $ preventInnerPoints
-    && x <= w/2 + threshold/2 + eta && y <= h/2 + threshold/2 + eta
-  pure black
+mockRectangle filled (abs -> w) (abs -> h) (abs -> threshold) (abs -> x, abs -> y) =
+    blackIf $
+      preventInnerPoints &&
+      x <= w/2 + threshold/2 + eta && y <= h/2 + threshold/2 + eta
   where
     preventInnerPoints =
       filled ||
       abs (y - h/2) <= threshold/2 + eta ||
       abs (x - w/2) <= threshold/2 + eta
 
+
+composeImages :: MockImage -> MockImage -> MockImage
+composeImages f g pt = case f pt of
+  Nothing -> g pt
+  color   -> color
 
 
 mockImage :: Picture -> MockImage
@@ -53,10 +63,9 @@ mockImage (SolidCircle r) = mockCircle 0 r
 mockImage (Rectangle w h) = mockRectangle False w h 0
 mockImage (ThickRectangle t w h) = mockRectangle False w h t
 mockImage (SolidRectangle w h) = mockRectangle True w h 0
-mockImage (Polyline ps) = \(x,y) -> do
-  guard $ any (\(px,py) -> abs (px - x) <= eta && abs (py - y) <= eta) ps
+mockImage (Polyline ps) = \(x,y) -> blackIf $
   -- TODO: lines between points
-  pure black
+  any (\(px,py) -> abs (px - x) <= eta && abs (py - y) <= eta) ps
 mockImage (Color c p) = (c <$) . mockImage p
 mockImage (Translate x y p) = mockImage p . translatedPoint (-x) (-y)
 mockImage (Rotate a p) = mockImage p . rotatedPoint (-a)
@@ -67,10 +76,8 @@ mockImage (Clip x y p) = \pt@(a,b) -> do
 -- i/0 = Infinity => empty image checks out!?
 mockImage (Scale fac1 fac2 p) = mockImage p . scaledPoint (1/fac1) (1/fac2)
 mockImage (Dilate fac p) = mockImage p . dilatedPoint fac
-mockImage (And p q) = \pt -> case mockImage p pt of
-  Nothing -> mockImage q pt
-  color   -> color
-mockImage (Pictures ps) = mockImage (foldr And Blank ps)
+mockImage (And p q) = composeImages (mockImage p) (mockImage q)
+mockImage (Pictures xs) = foldr (composeImages . mockImage) (const Nothing) xs
 mockImage _ = const Nothing
 
 
