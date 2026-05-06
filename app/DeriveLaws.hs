@@ -45,10 +45,21 @@ mockRectangle filled (abs -> w) (abs -> h) (abs -> threshold) (abs -> x, abs -> 
       abs (x - w/2) <= threshold/2 + eta
 
 
+-- TODO: blend colors if foreground is transparent
 composeImages :: MockImage -> MockImage -> MockImage
 composeImages f g pt = case f pt of
   Nothing -> g pt
   color   -> color
+
+
+pointDistance :: Point -> Point -> Double
+pointDistance a b = vectorLength $ vectorDifference a b
+
+
+isOnLineFromTo :: Double -> Point -> (Point, Point) -> Bool
+isOnLineFromTo threshold a (b,c) =
+  -- line too fat with <= eta, this can be changed to equality after 2. below
+  pointDistance b a + pointDistance a c - pointDistance b c <= 0.001 + threshold
 
 
 mockImage :: Picture -> MockImage
@@ -63,9 +74,11 @@ mockImage (SolidCircle r) = mockCircle 0 r
 mockImage (Rectangle w h) = mockRectangle False w h 0
 mockImage (ThickRectangle t w h) = mockRectangle False w h t
 mockImage (SolidRectangle w h) = mockRectangle True w h 0
-mockImage (Polyline ps) = \(x,y) -> blackIf $
-  -- TODO: lines between points
-  any (\(px,py) -> abs (px - x) <= eta && abs (py - y) <= eta) ps
+mockImage (Polyline ps@(_:xs)) = blackIf . flip any (zip ps xs) . isOnLineFromTo 0
+mockImage (ThickPolyline t ps@(_:xs)) = blackIf . flip any (zip ps xs) . isOnLineFromTo t
+mockImage (Polygon ps@(x:xs)) = blackIf . flip any (zip ps (xs ++ [x])) . isOnLineFromTo 0
+mockImage (ThickPolygon t ps@(x:xs)) = blackIf . flip any (zip ps (xs ++ [x])) . isOnLineFromTo t
+mockImage (SolidPolygon ps@(x:xs)) = blackIf . flip any (zip ps (xs ++ [x])) . isOnLineFromTo 0
 mockImage (Color c p) = (c <$) . mockImage p
 mockImage (Translate x y p) = mockImage p . translatedPoint (-x) (-y)
 mockImage (Rotate a p) = mockImage p . rotatedPoint (-a)
@@ -115,6 +128,26 @@ display (row:xs) = do
       | otherwise = "?"
 
 
+consoleTest :: Picture -> IO ()
+consoleTest p = do
+  putStr "use defaults? (y for yes, anything else for no):"
+  answer <- getChar
+  (a,b,c,d) <- case answer of
+    'y' -> pure (10, 10, 200, 200)
+    _   -> do
+      putStrLn ""
+      putStr "canvas height:"
+      cX <- readLn
+      putStr "canvas width:"
+      cY <- readLn
+      putStr "pixel width:"
+      pX <- readLn
+      putStr "pixel height:"
+      pY <- readLn
+      pure (cX,cY,pX,pY)
+  display $ rasterizeMock a b c d $ mockImage p
+
+
 sig :: Sig
 sig = signature
   [ con "rectangle" rectangle
@@ -123,24 +156,24 @@ sig = signature
   , con "circle" circle
   , con "thickCircle" thickCircle
   , con "solidCircle" solidCircle
-  , con "arc" arc
-  , con "thickArc" thickArc
-  , con "sector" sector
+  --, con "arc" arc
+  --, con "thickArc" thickArc
+  --, con "sector" sector
   , con "blank" blank
   , con "codeWorldLogo" codeWorldLogo
   , con "coordinatePlane" coordinatePlane
-  , con "lettering" lettering
-  , con "styledLettering" styledLettering
+  --, con "lettering" lettering
+  --, con "styledLettering" styledLettering
   , con "polyline" polyline
   , con "thickPolyline" thickPolyline
   , con "polygon" polygon
   , con "thickPolygon" thickPolygon
-  , con "solidPolygon" solidPolygon
-  , con "curve" curve
-  , con "thickCurve" thickCurve
-  , con "closedCurve" closedCurve
-  , con "thickClosedCurve" thickClosedCurve
-  , con "solidClosedCurve" solidClosedCurve
+  --, con "solidPolygon" solidPolygon
+  --, con "curve" curve
+  --, con "thickCurve" thickCurve
+  --, con "closedCurve" closedCurve
+  --, con "thickClosedCurve" thickClosedCurve
+  --, con "solidClosedCurve" solidClosedCurve
   , con "translated" translated
   , con "scaled" scaled
   , con "dilated" dilated
@@ -180,8 +213,9 @@ sigBg = background
   ]
 
 
-instance Observe () Picture Picture where
-  observe () = normalize
+instance Observe () [[Color]] Picture where
+  -- this takes forever, should probably optimize the rasterizer a bit
+  observe () = rasterizeMock 10 10 50 50 . mockImage
 
 
 instance Arbitrary Color where
@@ -237,21 +271,21 @@ basic = frequency
   , (2, circle <$> arbitrary)
   , (2, solidCircle <$> arbitrary)
   , (2, uncurry thickCircle <$> validThicknessRatio)
-  , (2, arc <$> arbitrary <*> arbitrary <*> arbitrary)
-  , (2, thickArc <$> positiveDouble <*> arbitrary <*> arbitrary <*> arbitrary)
-  , (2, sector <$> arbitrary <*> arbitrary <*> arbitrary)
-  , (2, lettering <$> arbitrary)
-  , (2, styledLettering <$> arbitrary <*> arbitrary <*> arbitrary)
+  --, (2, arc <$> arbitrary <*> arbitrary <*> arbitrary)
+  --, (2, thickArc <$> positiveDouble <*> arbitrary <*> arbitrary <*> arbitrary)
+  --, (2, sector <$> arbitrary <*> arbitrary <*> arbitrary)
+  --, (2, lettering <$> arbitrary)
+  --, (2, styledLettering <$> arbitrary <*> arbitrary <*> arbitrary)
   , (2, polyline <$> arbitrary)
   , (2, thickPolyline <$> positiveDouble <*> arbitrary)
   , (2, polygon <$> arbitrary)
   , (2, thickPolygon <$> positiveDouble <*> arbitrary)
-  , (2, solidPolygon <$> arbitrary)
-  , (2, curve <$> arbitrary)
-  , (2, thickCurve <$> positiveDouble <*> arbitrary)
-  , (2, closedCurve <$> arbitrary)
-  , (2, thickClosedCurve <$> positiveDouble <*> arbitrary)
-  , (2, solidClosedCurve <$> arbitrary)
+  --, (2, solidPolygon <$> arbitrary)
+  --, (2, curve <$> arbitrary)
+  --, (2, thickCurve <$> positiveDouble <*> arbitrary)
+  --, (2, closedCurve <$> arbitrary)
+  --, (2, thickClosedCurve <$> positiveDouble <*> arbitrary)
+  --, (2, solidClosedCurve <$> arbitrary)
   ]
 
 
