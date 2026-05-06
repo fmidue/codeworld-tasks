@@ -20,26 +20,44 @@ type MockImage = Point -> Maybe Color
 mockImage :: Picture -> MockImage
 mockImage Blank _ = Nothing
 mockImage (Circle r) (x,y) = do
-  guard $ abs (sqrt (x^2 + y^2) - r) <= 0.045
+  guard $ abs (sqrt (x^(2 :: Int) + y^(2 :: Int)) - r) <= 0.045
   pure black
 mockImage (Rectangle w h) (x,y) = do
   guard $
     (abs x <= abs w/2 && abs (abs y - abs h/2) <= 0.05) ||
     (abs y <= abs h/2 && abs (abs x - abs w/2) <= 0.05)
   pure black
-mockImage (Color c p) pt = pure c <* mockImage p pt
+mockImage (Polyline ps) (x,y) = do
+  guard $ any (\(px,py) -> abs (px - x) <= 0.05 && abs (py - y) <= 0.05) ps
+  -- TODO: lines between points
+  pure black
+mockImage (Color c p) pt = c <$ mockImage p pt
 mockImage (Translate x y p) (a,b) = mockImage p (a-x,b-y)
 -- i/0 = Infinity => empty image checks out!?
 mockImage (Scale fac1 fac2 p) (x,y) = mockImage p (x/fac1,y/fac2)
 mockImage _ _ = Nothing
 
 
--- Doesn't actually enforce dimensions right now...
-rasterizeMock :: Int -> Int -> MockImage -> [[Color]]
-rasterizeMock width height f = [ [fromMaybe white $ f (x, y) | y <- interval height] | x <- interval width]
+{-
+Issues:
+  1. Draws one pixel too many
+  2. Pixels remain blank if their center point isn't colored in.
+     Instead, I should check if the pixel overlaps with a colored point.
+  3. After 2., I'll also need to blend color if there's multiple overlaps.
+-}
+rasterizeMock :: Int -> Int -> Int -> Int -> MockImage -> [[Color]]
+rasterizeMock canvasWidth canvasHeight pixelWidth pixelHeight f =
+    [ [ fromMaybe white $ f (x, y)
+      | x <- interval canvasWidth pixelWidth
+      ]
+    | y <- map negate $ interval canvasHeight pixelHeight
+    ]
   where
-    interval dim = let half = fromIntegral dim / 2 in
-      [-half, -half+0.1 .. half]
+    interval :: Int -> Int -> [Double]
+    interval dim res =
+      let half = fromIntegral dim / 2
+          step = half / (fromIntegral res / 2)
+      in [-half, -half+step .. half]
 
 
 display :: [[Color]] -> IO ()
