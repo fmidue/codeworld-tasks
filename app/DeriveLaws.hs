@@ -81,8 +81,13 @@ mockImage (ThickRectangle t w h) = mockRectangle False w h t
 mockImage (SolidRectangle w h) = mockRectangle True w h 0
 mockImage (Polyline ps) = blackIf . flip any (zip ps $ drop 1 ps) . isOnLineFromTo 0
 mockImage (ThickPolyline t ps) = blackIf . flip any (zip ps $ drop 1 ps) . isOnLineFromTo t
-mockImage (Polygon ps) = blackIf . flip any (zip ps $ drop 1 ps ++ take 1 ps) . isOnLineFromTo 0
-mockImage (ThickPolygon t ps) = blackIf . flip any (zip ps $ drop 1 ps ++ take 1 ps) . isOnLineFromTo t
+mockImage (Polygon ps)
+  | length ps == 1 = const Nothing
+  | otherwise = blackIf . flip any (zip ps $ drop 1 ps ++ take 1 ps) . isOnLineFromTo 0
+mockImage (ThickPolygon t ps)
+  | length ps == 1 = const Nothing
+  | otherwise = blackIf . flip any (zip ps $ drop 1 ps ++ take 1 ps) . isOnLineFromTo t
+-- doesn't draw anything in some cases, e.g solidPolygon [(1,0),(1,1), (2,0)]...
 mockImage (SolidPolygon ps) = blackIf . flip isInsidePolygon ps
 mockImage (Color c p) = (c <$) . mockImage p
 mockImage (Translate x y p) = mockImage p . translatedPoint (-x) (-y)
@@ -165,8 +170,8 @@ sig = signature
   --, con "thickArc" thickArc
   --, con "sector" sector
   , con "blank" blank
-  , con "codeWorldLogo" codeWorldLogo
-  , con "coordinatePlane" coordinatePlane
+--  , con "codeWorldLogo" codeWorldLogo
+--  , con "coordinatePlane" coordinatePlane
   --, con "lettering" lettering
   --, con "styledLettering" styledLettering
   , con "polyline" polyline
@@ -268,8 +273,8 @@ instance Arbitrary Picture where
 basic :: Gen Picture
 basic = frequency
   [ (1, pure blank)
-  , (1, pure codeWorldLogo)
-  , (1, pure coordinatePlane)
+--  , (1, pure codeWorldLogo)
+--  , (1, pure coordinatePlane)
   , (2, rectangle <$> arbitrary <*> arbitrary)
   , (2, thickRectangle <$> positiveDouble <*> arbitrary <*> arbitrary)
   , (2, solidRectangle <$> arbitrary <*> arbitrary)
