@@ -203,6 +203,8 @@ sigTypes = signature
   , mono @Text
   , mono @TextStyle
   , mono @Font
+  -- Is that even useful? Turns of warnings, but laws can never use generated functions?
+  , inst (Sub Dict :: Arbitrary A :- Arbitrary (Picture -> A))
   , vars ["x","y"] $ Proxy @Double
   , vars ["s"] $ Proxy @Style
   , vars ["f"] $ Proxy @Font
@@ -216,10 +218,11 @@ sigTypes = signature
 sigBg :: Sig
 sigBg = background
   [ arith $ Proxy @Double
---  , lists
- -- , con "*" $ (*) @Double
- -- , con "-" $ (-) @Double
- -- , con "negate" $ negate @Double
+  , con "*" $ (*) @Double
+--  , con "-" $ (-) @Double
+--  , con "negate" $ negate @Double
+  , lists
+  , con "map" $ map @A @B
   ]
 
 
@@ -297,6 +300,12 @@ basic = frequency
   --, (2, thickClosedCurve <$> positiveDouble <*> arbitrary)
   --, (2, solidClosedCurve <$> arbitrary)
   ]
+
+
+instance CoArbitrary Picture where
+  -- should probably add a real implementation
+  -- if this is required for something after all!
+  coarbitrary p = coarbitrary (show p)
 
 
 decayArbitrary :: Arbitrary a => Int -> Gen a
