@@ -120,18 +120,15 @@ rasterizeMock viewportWidth viewportHeight pixelWidth pixelHeight f =
   where
     interval :: Int -> Int -> [Double]
     interval dim res =
-      let half = fromIntegral dim / 2
-          step = half / (fromIntegral res / 2)
-      in [ -half + step * (fromIntegral i + 0.5)
+      let dim' = fromIntegral dim
+          step = dim' / fromIntegral res
+      in [ -dim'/2 + step * (fromIntegral i + 0.5)
          | i <- [0 .. res - 1]
          ]
 
 
 display :: [[Color]] -> IO ()
-display [] = pure ()
-display (row:xs) = do
-  putStrLn $ unwords $ map colToChar row
-  display xs
+display = mapM_ $ putStrLn . unwords . map colToChar
   where
     colToChar c
       | c == black = "#"
