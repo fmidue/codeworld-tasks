@@ -106,30 +106,31 @@ mockImage _ = const Nothing
 
 {-
 Issues:
-  1. Draws one pixel too many
   2. Pixels remain blank if their center point isn't colored in.
      Instead, I should check if the pixel overlaps with a colored point.
   3. After 2., I'll also need to blend color if there's multiple overlaps.
 -}
 rasterizeMock :: Int -> Int -> Int -> Int -> MockImage -> [[Color]]
-rasterizeMock canvasWidth canvasHeight pixelWidth pixelHeight f =
+rasterizeMock viewportWidth viewportHeight pixelWidth pixelHeight f =
     [ [ fromMaybe white $ f (x, y)
-      | x <- interval canvasWidth pixelWidth
+      | x <- interval viewportWidth pixelWidth
       ]
-    | y <- map negate $ interval canvasHeight pixelHeight
+    | y <- map negate $ interval viewportHeight pixelHeight
     ]
   where
     interval :: Int -> Int -> [Double]
     interval dim res =
       let half = fromIntegral dim / 2
           step = half / (fromIntegral res / 2)
-      in [-half, -half+step .. half]
+      in [ -half + step * (fromIntegral i + 0.5)
+         | i <- [0 .. res - 1]
+         ]
 
 
 display :: [[Color]] -> IO ()
 display [] = pure ()
 display (row:xs) = do
-  putStrLn $ concatMap colToChar row
+  putStrLn $ unwords $ map colToChar row
   display xs
   where
     colToChar c
@@ -143,12 +144,12 @@ consoleTest p = do
   putStr "use defaults? (y for yes, anything else for no):"
   answer <- getChar
   (a,b,c,d) <- case answer of
-    'y' -> putStrLn " " >> pure (10, 10, 200, 200)
+    'y' -> putStrLn " " >> pure (10, 10, 124, 124)
     _   -> do
       putStrLn ""
-      putStr "canvas height:"
+      putStr "viewport height:"
       cX <- readLn
-      putStr "canvas width:"
+      putStr "viewport width:"
       cY <- readLn
       putStr "pixel width:"
       pX <- readLn
