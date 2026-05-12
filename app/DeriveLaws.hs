@@ -19,8 +19,8 @@ import CodeWorld.Test
 type MockImage = Point -> Maybe Color
 
 
-eta :: Double
-eta = 0.01
+epsilon :: Double
+epsilon = 0.01
 
 
 blackIf :: Bool -> Maybe Color
@@ -29,7 +29,7 @@ blackIf condition = guard condition $> black
 
 mockCircle :: Double -> Double -> MockImage
 mockCircle (abs -> radius) (abs -> threshold) (x,y) = blackIf $
-  abs (sqrt (x^(2 :: Int) + y^(2 :: Int)) - radius) <= threshold + eta
+  abs (sqrt (x^(2 :: Int) + y^(2 :: Int)) - radius) <= threshold + epsilon
 
 
 
@@ -37,12 +37,12 @@ mockRectangle :: Bool -> Double -> Double -> Double -> MockImage
 mockRectangle filled (abs -> w) (abs -> h) (abs -> threshold) (abs -> x, abs -> y) =
     blackIf $
       preventInnerPoints &&
-      x <= w/2 + threshold/2 + eta && y <= h/2 + threshold/2 + eta
+      x <= w/2 + threshold/2 + epsilon && y <= h/2 + threshold/2 + epsilon
   where
     preventInnerPoints =
       filled ||
-      abs (y - h/2) <= threshold/2 + eta ||
-      abs (x - w/2) <= threshold/2 + eta
+      abs (y - h/2) <= threshold/2 + epsilon ||
+      abs (x - w/2) <= threshold/2 + epsilon
 
 
 composeImages :: MockImage -> MockImage -> MockImage
@@ -63,7 +63,7 @@ pointDistance a b = vectorLength $ vectorDifference a b
 
 isOnLineFromTo :: Double -> Point -> (Point, Point) -> Bool
 isOnLineFromTo threshold a (b,c) =
-  -- line too fat with <= eta
+  -- line too fat with <= epsilon
   pointDistance b a + pointDistance a c - pointDistance b c  <= 0.001 + threshold
 
 
@@ -91,7 +91,7 @@ mockImage (Translate x y p) = mockImage p . translatedPoint (-x) (-y)
 mockImage (Rotate a p) = mockImage p . rotatedPoint (-a)
 mockImage (Reflect a p) = mockImage p . reflectedPoint (-a)
 mockImage (Clip x y p) = \pt@(a,b) -> do
-  guard $ abs a <= abs x/2 + eta && abs b <= abs y/2 + eta
+  guard $ abs a <= abs x/2 + epsilon && abs b <= abs y/2 + epsilon
   mockImage p pt
 -- i/0 = Infinity => empty image checks out!?
 mockImage (Scale fac1 fac2 p) = mockImage p . scaledPoint (1/fac1) (1/fac2)
