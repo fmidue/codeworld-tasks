@@ -6,8 +6,7 @@ module DeriveLaws where
 
 import Control.Monad (guard)
 import Data.Functor (($>))
-import Data.List.Extra (nubSort, nubOrd)
-import Data.Maybe (catMaybes)
+import Data.Maybe (fromMaybe)
 import Data.Text (Text)
 import QuickSpec
 import Test.QuickCheck
@@ -120,7 +119,7 @@ rasterizeMock viewportWidth viewportHeight resWidth resHeight samplesPerAxis ima
     pixelWidth = viewportWidth / fromIntegral resWidth
     pixelHeight = viewportHeight / fromIntegral resHeight
 
-    rasterizePixel col row = averageColors $ catMaybes
+    rasterizePixel col row = averageColors
       [ image (x, y)
       | let startX = -viewportWidth / 2 + fromIntegral col * pixelWidth
       , let startY =  viewportHeight / 2 - fromIntegral row * pixelHeight
@@ -137,19 +136,17 @@ rasterizeMock viewportWidth viewportHeight resWidth resHeight samplesPerAxis ima
     -- slow and probably not correct in all cases!
     -- this needs to be evaluated to a real color,
     -- but that is even slower?
-    averageColors xs = case nubOrd xs of
-      []  -> white
-      [color] -> color
-      colors -> mixed $ nubSort colors
-
+    averageColors xs = mixed $ map (fromMaybe white) xs
 
 display :: [[Color]] -> IO ()
 display = mapM_ $ putStrLn . unwords . map colToChar
   where
+    observeColor = observe ()
     colToChar c
-      | c == black = "#"
-      | c == white = "."
+      | colorValues == observeColor black = "#"
+      | colorValues == observeColor white = "."
       | otherwise = "?"
+      where colorValues = observeColor c
 
 
 consoleTest :: Picture -> IO ()
@@ -215,7 +212,7 @@ sigTypes :: Sig
 sigTypes = signature
   [ monoObserve @Picture
   , mono @[Picture]
-  , mono @Color
+  , monoObserve @Color
   , mono @Text
   , mono @TextStyle
   , mono @Font
@@ -242,9 +239,22 @@ sigBg = background
   ]
 
 
-instance Observe () [[Color]] Picture where
+instance Observe
+  ( Positive Double
+  , Positive Double
+  , Positive Int
+  , Positive Int
+  )
+  [[Color]]
+  Picture where
   -- this takes forever, should probably optimize the rasterizer a bit
-  observe () = rasterizeMock 10 10 10 10 1 . mockImage
+  observe (getPositive -> a, getPositive -> b, getPositive -> c, getPositive -> d)
+    = rasterizeMock a b c d 3 . mockImage
+
+
+instance Observe () (Double,Double,Double,Double) Color where
+  -- this takes forever, should probably optimize the rasterizer a bit
+  observe () c = (hue c, saturation c, luminosity c, alpha c)
 
 
 instance Arbitrary Color where
