@@ -69,8 +69,6 @@ isOnLineFromTo threshold a (b,c) =
 
 mockImage :: Picture -> MockImage
 mockImage Blank = const Nothing
--- don't care about these for testing,
--- but what should I use here to avoid spurious laws?
 mockImage Logo = const Nothing
 mockImage CoordinatePlane = const Nothing
 mockImage (Circle r) = mockCircle r 0
@@ -302,8 +300,6 @@ instance Arbitrary Picture where
 basic :: Gen Picture
 basic = frequency
   [ (1, pure blank)
---  , (1, pure codeWorldLogo)
---  , (1, pure coordinatePlane)
   , (2, rectangle <$> arbitrary <*> arbitrary)
   , (2, thickRectangle <$> positiveDouble <*> arbitrary <*> arbitrary)
   , (2, solidRectangle <$> arbitrary <*> arbitrary)
