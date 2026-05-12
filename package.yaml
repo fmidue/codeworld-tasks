@@ -49,7 +49,6 @@ executables:
       - -with-rtsopts=-N
     dependencies:
       - codeworld-tasks
-      - generic-arbitrary
       - QuickCheck
       - quickspec
 

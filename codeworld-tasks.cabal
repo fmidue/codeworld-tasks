@@ -74,7 +74,6 @@ executable derive-laws
     , data-reify
     , deepseq
     , extra
-    , generic-arbitrary
     , mtl
     , quickspec
     , text
