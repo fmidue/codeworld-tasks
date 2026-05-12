@@ -357,12 +357,12 @@ isLeftOfLine (xP,yP) ((x1,y1),(x2,y2)) =
 
 isInsidePolygon :: Point -> [Point] -> Bool
 isInsidePolygon p@(_,y) ps =
-    foldr windingNumber 0 (zip ps $ drop 1 ps ++ take 1 ps) > 0
+    foldr windingNumber 0 (zip ps $ drop 1 ps ++ take 1 ps) /= 0
   where
     windingNumber :: (Point, Point) -> Int -> Int
     windingNumber line@((_,y1),(_,y2)) acc
       | y1 <= y && (y2 > y) && isLeftOfLine p line = acc + 1
-      | y2 <= y && not (isLeftOfLine p line) = acc - 1
+      | y2 <= y && y1 > y && not (isLeftOfLine p line) = acc - 1
       | otherwise = acc
 
 
