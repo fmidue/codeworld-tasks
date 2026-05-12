@@ -6,7 +6,8 @@ module DeriveLaws where
 
 import Control.Monad (guard)
 import Data.Functor (($>))
-import Data.Maybe (fromMaybe)
+import Data.List.Extra (nubSort, nubOrd)
+import Data.Maybe (catMaybes)
 import Data.Text (Text)
 import QuickSpec
 import Test.QuickCheck
@@ -20,7 +21,7 @@ type MockImage = Point -> Maybe Color
 
 
 eta :: Double
-eta = 0.05
+eta = 0.01
 
 
 blackIf :: Bool -> Maybe Color
@@ -63,8 +64,8 @@ pointDistance a b = vectorLength $ vectorDifference a b
 
 isOnLineFromTo :: Double -> Point -> (Point, Point) -> Bool
 isOnLineFromTo threshold a (b,c) =
-  -- line too fat with <= eta, this can be changed to equality after 2. below
-  pointDistance b a + pointDistance a c - pointDistance b c <= 0.001 + threshold
+  -- line too fat with <= eta
+  pointDistance b a + pointDistance a c - pointDistance b c  <= 0.001 + threshold
 
 
 mockImage :: Picture -> MockImage
@@ -105,26 +106,41 @@ mockImage _ = const Nothing
 
 
 {-
-Issues:
-  2. Pixels remain blank if their center point isn't colored in.
-     Instead, I should check if the pixel overlaps with a colored point.
-  3. After 2., I'll also need to blend color if there's multiple overlaps.
+Issue: terribly slow!
+computing `image` multiple times slows down everything.
 -}
-rasterizeMock :: Int -> Int -> Int -> Int -> MockImage -> [[Color]]
-rasterizeMock viewportWidth viewportHeight pixelWidth pixelHeight f =
-    [ [ fromMaybe white $ f (x, y)
-      | x <- interval viewportWidth pixelWidth
+rasterizeMock :: Double -> Double -> Int -> Int -> Int -> MockImage -> [[Color]]
+rasterizeMock viewportWidth viewportHeight resWidth resHeight samplesPerAxis image =
+    [ [ rasterizePixel col row
+      | col <- [0 .. resWidth - 1]
       ]
-    | y <- map negate $ interval viewportHeight pixelHeight
+    | row <- [0 .. resHeight - 1]
     ]
   where
-    interval :: Int -> Int -> [Double]
-    interval dim res =
-      let dim' = fromIntegral dim
-          step = dim' / fromIntegral res
-      in [ -dim'/2 + step * (fromIntegral i + 0.5)
-         | i <- [0 .. res - 1]
+    pixelWidth = viewportWidth / fromIntegral resWidth
+    pixelHeight = viewportHeight / fromIntegral resHeight
+
+    rasterizePixel col row = averageColors $ catMaybes
+      [ image (x, y)
+      | let startX = -viewportWidth / 2 + fromIntegral col * pixelWidth
+      , let startY =  viewportHeight / 2 - fromIntegral row * pixelHeight
+      , x <- samplesBetween startX (startX + pixelWidth)
+      , y <- samplesBetween (startY - pixelHeight) startY
+      ]
+
+    samplesBetween start end =
+      let step = (end - start) / fromIntegral samplesPerAxis
+      in [ start + step * (fromIntegral subPixel + 0.5)
+         | subPixel <- [0 .. samplesPerAxis - 1]
          ]
+
+    -- slow and probably not correct in all cases!
+    -- this needs to be evaluated to a real color,
+    -- but that is even slower?
+    averageColors xs = case nubOrd xs of
+      []  -> white
+      [color] -> color
+      colors -> mixed $ nubSort colors
 
 
 display :: [[Color]] -> IO ()
@@ -140,8 +156,8 @@ consoleTest :: Picture -> IO ()
 consoleTest p = do
   putStr "use defaults? (y for yes, anything else for no):"
   answer <- getChar
-  (a,b,c,d) <- case answer of
-    'y' -> putStrLn " " >> pure (10, 10, 124, 124)
+  (a,b,c,d,e) <- case answer of
+    'y' -> putStrLn " " >> pure (10, 10, 124, 124, 3)
     _   -> do
       putStrLn ""
       putStr "viewport height:"
@@ -152,8 +168,10 @@ consoleTest p = do
       pX <- readLn
       putStr "pixel height:"
       pY <- readLn
-      pure (cX,cY,pX,pY)
-  display $ rasterizeMock a b c d $ mockImage p
+      putStr "samples per axis per pixel (super sampling):"
+      pY <- readLn
+      pure (cX,cY,pX,pY,s)
+  display $ rasterizeMock a b c d e $ mockImage p
 
 
 sig :: Sig
@@ -226,7 +244,7 @@ sigBg = background
 
 instance Observe () [[Color]] Picture where
   -- this takes forever, should probably optimize the rasterizer a bit
-  observe () = rasterizeMock 10 10 10 10 . mockImage
+  observe () = rasterizeMock 10 10 10 10 1 . mockImage
 
 
 instance Arbitrary Color where
