@@ -85,7 +85,6 @@ mockImage (Polygon ps)
 mockImage (ThickPolygon t ps)
   | length ps == 1 = const Nothing
   | otherwise = blackIf . flip any (zip ps $ drop 1 ps ++ take 1 ps) . isOnLineFromTo t
--- doesn't draw anything in some cases, e.g solidPolygon [(1,0),(1,1), (2,0)]...
 mockImage (SolidPolygon ps) = blackIf . flip isInsidePolygon ps
 mockImage (Color c p) = (c <$) . mockImage p
 mockImage (Translate x y p) = mockImage p . translatedPoint (-x) (-y)
