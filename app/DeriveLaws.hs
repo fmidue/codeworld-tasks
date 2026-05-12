@@ -223,7 +223,9 @@ sigTypes = signature
   , vars ["p"] $ Proxy @Picture
   , vars ["ps"] $ Proxy @[Picture]
   , vars ["pts"] $ Proxy @[Point]
-  , withInferInstanceTypes
+  , withPruningDepth 3
+  , withMaxTestSize 10
+  , withPrintStyle ForHumans
   ]
 
 sigBg :: Sig
