@@ -169,7 +169,7 @@ consoleTest p = do
       putStr "pixel height:"
       pY <- readLn
       putStr "samples per axis per pixel (super sampling):"
-      pY <- readLn
+      s <- readLn
       pure (cX,cY,pX,pY,s)
   display $ rasterizeMock a b c d e $ mockImage p
 

@@ -65,7 +65,7 @@ executable derive-laws
       Paths_codeworld_tasks
   hs-source-dirs:
       app
-  ghc-options: -Wall -Werror -Wcompat -Widentities -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -O2 -threaded -rtsopts -with-rtsopts=-N -main-is DeriveLaws
+  ghc-options: -Wall -Werror -Wcompat -Widentities -Wincomplete-uni-patterns -Wpartial-fields -Wredundant-constraints -O2 -threaded -funfolding-use-threshold=16 -optc-O3 -optc-ffast-math -fexcess-precision -rtsopts -with-rtsopts=-N -main-is DeriveLaws
   build-depends:
       QuickCheck
     , base >=4.11 && <5

@@ -45,6 +45,10 @@ executables:
     ghc-options:
       - -O2
       - -threaded
+      - -funfolding-use-threshold=16
+      - -optc-O3
+      - -optc-ffast-math
+      - -fexcess-precision
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
