@@ -103,6 +103,7 @@ mockImage (ThickRectangle t w h) = mockRectangle False w h t
 mockImage (SolidRectangle w h) = mockRectangle True w h 0
 mockImage (Arc start end r) = mockArc start end r 0
 mockImage (ThickArc t start end r) = mockArc start end r t
+mockImage (Sector start end r) = mockArc start end 0 r
 mockImage (Polyline ps) = blackIf . flip any (zip ps $ drop 1 ps) . isOnLineFromTo 0
 mockImage (ThickPolyline t ps) = blackIf . flip any (zip ps $ drop 1 ps) . isOnLineFromTo t
 mockImage (Polygon ps)
@@ -201,7 +202,7 @@ sig = signature
   , con "solidCircle" solidCircle
   , con "arc" arc
   , con "thickArc" thickArc
-  --, con "sector" sector
+  , con "sector" sector
   , con "blank" blank
 --  , con "codeWorldLogo" codeWorldLogo
 --  , con "coordinatePlane" coordinatePlane
@@ -340,7 +341,7 @@ basic = frequency
   , (2, uncurry thickCircle <$> validThicknessRatio)
   , (2, arc <$> arbitrary <*> arbitrary <*> arbitrary)
   , (2, thickArc . getNonNegative <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)
-  --, (2, sector <$> arbitrary <*> arbitrary <*> arbitrary)
+  , (2, sector <$> arbitrary <*> arbitrary <*> arbitrary)
   --, (2, lettering <$> arbitrary)
   --, (2, styledLettering <$> arbitrary <*> arbitrary <*> arbitrary)
   , (2, polyline <$> arbitrary)
