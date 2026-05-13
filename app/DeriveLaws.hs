@@ -156,9 +156,6 @@ rasterizeMock viewportWidth viewportHeight resWidth resHeight samplesPerAxis ima
          | subPixel <- [0 .. samplesPerAxis - 1]
          ]
 
-    -- slow and probably not correct in all cases!
-    -- this needs to be evaluated to a real color,
-    -- but that is even slower?
     averageColors xs = mixed $ map (fromMaybe white) xs
 
 display :: [[Color]] -> IO ()
@@ -282,7 +279,6 @@ instance Observe
 
 
 instance Observe () (Double,Double,Double,Double) Color where
-  -- this takes forever, should probably optimize the rasterizer a bit
   observe () c = (hue c, saturation c, luminosity c, alpha c)
 
 
