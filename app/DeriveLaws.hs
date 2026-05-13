@@ -259,6 +259,11 @@ sigBg = background
 --  , con @Double "2*pi" (2*pi)
 --  , con @Double "pi" pi
   , lists
+  , con "translatedPoint" translatedPoint
+  , con "scaledPoint" scaledPoint
+  , con "reflectedPoint" reflectedPoint
+  , con "rotatedPoint" rotatedPoint
+  , con "foldr" $ foldr @[] @Picture @Picture
   , con "map" $ map @A @B
   ]
 
