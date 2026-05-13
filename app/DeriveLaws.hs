@@ -58,12 +58,15 @@ mockRectangle :: Bool -> Double -> Double -> Double -> MockImage
 mockRectangle filled (abs -> w) (abs -> h) (abs -> threshold) (abs -> x, abs -> y) =
     blackIf $
       preventInnerPoints &&
-      x <= w/2 + threshold/2 + epsilon && y <= h/2 + threshold/2 + epsilon
+      x <= halfW + bound && y <= halfH + bound
   where
+    halfW = w/2
+    halfH = h/2
+    bound = threshold/2 + epsilon
     preventInnerPoints =
       filled ||
-      abs (y - h/2) <= threshold/2 + epsilon ||
-      abs (x - w/2) <= threshold/2 + epsilon
+      abs (y - halfH) <= bound ||
+      abs (x - halfW) <= bound
 
 
 composeImages :: MockImage -> MockImage -> MockImage
