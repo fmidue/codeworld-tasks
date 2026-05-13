@@ -5,6 +5,7 @@ module DeriveLaws where
 
 
 import Control.Monad (guard)
+import Data.Fixed (mod')
 import Data.Functor (($>))
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
@@ -28,9 +29,29 @@ blackIf condition = guard condition $> black
 
 
 mockCircle :: Double -> Double -> MockImage
-mockCircle (abs -> radius) (abs -> threshold) (x,y) = blackIf $
-  abs (sqrt (x^(2 :: Int) + y^(2 :: Int)) - radius) <= threshold + epsilon
+mockCircle = mockArc 0 (2*pi)
 
+
+mockArc :: Double -> Double -> Double -> Double -> MockImage
+mockArc start end (abs -> radius) (abs -> threshold) (x,y)
+  | start == end = Nothing
+  | otherwise = blackIf $
+  abs (sqrt (x*x + y*y) - radius) <= threshold + epsilon && inArc
+  where
+    full = 2*pi
+    modStart = start `mod'` full
+    modEnd = end `mod'` full
+    lowerBound = min modStart modEnd
+    upperBound = max modStart modEnd
+    angle = atan2 y x `mod'` (2*pi)
+
+    inArc
+      | abs (end - start) >= full = True
+      -- the direction of the line stroke changes based on this...
+      | signum start + signum end `elem` [1,-2,2] =
+          angle <= upperBound && angle >= lowerBound
+      | otherwise =
+          angle >= upperBound || angle <= lowerBound
 
 
 mockRectangle :: Bool -> Double -> Double -> Double -> MockImage
@@ -77,6 +98,8 @@ mockImage (SolidCircle r) = mockCircle 0 r
 mockImage (Rectangle w h) = mockRectangle False w h 0
 mockImage (ThickRectangle t w h) = mockRectangle False w h t
 mockImage (SolidRectangle w h) = mockRectangle True w h 0
+mockImage (Arc start end r) = mockArc start end r 0
+mockImage (ThickArc t start end r) = mockArc start end r t
 mockImage (Polyline ps) = blackIf . flip any (zip ps $ drop 1 ps) . isOnLineFromTo 0
 mockImage (ThickPolyline t ps) = blackIf . flip any (zip ps $ drop 1 ps) . isOnLineFromTo t
 mockImage (Polygon ps)
@@ -176,8 +199,8 @@ sig = signature
   , con "circle" circle
   , con "thickCircle" thickCircle
   , con "solidCircle" solidCircle
-  --, con "arc" arc
-  --, con "thickArc" thickArc
+  , con "arc" arc
+  , con "thickArc" thickArc
   --, con "sector" sector
   , con "blank" blank
 --  , con "codeWorldLogo" codeWorldLogo
@@ -307,8 +330,8 @@ basic = frequency
   , (2, circle <$> arbitrary)
   , (2, solidCircle <$> arbitrary)
   , (2, uncurry thickCircle <$> validThicknessRatio)
-  --, (2, arc <$> arbitrary <*> arbitrary <*> arbitrary)
-  --, (2, thickArc <$> positiveDouble <*> arbitrary <*> arbitrary <*> arbitrary)
+  , (2, arc <$> arbitrary <*> arbitrary <*> arbitrary)
+  , (2, thickArc <$> positiveDouble <*> arbitrary <*> arbitrary <*> arbitrary)
   --, (2, sector <$> arbitrary <*> arbitrary <*> arbitrary)
   --, (2, lettering <$> arbitrary)
   --, (2, styledLettering <$> arbitrary <*> arbitrary <*> arbitrary)
