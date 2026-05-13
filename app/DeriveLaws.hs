@@ -274,7 +274,7 @@ instance Observe
   [[Color]]
   Picture where
   -- this takes forever, should probably optimize the rasterizer a bit
-  observe (getPositive -> a, getPositive -> b, getPositive -> c, getPositive -> d)
+  observe (Positive a, Positive b, Positive c, Positive d)
     = rasterizeMock a b c d 3 . mockImage
 
 
@@ -328,20 +328,20 @@ basic :: Gen Picture
 basic = frequency
   [ (1, pure blank)
   , (2, rectangle <$> arbitrary <*> arbitrary)
-  , (2, thickRectangle <$> positiveDouble <*> arbitrary <*> arbitrary)
+  , (2, thickRectangle . getNonNegative <$> arbitrary <*> arbitrary <*> arbitrary)
   , (2, solidRectangle <$> arbitrary <*> arbitrary)
   , (2, circle <$> arbitrary)
   , (2, solidCircle <$> arbitrary)
   , (2, uncurry thickCircle <$> validThicknessRatio)
   , (2, arc <$> arbitrary <*> arbitrary <*> arbitrary)
-  , (2, thickArc <$> positiveDouble <*> arbitrary <*> arbitrary <*> arbitrary)
+  , (2, thickArc . getNonNegative <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)
   --, (2, sector <$> arbitrary <*> arbitrary <*> arbitrary)
   --, (2, lettering <$> arbitrary)
   --, (2, styledLettering <$> arbitrary <*> arbitrary <*> arbitrary)
   , (2, polyline <$> arbitrary)
-  , (2, thickPolyline <$> positiveDouble <*> arbitrary)
+  , (2, thickPolyline . getNonNegative <$> arbitrary <*> arbitrary)
   , (2, polygon <$> arbitrary)
-  , (2, thickPolygon <$> positiveDouble <*> arbitrary)
+  , (2, thickPolygon . getNonNegative <$> arbitrary <*> arbitrary)
   , (2, solidPolygon <$> arbitrary)
   --, (2, curve <$> arbitrary)
   --, (2, thickCurve <$> positiveDouble <*> arbitrary)
@@ -367,9 +367,6 @@ pictureList = do
   k  <- chooseInt (0, m)
   vectorOf k (resize (m-k) arbitrary)
 
-
-positiveDouble :: Gen Double
-positiveDouble = arbitrary `suchThat` (>=0)
 
 validThicknessRatio :: Gen (Double, Double)
 validThicknessRatio = do
