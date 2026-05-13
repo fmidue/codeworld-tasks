@@ -259,11 +259,15 @@ sigBg = background
   , con "*" $ (*) @Double
 --  , con "-" $ (-) @Double
 --  , con "negate" $ negate @Double
+--  , con @Double "2*pi" (2*pi)
+--  , con @Double "pi" pi
   , lists
   , con "map" $ map @A @B
   ]
 
-
+-- TODO: this produces useless images far too often.
+-- I need to write a generator for these values,
+-- such that they strike a good balance between amount of pixels and subpixels.
 instance Observe
   ( Positive Double
   , Positive Double
