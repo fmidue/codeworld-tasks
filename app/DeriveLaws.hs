@@ -248,6 +248,7 @@ sigTypes = signature
   , vars ["pts"] $ Proxy @[Point]
   , withMaxTestSize 10
   , withPrintStyle ForHumans
+  , withPruningTermSize 9
   ]
 
 sigBg :: Sig
