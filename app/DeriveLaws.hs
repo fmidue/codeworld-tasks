@@ -113,6 +113,8 @@ mockImage (ThickPolygon t ps)
   | length ps == 1 = const Nothing
   | otherwise = blackIf . flip any (zip ps $ drop 1 ps ++ take 1 ps) . isOnLineFromTo t
 mockImage (SolidPolygon ps) = blackIf . flip isInsidePolygon ps
+mockImage (Curve []) = const Nothing
+mockImage (Curve [p1,p2]) = blackIf . flip (isOnLineFromTo 0) (p1,p2)
 mockImage (Color c p) = (c <$) . mockImage p
 mockImage (Translate x y p) = mockImage p . translatedPoint (-x) (-y)
 mockImage (Rotate a p) = mockImage p . rotatedPoint (-a)
