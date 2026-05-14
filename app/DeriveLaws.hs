@@ -222,7 +222,6 @@ sig = signature
   --, con "solidClosedCurve" solidClosedCurve
   , con "translated" translated
   , con "scaled" scaled
-  , con "dilated" dilated
   , con "colored" colored
   , con "rotated" rotated
   , con "reflected" reflected
@@ -320,7 +319,6 @@ instance Arbitrary Picture where
       else frequency
         [ (1, translated <$> arbitrary <*> arbitrary <*> decayArbitrary 2)
         , (1, scaled <$> arbitrary <*> arbitrary <*> decayArbitrary 2)
-        , (1, dilated <$> arbitrary <*> decayArbitrary 2)
         , (1, colored <$> arbitrary <*> decayArbitrary 2)
         , (1, rotated <$> arbitrary <*> decayArbitrary 2)
         , (1, reflected <$> arbitrary <*> decayArbitrary 2)
