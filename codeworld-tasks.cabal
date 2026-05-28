@@ -73,6 +73,7 @@ executable derive-laws
     , containers
     , data-reify
     , deepseq
+    , diagrams-solve
     , extra
     , mtl
     , quickspec

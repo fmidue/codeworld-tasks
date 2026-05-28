@@ -55,6 +55,7 @@ executables:
       - codeworld-tasks
       - QuickCheck
       - quickspec
+      - diagrams-solve
 
 tests:
   codeworld-tasks-test:

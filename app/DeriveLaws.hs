@@ -7,8 +7,10 @@ module DeriveLaws where
 import Control.Monad (guard)
 import Data.Fixed (mod')
 import Data.Functor (($>))
+import Data.List (zip4)
 import Data.Maybe (fromMaybe)
 import Data.Text (Text)
+import Diagrams.Solve.Polynomial (cubForm, quadForm)
 import QuickSpec
 import Test.QuickCheck
 import Test.QuickCheck.Arbitrary ()
@@ -22,6 +24,9 @@ type MockImage = Point -> Maybe Color
 
 epsilon :: Double
 epsilon = 0.01
+
+(.^) :: Num a => a -> Integer -> a
+(.^) = (^)
 
 
 blackIf :: Bool -> Maybe Color
@@ -69,6 +74,22 @@ mockRectangle filled (abs -> w) (abs -> h) (abs -> threshold) (abs -> x, abs -> 
       abs (x - halfW) <= bound
 
 
+mockCurve :: Double -> [Point] -> MockImage
+mockCurve threshold [p1,p2] = blackIf . flip (isOnLineFromTo threshold) (p1,p2)
+mockCurve threshold ps@(p1:p2:p3:_) = \p -> blackIf $
+  -- quadratic for first segment
+  onQuadBezier threshold p (p1,computeControlPoint (p1,p2,p3),p2) ||
+  -- then cubic for inner segments
+  let zipMonster = zip4 ps (drop 1 ps) (drop 2 ps) (drop 3 ps)
+      (e3,e2,e1) = unsafeTakeLastThree ps
+  in any (\(a,b,c,d) -> let (c1,c2) = computeControlPointsMiddle (a,b,c,d)
+          in onCubicBezier threshold p (b,c1,c2,c)
+        ) zipMonster ||
+  -- and quadratic again for the last segment
+  onQuadBezier threshold p (e2,computeControlPointEnd (e1,e2,e3),e3)
+mockCurve _ _ = const Nothing
+
+
 composeImages :: MockImage -> MockImage -> MockImage
 composeImages f g pt = case f pt of
   Nothing    -> g pt
@@ -113,8 +134,8 @@ mockImage (ThickPolygon t ps)
   | length ps == 1 = const Nothing
   | otherwise = blackIf . flip any (zip ps $ drop 1 ps ++ take 1 ps) . isOnLineFromTo t
 mockImage (SolidPolygon ps) = blackIf . flip isInsidePolygon ps
-mockImage (Curve []) = const Nothing
-mockImage (Curve [p1,p2]) = blackIf . flip (isOnLineFromTo 0) (p1,p2)
+mockImage (Curve xs) = mockCurve 0 xs
+mockImage (ThickCurve t xs) = mockCurve t xs
 mockImage (Color c p) = (c <$) . mockImage p
 mockImage (Translate x y p) = mockImage p . translatedPoint (-x) (-y)
 mockImage (Rotate a p) = mockImage p . rotatedPoint (-a)
@@ -128,6 +149,12 @@ mockImage (Dilate fac p) = mockImage p . dilatedPoint (1/fac)
 mockImage (And p q) = composeImages (mockImage p) (mockImage q)
 mockImage (Pictures xs) = foldr (composeImages . mockImage) (const Nothing) xs
 mockImage _ = const Nothing
+
+unsafeTakeLastThree :: [a] -> (a,a,a)
+unsafeTakeLastThree xs = case reverse xs of
+  (a1:a2:a3:_) -> (a1,a2,a3)
+  _            -> error "not enough elements"
+
 
 
 {-
@@ -215,8 +242,8 @@ sig = signature
   , con "polygon" polygon
   , con "thickPolygon" thickPolygon
   , con "solidPolygon" solidPolygon
-  --, con "curve" curve
-  --, con "thickCurve" thickCurve
+  , con "curve" curve
+  , con "thickCurve" thickCurve
   --, con "closedCurve" closedCurve
   --, con "thickClosedCurve" thickClosedCurve
   --, con "solidClosedCurve" solidClosedCurve
@@ -347,8 +374,8 @@ basic = frequency
   , (2, polygon <$> arbitrary)
   , (2, thickPolygon . getNonNegative <$> arbitrary <*> arbitrary)
   , (2, solidPolygon <$> arbitrary)
-  --, (2, curve <$> arbitrary)
-  --, (2, thickCurve <$> positiveDouble <*> arbitrary)
+  , (2, curve <$> arbitrary)
+  , (2, thickCurve . getNonNegative <$> arbitrary <*> arbitrary)
   --, (2, closedCurve <$> arbitrary)
   --, (2, thickClosedCurve <$> positiveDouble <*> arbitrary)
   --, (2, solidClosedCurve <$> arbitrary)
@@ -386,6 +413,83 @@ isInsidePolygon p@(_,y) ps =
       | y1 <= y && (y2 > y) && isLeftOfLine p line = acc + 1
       | y2 <= y && y1 > y && not (isLeftOfLine p line) = acc - 1
       | otherwise = acc
+
+
+onBezier :: Double -> (Double, Double) -> t -> t -> (t -> Double -> [Double]) -> (t -> Double -> Double) -> Bool
+onBezier threshold (pX,pY) pointsX pointsY howToGetRoots theCurve = any isOnIt candidates
+  where
+    candidates = howToGetRoots pointsX pX ++ howToGetRoots pointsY pY
+    isOnIt t = t >= 0 && t <= 1 &&
+      abs (theCurve pointsX t - pX) <= epsilon + threshold &&
+      abs (theCurve pointsY t - pY) <= epsilon + threshold
+
+
+onQuadBezier :: Double -> Point -> (Point,Point,Point) -> Bool
+onQuadBezier threshold point ((startX, startY), (controlX, controlY), (endX, endY)) =
+    onBezier threshold point (startX, controlX, endX) (startY, controlY, endY) rootsForCoord quad
+  where
+    quad (start, control, end) t =
+      (1 - t).^2 * start +
+      2 * (1 - t) * t * control +
+      t.^2 * end
+
+    rootsForCoord (start, control, end) p = quadForm a b c
+      where
+        a = start - 2 * control + end
+        b = 2 * (control - start)
+        c = start - p
+
+
+onCubicBezier :: Double -> Point -> (Point,Point,Point,Point) -> Bool
+onCubicBezier threshold point ((startX, startY), (controlX1, controlY1), (controlX2, controlY2), (endX, endY)) =
+    onBezier threshold point (startX, controlX1, controlX2, endX) (startY, controlY1, controlY2, endY) rootsForCoord cubic
+  where
+    cubic (start, control1, control2, end) t =
+      (1 - t).^3 * start +
+      2 * (1 - t).^2 * t * control1 +
+      3 * (1 - t) * t.^2 * control2 +
+      t.^3 * end
+
+    rootsForCoord (start, control1, control2, end) p = cubForm a b c d
+      where
+        a = -start + 3*control1 - 3*control2 + end
+        b = 3*start - 6*control1 + 3*control2
+        c = -3*start + 3*control1
+        d = start - p
+
+
+computeControlPoint :: (Point,Point,Point) -> Point
+computeControlPoint (p1@(x1,y1),p2@(x2,y2),p3@(x3,y3)) = (x,y)
+  where
+    x = x2 + ratio * (x1-x3) / 2
+    y = y2 + ratio * (y1-y3) / 2
+    distStart = pointDistance p1 p2
+    distEnd = pointDistance p2 p3
+    ratio = distStart / (distStart + distEnd)
+
+
+computeControlPointsMiddle :: (Point,Point,Point,Point) -> (Point,Point)
+computeControlPointsMiddle (p1@(x1,y1),p2@(x2,y2),p3@(x3,y3),p4@(x4,y4)) = ((cx1,cy1),(cx2,cy2))
+  where
+    cx1 = x2 + ratio2 * (x3-x1) / 2
+    cy1 = y2 + ratio2 * (y3 - y1) / 2
+    cx2 = x3 + ratio1 * (x2 - x4) / 2
+    cy2 = y3 + ratio1 * (y2 - y4) / 2
+    distStart = pointDistance p1 p2
+    distMiddle = pointDistance p2 p3
+    distEnd = pointDistance p3 p4
+    ratio1 = distMiddle / (distMiddle + distEnd)
+    ratio2 = distMiddle / (distStart + distMiddle)
+
+
+computeControlPointEnd :: (Point,Point,Point) -> Point
+computeControlPointEnd (p1@(x1,y1),p2@(x2,y2),p3@(x3,y3)) = (x,y)
+  where
+    x = x2 + ratio * (x3-x1) / 2
+    y = y2 + ratio * (y3-y1) / 2
+    distStart = pointDistance p2 p3
+    distEnd = pointDistance p1 p2
+    ratio = distStart / (distStart + distEnd)
 
 
 
