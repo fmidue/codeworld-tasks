@@ -438,36 +438,45 @@ pattern AnyCurve s ps = PRec (T.Curve s ps)
 
 {-|
 Draw a hollow, thin rectangle with this length and height.
+Specifying a negative width or height causes a runtime error.
 -}
 rectangle :: Double -> Double -> Picture
-rectangle = Rectangle
+rectangle (validDimensions -> checkSecond) (checkSecond -> (x,y)) =
+  Rectangle x y
 
 {-|
 Draw a hollow rectangle with this line width, length and height.
-Specifying a negative line width causes a runtime error (mirrors behaviour in CodeWorld editor).
+Specifying a negative width, height or line width causes a runtime error.
 -}
 thickRectangle :: Double -> Double -> Double -> Picture
-thickRectangle (validThickness -> t) = ThickRectangle t
+thickRectangle
+  (validThickness -> t)
+  (validDimensions -> validY)
+  (validY -> (x,y))
+  = ThickRectangle t x y
 
 {-|
 Draw a filled in rectangle with this length and height.
+Specifying a negative width or height causes a runtime error.
 -}
 solidRectangle :: Double -> Double -> Picture
-solidRectangle = SolidRectangle
+solidRectangle (validDimensions -> validY) (validY -> (x,y)) =
+  SolidRectangle x y
 
 {-|
 Draw a hollow, thin circle with this radius.
+Specifying a negative radius causes a runtime error.
 -}
 circle :: Double -> Picture
-circle = Circle
+circle = Circle . validRadius
 
 {-|
 Draw a hollow circle with this line width and radius.
-Specifying a negative line width or a line width greater than the circles diameter
-causes a runtime error (mirrors behaviour in CodeWorld editor).
+Specifying a line width greater than the circles diameter
+or a negative line width or radius causes a runtime error.
 -}
 thickCircle :: Double -> Double -> Picture
-thickCircle (validThickness -> t) r
+thickCircle (validThickness -> t) (validRadius -> r)
   | t <= 2 * abs r = ThickCircle t r
   | otherwise  = error "The line width of a thickCircle must not be greater than the diameter."
 
@@ -475,27 +484,29 @@ thickCircle (validThickness -> t) r
 Draw a filled in circle with this radius.
 -}
 solidCircle :: Double -> Picture
-solidCircle = SolidCircle
+solidCircle = SolidCircle . validRadius
 
 {-|
 Draw a thin, hollow circle segment with these start and end angles and radius.
+Specifying a negative radius causes a runtime error.
 -}
 arc :: Double -> Double -> Double -> Picture
-arc = Arc
+arc a1 a2 = Arc a1 a2 . validRadius
 
 {-|
 Draw a filled in circle segment with these start and end angles and radius.
 This would be @solidArc@ following the usual naming scheme.
+Specifying a negative radius causes a runtime error.
 -}
 sector :: Double -> Double -> Double -> Picture
-sector = Sector
+sector a1 a2 = Sector a1 a2 . validRadius
 
 {-|
 Draw a hollow circle segment with this line width, these start and end angles and radius.
-Specifying a negative line width causes a runtime error (mirrors behaviour in CodeWorld editor).
+Specifying a negative line width or radius causes a runtime error.
 -}
 thickArc :: Double -> Double -> Double -> Double -> Picture
-thickArc (validThickness -> t) = ThickArc t
+thickArc (validThickness -> t) a1 a2 = ThickArc t a1 a2 . validRadius
 
 {-|
 Draw a thin curve passing through the provided points via a number of Bézier splices.
@@ -616,10 +627,11 @@ reflected :: Double -> Picture -> Picture
 reflected = Reflect
 
 {-|
-Clip the image in a rectangle with this length and height.
+Clip the image in a rectangle with this width and height.
+Specifying a negative width or height causes a runtime error.
 -}
 clipped :: Double -> Double -> Picture -> Picture
-clipped = Clip
+clipped (validDimensions -> validY) (validY -> (x,y)) = Clip x y
 
 {-|
 Compose a list of `Picture`s.
@@ -836,6 +848,20 @@ handle p corners@(a,b,c,d) = case p of
 
 
 validThickness :: Double -> Double
-validThickness t
-  | t < 0     = error "The line width must be non-negative."
-  | otherwise = t
+validThickness = errorIfTrue "The line width must be non-negative." (<0)
+
+
+validDimensions :: Double -> Double -> (Double, Double)
+validDimensions = curry $ errorIfTrue
+  "The width and height must be non-negative."
+  (\(a,b) -> a < 0 || b < 0)
+
+
+validRadius :: Double -> Double
+validRadius = errorIfTrue "The radius must be non-negative" (<0)
+
+
+errorIfTrue :: String -> (a -> Bool) -> a -> a
+errorIfTrue message condition thing
+  | condition thing = error message
+  | otherwise = thing
