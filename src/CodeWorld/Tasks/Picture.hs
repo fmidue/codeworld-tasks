@@ -472,16 +472,17 @@ circle = Circle . validRadius
 
 {-|
 Draw a hollow circle with this line width and radius.
-Specifying a line width greater than the circles diameter
+Specifying a line width greater than the circle's diameter
 or a negative line width or radius causes a runtime error.
 -}
 thickCircle :: Double -> Double -> Picture
 thickCircle (validThickness -> t) (validRadius -> r)
-  | t <= 2 * abs r = ThickCircle t r
+  | t <= 2 * r = ThickCircle t r
   | otherwise  = error "The line width of a thickCircle must not be greater than the diameter."
 
 {-|
 Draw a filled in circle with this radius.
+Specifying a negative radius causes a runtime error.
 -}
 solidCircle :: Double -> Picture
 solidCircle = SolidCircle . validRadius
