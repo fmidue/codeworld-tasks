@@ -848,7 +848,7 @@ handle p corners@(a,b,c,d) = case p of
 
 
 validThickness :: Double -> Double
-validThickness = errorIfTrue "The line width must be non-negative." (<0)
+validThickness = errorIfTrue "The line width must be non-negative." (< 0)
 
 
 validDimensions :: Double -> Double -> (Double, Double)
@@ -858,7 +858,7 @@ validDimensions = curry $ errorIfTrue
 
 
 validRadius :: Double -> Double
-validRadius = errorIfTrue "The radius must be non-negative" (<0)
+validRadius = errorIfTrue "The radius must be non-negative" (< 0)
 
 
 errorIfTrue :: String -> (a -> Bool) -> a -> a
