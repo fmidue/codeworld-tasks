@@ -38,7 +38,7 @@ mockCircle = mockArc 0 (2*pi)
 
 
 mockArc :: Double -> Double -> Double -> Double -> MockImage
-mockArc start end (abs -> radius) (abs -> threshold) (x,y)
+mockArc start end radius (abs -> threshold) (x,y)
   | start == end = Nothing
   | otherwise = blackIf $
   abs (sqrt (x*x + y*y) - radius) <= threshold + epsilon && inArc
@@ -60,7 +60,7 @@ mockArc start end (abs -> radius) (abs -> threshold) (x,y)
 
 
 mockRectangle :: Bool -> Double -> Double -> Double -> MockImage
-mockRectangle filled (abs -> w) (abs -> h) (abs -> threshold) (abs -> x, abs -> y) =
+mockRectangle filled w h (abs -> threshold) (abs -> x, abs -> y) =
     blackIf $
       preventInnerPoints &&
       x <= halfW + bound && y <= halfH + bound
@@ -358,29 +358,30 @@ instance Arbitrary Picture where
 basic :: Gen Picture
 basic = frequency
   [ (1, pure blank)
-  , (2, rectangle <$> arbitrary <*> arbitrary)
-  , (2, thickRectangle . getNonNegative <$> arbitrary <*> arbitrary <*> arbitrary)
-  , (2, solidRectangle <$> arbitrary <*> arbitrary)
-  , (2, circle <$> arbitrary)
-  , (2, solidCircle <$> arbitrary)
+  , (2, rectangle <$> nonNegative <*> nonNegative)
+  , (2, thickRectangle <$> nonNegative <*> nonNegative <*> nonNegative)
+  , (2, solidRectangle <$> nonNegative <*> nonNegative)
+  , (2, circle <$> nonNegative)
+  , (2, solidCircle <$> nonNegative)
   , (2, uncurry thickCircle <$> validThicknessRatio)
-  , (2, arc <$> arbitrary <*> arbitrary <*> arbitrary)
-  , (2, thickArc . getNonNegative <$> arbitrary <*> arbitrary <*> arbitrary <*> arbitrary)
-  , (2, sector <$> arbitrary <*> arbitrary <*> arbitrary)
+  , (2, arc <$> arbitrary <*> arbitrary <*> nonNegative)
+  , (2, thickArc <$> nonNegative <*> arbitrary <*> arbitrary <*> nonNegative)
+  , (2, sector <$> arbitrary <*> arbitrary <*> nonNegative)
   --, (2, lettering <$> arbitrary)
   --, (2, styledLettering <$> arbitrary <*> arbitrary <*> arbitrary)
   , (2, polyline <$> arbitrary)
-  , (2, thickPolyline . getNonNegative <$> arbitrary <*> arbitrary)
+  , (2, thickPolyline <$> nonNegative <*> arbitrary)
   , (2, polygon <$> arbitrary)
-  , (2, thickPolygon . getNonNegative <$> arbitrary <*> arbitrary)
+  , (2, thickPolygon <$> nonNegative <*> arbitrary)
   , (2, solidPolygon <$> arbitrary)
   , (2, curve <$> arbitrary)
-  , (2, thickCurve . getNonNegative <$> arbitrary <*> arbitrary)
+  , (2, thickCurve <$> nonNegative <*> arbitrary)
   --, (2, closedCurve <$> arbitrary)
   --, (2, thickClosedCurve <$> positiveDouble <*> arbitrary)
   --, (2, solidClosedCurve <$> arbitrary)
   ]
-
+  where
+    nonNegative = getNonNegative <$> arbitrary
 
 decayArbitrary :: Arbitrary a => Int -> Gen a
 decayArbitrary n = scale (`div` n) arbitrary
@@ -395,8 +396,8 @@ pictureList = do
 
 validThicknessRatio :: Gen (Double, Double)
 validThicknessRatio = do
-  size <- arbitrary
-  thickness <- choose (0,abs size*2)
+  size <- getNonNegative <$> arbitrary
+  thickness <- choose (0,size*2)
   pure (thickness, size)
 
 
