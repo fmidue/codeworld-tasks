@@ -71,15 +71,15 @@ applyRewritingRules p
 
 rewriting :: Picture -> Picture
 rewriting (AnyCircle _ 0) = Blank
-rewriting (ThickCircle t (abs -> r))
+rewriting (ThickCircle t r)
   | t == 2 * r = SolidCircle (r + t/2)
-rewriting (AnyCircle s (abs -> r)) = AnyCircle s r
+rewriting (AnyCircle s r) = AnyCircle s r
 
 rewriting (AnyRectangle _ 0 _) = Blank
 rewriting (AnyRectangle _ _ 0) = Blank
-rewriting (ThickRectangle t (abs -> l) (abs -> w))
+rewriting (ThickRectangle t l w)
   | t >= 2*l || t >= 2*w = SolidRectangle (l + t/2) (w + t/2)
-rewriting (AnyRectangle s (abs -> l) (abs -> w)) = toWideRectangle s l w
+rewriting (AnyRectangle s l w) = toWideRectangle s l w
 
 rewriting (AnyArc s a1 a2 r) = checkArc s a1 a2 r
 
