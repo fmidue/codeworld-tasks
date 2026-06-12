@@ -349,8 +349,8 @@ Concretize an abstract translation.
 -}
 fromPosition :: Position -> Double
 fromPosition Zero    = 0
-fromPosition (Neg d) = fuzz $ -d
-fromPosition (Pos d) = fuzz d
+fromPosition (Neg d) = -d
+fromPosition (Pos d) = d
 
 
 fuzz :: Double -> Double
@@ -361,7 +361,7 @@ fuzz a = if abs a < 0.005 then 0 else a
 Abstract a concrete translation.
 -}
 toPosition :: Double -> Position
-toPosition d
+toPosition (fuzz -> d)
   | d == 0 = Zero
   | d < 0 = Neg $ abs d
   | otherwise = Pos d
