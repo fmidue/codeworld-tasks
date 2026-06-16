@@ -288,7 +288,7 @@ test =
           oneOf (\p -> hasRelation (p `isLeftOf` p)) eggChoices <||>
           oneOf (\p -> hasRelation (p `isRightOf` p)) eggChoices
         complain "Eggs are above the grass?" $
-          oneOf (\p -> hasRelation (p `isAbove` grass)) (take 3 eggChoices) <||>
+          oneOf (\p -> hasRelation (p `isAbove` grass)) eggChoices <||>
           hasRelation (polyEggThick `atSamePosition` grass)
 
       complain "Cannot detect movement. Make sure you are not ignoring parameter 't'."
@@ -369,7 +369,8 @@ test =
                       fromMaybe 0 (getExactCircleRadius normalized)
       , x == 0
       , isEgg normalized
-      , abs (y - eggSize) <= eggSize*0.5
+      , abs (y - eggSize) <= eggSize*0.5 ||
+        any (normalized `contains`) curveEggs
       ]
 
 
