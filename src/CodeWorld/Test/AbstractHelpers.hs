@@ -158,15 +158,15 @@ largerY = reNormalize $ scaled 1 2
 Draw an abstract, open curve with this many segments.
 -}
 someCurve :: Int -> AbstractPicture
-someCurve points = normalizeAndAbstract $
-  curve $ take (points+1) $ iterate (both (+0.1)) (1,0)
+someCurve segments = normalizeAndAbstract $
+  curve $ take (segments+1) $ iterate (both (+0.1)) (1,0)
 
 {- |
 Draw an abstract, filled in and closed curve with this many segments.
 -}
 someSolidCurve :: Int -> AbstractPicture
-someSolidCurve points = normalizeAndAbstract $
-  solidClosedCurve $ take (points+1) $ iterate (both (+0.1)) (1,0)
+someSolidCurve segments = normalizeAndAbstract $
+  solidClosedCurve $ take segments $ iterate (both (+0.1)) (1,0)
 
 {- |
 Compose two abstract pictures.
