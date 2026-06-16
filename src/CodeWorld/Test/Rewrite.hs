@@ -10,7 +10,7 @@ module CodeWorld.Test.Rewrite (
 
 import Data.Fixed                       (mod')
 import Data.Generics.Uniplate.Data      (rewrite)
-import Data.List.Extra                  (sort, takeEnd)
+import Data.List.Extra                  (sort, takeEnd, dropEnd)
 
 import CodeWorld.Tasks.Color            (black)
 import CodeWorld.Tasks.VectorSpace (
@@ -84,10 +84,12 @@ rewriting (AnyRectangle s l w) = toWideRectangle s l w
 rewriting (AnyArc s a1 a2 r) = checkArc s a1 a2 r
 
 rewriting (AnyPolyline (Closed (Outline mOutline)) ps) = AnyPolyline (Open mOutline) $ toOpenShape ps
-rewriting (AnyPolyline s (removeSurplus -> ps)) = checkForRectangle s $ toOpenShape ps
+rewriting (AnyPolyline s (removeSurplus -> ps)) = checkForRectangle s $ case s of
+  Closed Solid -> toOpenShape ps
+  Open _       -> ps
 
 rewriting (AnyCurve (Closed (Outline mOutline)) ps) = AnyCurve (Open mOutline) $ toOpenShape ps
-rewriting (AnyCurve s ps) = handlePointList (AnyCurve s) $ toOpenShape ps
+rewriting (AnyCurve s ps) = handlePointList (AnyCurve s) ps
 
 rewriting (Lettering "") = Blank
 rewriting (StyledLettering _ _ "") = Blank
@@ -261,7 +263,9 @@ handleLikeFreeShapes s1 ps1 ps2
 
 checkForRectangle :: Shape -> [Point] -> Picture
 checkForRectangle shape ps = case pointsToRectangle shape ps of
-  Nothing -> handlePointList (AnyPolyline shape) ps
+  Nothing -> handlePointList (AnyPolyline shape) $ case shape of
+    Closed Solid -> dropEnd 1 ps
+    _            -> ps
   Just r  -> r
 
 pointsToRectangle :: Shape -> [Point] -> Maybe Picture
