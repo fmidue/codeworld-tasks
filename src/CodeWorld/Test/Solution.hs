@@ -22,6 +22,7 @@ module CodeWorld.Test.Solution (
   inRangeOf,
   rawImage,
   normalizedImage,
+  normalizedImageNoOrder,
   findAll,
   findAllThen,
   findAllTranslated,
@@ -73,7 +74,8 @@ import CodeWorld.Test.Relative (
   )
 import CodeWorld.Test.Rewrite (
   normalize,
-  normalizeAndAbstract
+  normalizeAndAbstract,
+  normalizeNoOrder,
   )
 
 
@@ -233,6 +235,13 @@ Returns the normalized Picture.
 -}
 normalizedImage :: MonadReader StaticImage m => m Picture
 normalizedImage = asks (normalize . fst)
+
+
+{- |
+Returns the normalized Picture, removing any layering information.
+-}
+normalizedImageNoOrder :: MonadReader StaticImage m => m Picture
+normalizedImageNoOrder = asks (normalizeNoOrder . fst)
 
 
 {- |
