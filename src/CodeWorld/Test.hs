@@ -110,6 +110,7 @@ module CodeWorld.Test (
   -- ** Queries on Components
   rawImage,
   normalizedImage,
+  normalizedImageNoOrder,
   findAll,
   findAllThen,
   findAllTranslated,
@@ -446,6 +447,7 @@ import CodeWorld.Test.Solution (
   findFirstTranslatedThen,
   rawImage,
   normalizedImage,
+  normalizedImageNoOrder,
 
   mapAnimation,
   anyAt,
