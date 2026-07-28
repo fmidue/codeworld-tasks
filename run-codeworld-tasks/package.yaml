@@ -16,6 +16,7 @@ dependencies:
   - haskell-template-task
   - haskell-template-task-raw
   - hint
+  - mtl
   - rainbow
   - text
   - wl-pprint-text

@@ -38,6 +38,7 @@ executable test-task
     , haskell-template-task
     , haskell-template-task-raw
     , hint
+    , mtl
     , rainbow
     , random
     , syb
