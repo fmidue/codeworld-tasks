@@ -7,6 +7,15 @@ import qualified Data.Text              as T
 import qualified Data.Text.Lazy         as LT
 
 import Control.Monad                    (void)
+import Control.Monad.Except (
+  ExceptT,
+  runExceptT,
+  throwError,
+  withExceptT,
+  )
+import Control.Monad.IO.Class
+import Data.Char                        (toUpper)
+import Data.String                      (fromString)
 import Data.Text                        (Text)
 import Data.Text.Lazy.Builder           (toLazyText)
 import Haskell.Template.Task            (grade)
@@ -25,10 +34,11 @@ import Rainbow (
   green,
   red,
   yellow,
+  putChunk,
   putChunkLn,
   )
 import System.Directory                 (getTemporaryDirectory)
-import System.Exit                      (die, exitFailure, exitSuccess)
+import System.Exit                      (die, exitSuccess)
 import System.Environment               (getArgs)
 import System.FilePath                  ((</>), (-<.>))
 import System.IO                        (readFile')
@@ -59,6 +69,10 @@ suggestionStyle = bold . fore brightYellow . chunk
 
 data Mode = Submission | Solution
 
+data Rejection = Syntax | Semantics | Unknown deriving (Show)
+
+type Output = ExceptT Rejection IO
+
 
 instance Read Mode where
   readPrec = lift $ do
@@ -88,17 +102,29 @@ main = do
 runTemplateTask :: String -> String -> IO ()
 runTemplateTask task submission = do
   tmp <- getTemporaryDirectory
-  grade
-    id
-    id
+  result <- runExceptT $ grade
+    syntax
+    semantics
     rejection
     suggestion
     tmp
     task
     submission
-  putChunkLn $ bold $ fore green "Your submission passed!"
-  emptyLine
-  putChunkLn $ statusLabel green "SUCCESS"
+  case result of
+    Right () -> do
+      putChunkLn $ bold $ fore green "Your submission passed!"
+      emptyLine
+      putChunkLn $ statusLabel green "SUCCESS"
+    Left reason ->
+      putChunkLn $ statusLabel red $ fromString $ map toUpper $ show reason
+
+
+syntax :: Output () -> Output ()
+syntax = withExceptT $ const Syntax
+
+
+semantics :: Output () -> Output ()
+semantics = withExceptT $ const Semantics
 
 
 modeToDir :: Mode -> FilePath
@@ -140,22 +166,23 @@ styleCommon t
   | otherwise = bold $ chunk t
 
 
-suggestion :: Doc -> IO ()
-suggestion doc = do
+suggestion :: Doc -> Output ()
+suggestion doc = liftIO $ do
   putChunkLn $ statusLabel yellow "SUGGESTION:"
   emptyLine
   unlinesChunks $ map styleSuggestions $ toLines doc
   emptyLine
 
 
-rejection :: Doc -> IO a
+rejection :: Doc -> Output a
 rejection doc = do
-  putChunkLn $ statusLabel red "ERROR:"
-  emptyLine
-  unlinesChunks $ map styleRejections $ toLines doc
-  emptyLine
-  putChunkLn $ statusLabel red "REJECTED"
-  exitFailure
+  liftIO $ do
+    putChunkLn $ statusLabel red "ERROR:"
+    emptyLine
+    unlinesChunks $ map styleRejections $ toLines doc
+    emptyLine
+    putChunk $ statusLabel red "REJECTED DUE TO: "
+  throwError Unknown
 
 
 emptyLine :: IO ()
