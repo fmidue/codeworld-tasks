@@ -38,7 +38,7 @@ import Rainbow (
   putChunkLn,
   )
 import System.Directory                 (getTemporaryDirectory)
-import System.Exit                      (die, exitSuccess)
+import System.Exit                      (die, exitFailure, exitSuccess)
 import System.Environment               (getArgs)
 import System.FilePath                  ((</>), (-<.>))
 import System.IO                        (readFile')
@@ -95,7 +95,6 @@ main = do
         (openFileInDir . modeToDir)
         $ readMaybe subMode
       runTemplateTask taskContents submissionContents
-      exitSuccess
     _              -> usage
 
 
@@ -115,8 +114,10 @@ runTemplateTask task submission = do
       putChunkLn $ bold $ fore green "Your submission passed!"
       emptyLine
       putChunkLn $ statusLabel green "SUCCESS"
-    Left reason ->
+      exitSuccess
+    Left reason -> do
       putChunkLn $ statusLabel red $ fromString $ map toUpper $ show reason
+      exitFailure
 
 
 syntax :: Output () -> Output ()
