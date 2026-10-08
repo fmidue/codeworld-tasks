@@ -52,10 +52,10 @@ executables:
       - -rtsopts
       - -with-rtsopts=-N
     dependencies:
-      - codeworld-tasks
+      - blank-canvas
+      - codeworld-api
       - QuickCheck
       - quickspec
-      - diagrams-solve
 
 tests:
   codeworld-tasks-test:

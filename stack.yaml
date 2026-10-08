@@ -9,3 +9,11 @@ extra-deps:
   - git: https://github.com/nick8325/quickspec.git
     commit: dc011cd737f98b8a67f6051560d9fce553385905
   - twee-lib-2.5
+
+  # real codeworld-api for use in derive-laws executable
+  - git: https://github.com/patritzenfeld/codeworld.git
+    commit: 986ef6e640a09b26bbedd9cf9b892de542d6ab3e
+    subdirs:
+      - codeworld-api
+
+allow-newer: true

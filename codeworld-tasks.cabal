@@ -69,11 +69,11 @@ executable derive-laws
   build-depends:
       QuickCheck
     , base >=4.11 && <5
-    , codeworld-tasks
+    , blank-canvas
+    , codeworld-api
     , containers
     , data-reify
     , deepseq
-    , diagrams-solve
     , extra
     , mtl
     , quickspec
